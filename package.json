@@ -16,5 +16,10 @@
   "bugs": {
     "url": "https://github.com/wattana/LINE-BOT-Starter/issues"
   },
-  "homepage": "https://github.com/wattana/LINE-BOT-Starter"
+  "homepage": "https://github.com/wattana/LINE-BOT-Starter",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
+    "sqlite3": "^3.1.8"
+  }
 }
