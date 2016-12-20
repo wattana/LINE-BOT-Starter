@@ -1,12 +1,12 @@
 curl -H "Content-Type: application/json" -X POST -d '{
   "events": [
     {
-      "replyToken": "nHuyWiB7yP5Zw52FIkcQobQuGDXCTA",
+      "replyToken": "079a4d9bb8724be19e21e31d6ae2f26d",
       "type": "message",
       "timestamp": 1462629479859,
       "source": {
         "type": "user",
-        "userId": "U206d25c2ea6bd87c17655609a1c37cb8"
+        "userId": "Uaa89e07dfe96f3b66fe7937cf9e2c591"
       },
       "message": {
         "id": "325708",
@@ -15,12 +15,12 @@ curl -H "Content-Type: application/json" -X POST -d '{
       }
     },
     {
-      "replyToken": "nHuyWiB7yP5Zw52FIkcQobQuGDXCTA",
+      "replyToken": "079a4d9bb8724be19e21e31d6ae2f26d",
       "type": "follow",
       "timestamp": 1462629479859,
       "source": {
         "type": "user",
-        "userId": "U206d25c2ea6bd87c17655609a1c37cb8"
+        "userId": "Uaa89e07dfe96f3b66fe7937cf9e2c591"
       }
     }
   ]
