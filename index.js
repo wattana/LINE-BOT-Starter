@@ -407,7 +407,7 @@ function replyMessage(data) {
             "altText": "กรุณาเลือกเมนูค่ะ",
             "template": {
                 "type": "buttons",
-                "thumbnailImageUrl": "http://www.centarahotelsresorts.com/images/upload/ctr/special_offer/full_size/krabi-swimming-pool-01-640x457.jpg",
+                "thumbnailImageUrl": "https://limitless-crag-52851.herokuapp.com/resources/images/example.jpg",
                 "title": "Menu",
                 "text": "กรุณาเลือกเมนู",
                 "actions": [
