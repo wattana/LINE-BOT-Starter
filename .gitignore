@@ -10,5 +10,7 @@ npm-debug.log
 # Docker
 Dockerfile
 docker-compose.yml
-LineChat
+LineChat/*
+!LineChat/app/
+!LineChat/classic/
 chat.db

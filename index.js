@@ -150,7 +150,7 @@ app.post('/message', jsonParser,function (req, res) {
     for (var i=0; i<req.body.events.length; i++) {
         var data = req.body.events[i];
         if (data.type == 'message') {
-            if (data.message.text == 'สอบถาม'||data.message.text == 'menu') {
+            if (data.message.text == 'สอบถาม'||data.message.text.toLowerCase() == 'menu') {
               replyMessage(data);
             }
             var exists = true;
@@ -178,7 +178,7 @@ app.post('/message', jsonParser,function (req, res) {
               "VALUES (?, ?, ?, ?, ?, ?)");
             console.log("INSERT INTO messages ",
                       [data.replyToken, data.type, 
-                      data.timestamp,data.source.type,data.source.userId]);
+                      data.timestamp,data.source.type,data.source.userId],JSON.stringify(data));
             stmt.run([data.replyToken, data.type, 
                       data.timestamp, data.source.type, data.source.userId,
                       JSON.stringify(data)],
@@ -192,6 +192,43 @@ app.post('/message', jsonParser,function (req, res) {
     //console.log("message body ",JSON.stringify(req.body));
     res.send('Message success\n')
 })
+
+app.get('/listAllMessage',function (req, res) {
+  //console.log(req)
+  var db = new sqlite3.Database(DATABASE_NAME);
+  var messages = [];
+  db.all("SELECT messages.rowid AS id, replyToken, eventType, timestamp ,sourceType, "+
+         "sourceUserId , messageId , messageType , messageText ,info "+
+         "FROM messages ",
+    function(err, rows) {
+      console.log(rows)
+      /*
+      console.log(row.id + ": " , row.replyToken, row.eventType, row.timestamp ,
+      row.sourceType ,row.sourceUserId , row.messageId , row.messageType , 
+      row.messageText,row.info);
+      */
+      for (var i=0; i<rows.length; i++) {
+        var row = rows[i]
+        messages.push({
+          id : row.id,
+          replyToken: row.replyToken,
+          eventType : row.eventType,
+          timestamp : row.timestamp ,
+          sourceType : row.sourceType ,
+          sourceUserId : row.sourceUserId ,
+          messageId : row.messageId ,
+          messageType: row.messageType , 
+          messageText: row.messageText,
+          info: row.info
+        })
+      }
+      //console.log(messages)
+      res.json(messages);
+
+  });
+  //console.log('WWWWW',messages)
+  db.close();
+});
 
 app.get('/listMessage',function (req, res) {
   //console.log(req)
