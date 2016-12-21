@@ -18,7 +18,7 @@ var DATABASE_NAME = "chat.db"
 var db = new sqlite3.Database(DATABASE_NAME);
  
 db.serialize(function() {
-  var drop = true;
+  var drop = false;
   if (drop) {
     db.run("drop TABLE if exists messages")
     db.run("drop TABLE if exists chat_room")

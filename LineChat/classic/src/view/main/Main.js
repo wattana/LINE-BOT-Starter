@@ -101,8 +101,12 @@ Ext.define('LineChat.view.main.Main', {
             }, {
                 title: 'Settings',
                 iconCls: 'fa-cog',
-                bind: {
-                    html: '{loremIpsum}'
+                items : {
+                    title : 'Settings',
+                    items : {
+                        padding : 150,
+                        html: '<a href="https://line.me/R/ti/p/%40bmq9116z" target="_blank"><img height="36" border="0" alt="เพิ่มเพื่อน" src="https://scdn.line-apps.com/n/line_add_friends/btn/en.png"></a>'
+                    }
                 }
             }] 
         });
