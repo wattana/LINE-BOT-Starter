@@ -13,4 +13,5 @@ docker-compose.yml
 LineChat/*
 !LineChat/app/
 !LineChat/classic/
+!LineChat/socket.io/
 chat.db
