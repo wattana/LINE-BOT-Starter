@@ -12,7 +12,7 @@ Ext.define('LineChat.view.main.MainController', {
     init: function() {
         var me = this;
         console.log('init controller')
-        var socketUrl = "null";
+        var socketUrl = null;
         if (Ext.manifest['env']=='development') {
             socketUrl = "localhost:3000"
         }
