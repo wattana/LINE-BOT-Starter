@@ -94,7 +94,6 @@ function onPushMessage (data) {
 app.use('/classic',express.static('classic'))
 app.use('/modern',express.static('modern'))
 app.use('/resources',express.static('resources'))
-app.use('/line',express.static('line'))
 
 // allow CORS
 app.all('*', function(req, res, next) {
