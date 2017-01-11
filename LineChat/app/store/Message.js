@@ -12,6 +12,9 @@ Ext.define('LineChat.store.Message', {
         'messageId', 
         'messageType', 
         'messageText',
+        {
+            name : 'message'
+        },
         'info'
     ],
     autoLoad : false,

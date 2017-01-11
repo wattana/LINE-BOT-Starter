@@ -2,7 +2,7 @@ Ext.define('LineChat.view.main.RoomList', {
     extend: 'Ext.grid.Panel',
     xtype: 'roomlist',
     scrollable : true,
-    height : 200,
+    //height : 200,
     requires: [
         'LineChat.store.Room'
     ],
@@ -29,11 +29,21 @@ Ext.define('LineChat.view.main.RoomList', {
                         '<span class="chat-by-name" style="margin-right: 2px">({unread})</span>',
                     '</tpl>',
                     '<div class="chat-message">',
-                        '<span class="chat-by-name" style="margin-right: 2px">{message} </span>',
+                        '<span class="chat-by-name" style="margin-right: 2px">{[this.getMessage(values)]} </span>',
                     '</div>',
                 '</div>',
             '</div>',
             {
+                getMessage : function (message) {
+                    if (message.messageType != 'text') {
+                        if (message.sourceType == 'agent') {
+                            return Ext.String.ellipsis("You "+message.messageText, 50)
+                        } else {
+                            return Ext.String.ellipsis(message.displayName+" "+message.messageText, 50)
+                        }
+                    }
+                    return Ext.String.ellipsis(message.messageText, 50)
+                },
                 statusColor: function (waitFlag, talkDatetime) {
                     if (waitFlag == '1') {
                         return 'gray'

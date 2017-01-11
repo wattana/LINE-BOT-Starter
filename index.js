@@ -25,13 +25,16 @@ db.serialize(function() {
   }
   db.run("CREATE TABLE if not exists messages "+
         "(roomId INTEGER, replyToken TEXT, eventType TEXT,timestamp TEXT,sourceType TEXT,sourceUserId TEXT, "+
-        "messageId TEXT, messageType TEXT, messageText TEXT,info TEXT)");
+        "messageId TEXT, messageType TEXT, messageText TEXT, "+
+        "stickerId INTEGER, packageId INTEGER,info TEXT)");
 
   db.run("CREATE TABLE if not exists chat_room "+
         "(userId TEXT, "+
         "displayName TEXT, "+
         "pictureUrl TEXT, "+
         "statusMessage TEXT,"+
+        "sourceType TEXT,"+
+        "messageType TEXT,"+
         "message TEXT,"+
         'createtime TEXT,'+
         'updatetime TEXT,'+
@@ -150,28 +153,31 @@ app.post('/message', jsonParser,function (req, res) {
     for (var i=0; i<req.body.events.length; i++) {
         var data = req.body.events[i];
         if (data.type == 'message') {
-            if (data.message.text == 'สอบถาม'||data.message.text.toLowerCase() == 'menu') {
-              replyMessage(data);
-            }
-            var exists = true;
-            var messageEv = data;
-            db.get("SELECT rowid AS id, * FROM chat_room where userId = ? and active=1 LIMIT 1", [messageEv.source.userId],
-            function(err, row){
-              if(err) throw err;
-              var room = {};
-              if(typeof row == "undefined") {
-                  exists = false;
-              } else {
-                  room = row
-                  console.log("row is: ", row);
+              if (data.message.type == 'text') {
+                if (data.message.text == 'สอบถาม'||data.message.text.toLowerCase() == 'menu') {
+                  replyMessage(data);
+                }
               }
-              console.log("## Is not exists",exists)
-              if (exists) {
-                updateRoom(room, messageEv);
-              } else {
-                createRoom(room, messageEv);
-              }       
-            });
+              var exists = true;
+              var messageEv = data;
+              db.get("SELECT rowid AS id, * FROM chat_room where userId = ? and active=1 LIMIT 1", [messageEv.source.userId],
+              function(err, row){
+                if(err) throw err;
+                var room = {};
+                if(typeof row == "undefined") {
+                    exists = false;
+                } else {
+                    room = row
+                    console.log("row is: ", row);
+                }
+                console.log("## Is not exists",exists)
+                if (exists) {
+                  updateRoom(room, messageEv);
+                } else {
+                  createRoom(room, messageEv);
+                }       
+              });
+            
         } else {
             var stmt = db.prepare("INSERT INTO messages "+
               "(replyToken ,eventType ,timestamp ,sourceType ,sourceUserId ,info) "+ 
@@ -234,13 +240,14 @@ app.get('/listMessage',function (req, res) {
   //console.log(req)
   var db = new sqlite3.Database(DATABASE_NAME);
   var messages = [];
-  db.all("SELECT messages.rowid AS id, roomId, replyToken, eventType, timestamp ,sourceType, "+
-         "sourceUserId , messageId , messageType , messageText ,info "+
+  db.all("SELECT messages.rowid AS id, roomId, replyToken, eventType, timestamp ,messages.sourceType, "+
+         "sourceUserId , messageId , messages.messageType , messageText ,info, "+
+         "stickerId, packageId "+
          "FROM messages , chat_room "+
          "where messages.sourceUserId = chat_room.userId "+
          "and chat_room.rowid = ? and eventType='message'",[req.query.roomId], 
     function(err, rows) {
-      console.log(rows)
+      console.log(err,rows)
       /*
       console.log(row.id + ": " , row.replyToken, row.eventType, row.timestamp ,
       row.sourceType ,row.sourceUserId , row.messageId , row.messageType , 
@@ -259,7 +266,9 @@ app.get('/listMessage',function (req, res) {
           messageId : row.messageId ,
           messageType: row.messageType , 
           messageText: row.messageText,
-          info: row.info
+          message: row.info,
+          stickerId : row.stickerId, 
+          packageId : row.packageId
         })
       }
       //console.log(messages)
@@ -274,7 +283,7 @@ app.get('/listRoom',function (req, res) {
   //console.log(req)
   var db = new sqlite3.Database(DATABASE_NAME);
   var messages = [];
-  db.all("SELECT rowid AS id, userId ,displayName, pictureUrl, statusMessage, message ,createtime, updatetime, active FROM chat_room", function(err, rows) {
+  db.all("SELECT rowid AS id, sourceType,userId ,displayName, pictureUrl, statusMessage, messageType, message ,createtime, updatetime, active FROM chat_room", function(err, rows) {
       /*
       console.log(row.id + ": " , row.replyToken, row.eventType, row.timestamp ,
       row.sourceType ,row.sourceUserId , row.messageId , row.messageType , 
@@ -289,6 +298,9 @@ app.get('/listRoom',function (req, res) {
           pictureUrl : row.pictureUrl ,
           statusMessage : row.statusMessage ,
           message : row.message ,
+          messageType : row.messageType,
+          messageText : row.message ,
+          sourceType : row.sourceType,
           createtime : row.createtime ,
           updatetime : row.updatetime ,
           active : row.active
@@ -327,9 +339,9 @@ function createRoom(room, messageEv) {
         async.series([
           function (callback) {
             db.run("INSERT INTO chat_room "+
-              "(userId ,displayName, pictureUrl, statusMessage, active) "+
-              "select ?, ?, ?, ?, ? WHERE NOT EXISTS(SELECT 1 FROM chat_room WHERE userId = ? and active=1)",
-            [messageEv.source.userId, "", "", "" , 1, messageEv.source.userId],
+              "(userId ,sourceType, displayName, pictureUrl, statusMessage, active) "+
+              "select ?, ?, ?, ?, ?, ? WHERE NOT EXISTS(SELECT 1 FROM chat_room WHERE userId = ? and active=1)",
+            [messageEv.source.userId, messageEv.source.type, "", "", "" , 1, messageEv.source.userId],
             function () {
               room.id = this.lastID;
               console.log("lastID",this.lastID)
@@ -337,45 +349,39 @@ function createRoom(room, messageEv) {
             })
           },
           function (callback) {
-            console.log("INSERT INTO chat_room", [room.id,messageEv.source.userId,"","","",1]);
+            console.log("Update  chat_room", [room.id,messageEv.source.userId,"","","",1]);
+            var messageText = getMessageText(messageEv);
             db.run("update chat_room set "+
                   "displayName = ?"+
                   ",pictureUrl = ?"+
                   ",statusMessage = ? "+
+                  ",messageType = ? "+
                   ",message = ? "+
                   ",createtime = ? "+
                   "WHERE userId = ? and active=1",
             [result.displayName, result.pictureUrl,
-            result.statusMessage ,messageEv.message.text, messageEv.timestamp, messageEv.source.userId])
+            result.statusMessage, messageEv.message.type,
+            messageText, messageEv.timestamp, messageEv.source.userId])
             console.log("Update chat_room", [result.displayName, result.pictureUrl,result.statusMessage ,messageEv.source.userId]);
             io.emit('newroom', {
                 id : room.id,
                 userId: messageEv.source.userId,
+                sourceType : messageEv.source.type,
                 sourceUserId: messageEv.source.userId,
                 displayName : result.displayName,
                 pictureUrl : result.pictureUrl ,
                 statusMessage : result.statusMessage ,
-                message : messageEv.message.text ,
+                message : messageEv.message ,
+                messageId : messageEv.message.id ,
+                stickerId : messageEv.message.stickerId, 
+                packageId : messageEv.message.packageId,
+                messageText : messageText,
+                messageType: messageEv.message.type , 
                 createtime : messageEv.timestamp ,
-                updatetime : null ,
+                updatetime : messageEv.timestamp ,
                 active : 1
             });
-            console.log("INSERT INTO messages ",
-                      [room.id, messageEv.replyToken, messageEv.type, 
-                      messageEv.timestamp,messageEv.source.type,messageEv.source.userId,
-                      messageEv.message.id, messageEv.message.type, messageEv.message.text]);
-            var stmt = db.prepare("INSERT INTO messages "+
-              "(roomId ,replyToken ,eventType ,timestamp ,sourceType ,"+
-              "sourceUserId , messageId ,messageType , messageText ,info) "+ 
-              "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            stmt.run([room.id, messageEv.replyToken, messageEv.type, 
-                      messageEv.timestamp,messageEv.source.type,messageEv.source.userId,
-                      messageEv.message.id, messageEv.message.type, messageEv.message.text,
-                      JSON.stringify(messageEv)],
-              function(err) {
-                if (err) console.log("err",err)
-            });
-            stmt.finalize();
+            saveMessage(db , room, messageEv)
             callback();
           }
         ])
@@ -392,27 +398,18 @@ function updateRoom(room, messageEv) {
     console.log("Update chat_room", [messageEv.message.text, messageEv.timestamp, messageEv.source.userId]);
     var db = new sqlite3.Database(DATABASE_NAME);
     db.serialize(function() {
+      var messageText = getMessageText(messageEv);
+
       db.run("update chat_room set "+
-            "message = ? "+
+            "messageType = ? "+
+            ",message = ? "+
+            ",sourceType = ? "+
             ",updatetime = ? "+
             "WHERE userId = ? and active=1",
-      [messageEv.message.text, messageEv.timestamp, messageEv.source.userId]);
-      var stmt = db.prepare("INSERT INTO messages "+
-        "(roomId ,replyToken ,eventType ,timestamp ,sourceType ,"+
-        "sourceUserId , messageId ,messageType , messageText ,info) "+ 
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-      console.log("INSERT INTO messages ",
-                [room.id, messageEv.replyToken, messageEv.type, 
-                messageEv.timestamp,messageEv.source.type,messageEv.source.userId,
-                messageEv.message.id, messageEv.message.type, messageEv.message.text]);
-      stmt.run([room.id, messageEv.replyToken, messageEv.type, 
-                messageEv.timestamp,messageEv.source.type,messageEv.source.userId,
-                messageEv.message.id, messageEv.message.type, messageEv.message.text,
-                JSON.stringify(messageEv)],
-        function(err) {
-          if (err) console.log("err",err)
-      });
-      stmt.finalize();
+      [messageEv.message.type, messageText, messageEv.source.type, 
+       messageEv.timestamp, messageEv.source.userId]);
+
+      saveMessage(db , room, messageEv)
       io.emit('message', {
         roomId : room.id,
         userId: messageEv.source.userId,
@@ -421,13 +418,58 @@ function updateRoom(room, messageEv) {
         timestamp : Date.now(),//messageEv.timestamp ,
         sourceType : messageEv.source.type ,
         sourceUserId : messageEv.source.userId ,
+        message : messageEv.message ,
         messageId : messageEv.message.id ,
         messageType: messageEv.message.type , 
-        messageText: messageEv.message.text
-      });
+        messageText: messageText,
+        stickerId : messageEv.message.stickerId, 
+        packageId : messageEv.message.packageId,
 
+      });
     });
     db.close();
+}
+
+function getMessageText (messageEv) {
+    if (messageEv.message.type == 'text'){
+      return messageEv.message.text
+    } else if (messageEv.message.type == 'image'){
+      return "send you a photo"
+    } else if (messageEv.message.type == 'video'){
+      return "send you a video"
+    } else if (messageEv.message.type == 'audio'){
+      return "send you a audio"
+    } else if (messageEv.message.type == 'location'){
+      return "send you a location"
+    } else if (messageEv.message.type == 'sticker'){
+      return "send you a sticker"
+    }
+}
+
+function saveMessage(db , room, messageEv) {
+  console.log("INSERT INTO messages ",
+              [room.id, messageEv.replyToken, messageEv.type, 
+              messageEv.timestamp,messageEv.source.type,messageEv.source.userId,
+              messageEv.message.id, messageEv.message.type, messageEv.message.text]);
+    var stmt = db.prepare("INSERT INTO messages "+
+      "(roomId ,replyToken ,eventType ,timestamp ,sourceType ,"+
+      "sourceUserId , messageId ,messageType , messageText ,stickerId, packageId, info) "+ 
+      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+    stmt.run([room.id, messageEv.replyToken, messageEv.type, 
+              messageEv.timestamp,messageEv.source.type,messageEv.source.userId,
+              messageEv.message.id, messageEv.message.type, 
+              messageEv.message.text,
+              messageEv.message.type == 'sticker'? messageEv.message.stickerId : 0,
+              messageEv.message.type == 'sticker'? messageEv.message.packageId : 0,
+              JSON.stringify(messageEv)],
+      function(err) {
+        if (err) console.log("err",err)
+    });
+    stmt.finalize();
+
+    
+
 }
 
 function replyMessage(data) {

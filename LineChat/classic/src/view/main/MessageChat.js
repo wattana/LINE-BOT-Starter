@@ -64,6 +64,23 @@ Ext.define('LineChat.view.main.MessageChat', {
                 return v === undefined || v === null ? '' : Ext.Date.format(v, "d/m/X H:i:s");
             }
         });
+
+        var meStickerTpl = Ext.create('Ext.XTemplate',
+            '<div class="chat-item">',
+                '<div style="float:right">',
+                    '<img src="http://dl.stickershop.line.naver.jp/products/0/0/100/{packageId}/PC/stickers/{stickerId}.png">',
+                    '<div class="comment-by">{date:this.formatDate}</div>',
+                '</div>',
+            '</div>');
+
+        var stickerTpl = Ext.create('Ext.XTemplate',
+        '<div class="chat-item">',
+            '<div>',
+                '<img src="http://dl.stickershop.line.naver.jp/products/0/0/100/{packageId}/PC/stickers/{stickerId}.png">',
+                '<div class="comment-by">{date:this.formatDate}</div>',
+            '</div>',
+        '</div>');
+
         me.viewConfig = {
             stripeRows: false,
             preserveScrollOnRefresh: true,
@@ -81,10 +98,16 @@ Ext.define('LineChat.view.main.MessageChat', {
         me.columns = [{
             header: 'message', dataIndex: 'message', flex: 1,
             renderer: function (value, metaData, record, rowIndex, colIndex, store) {
-                console.log(record)
+                //console.log(record)
                 metaData.style = 'white-space: normal;'
                 if (record.get("replyToken") == '') {
+                    if (record.get("messageType") == 'sticker') {
+                        return mestickerTpl.apply(record.data)
+                    }
                     return meMessageTpl.apply(record.data)
+                }
+                if (record.get("messageType") == 'sticker') {
+                    return stickerTpl.apply(record.data)
                 }
                 return messageTpl.apply(record.data)
             }

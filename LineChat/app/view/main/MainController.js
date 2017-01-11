@@ -19,12 +19,12 @@ Ext.define('LineChat.view.main.MainController', {
         var socket = io(socketUrl);
         this.socket = socket;
         socket.on('newroom', function (data) {
-            console.log(data);
+            console.log("newroom",data);
             socket.emit('my other event', { my: 'data' });
             me.addChatRoom(data)
         });
         socket.on('message', function (data) {
-            console.log(data);
+            console.log('message', data);
             me.addMessage(data)
         });
     },
@@ -68,7 +68,7 @@ Ext.define('LineChat.view.main.MainController', {
 
     addChatRoom: function (chatMessage) {
         var me = this;
-        console.log(chatMessage)
+        //console.log(chatMessage)
         var grid = this.getView().down('roomlist')
         grid.getStore().insert(0, chatMessage)
         
@@ -90,7 +90,7 @@ Ext.define('LineChat.view.main.MainController', {
     },
 
     onHelpItemClick : function ( view , record , item , index , e , eOpts ){
-        console.log("record",record)
+        //console.log("record",record)
         var me = this;
         var roomInfo = this.getView().getReferences().roomInfoForm;
         this.sendMessage(roomInfo.down("hidden[name=id]").getValue(),
@@ -123,7 +123,7 @@ Ext.define('LineChat.view.main.MainController', {
     },
     addMessage: function (chatMessage) {
         var me = this;
-        console.log(chatMessage)
+        //console.log(chatMessage)
         var roomInfo = this.getView().getReferences().roomInfoForm;
         var chatRoomGrid = this.getView().down('roomlist')
         var roomRecord = chatRoomGrid.getStore().findRecord("userId", chatMessage.sourceUserId)
@@ -132,7 +132,7 @@ Ext.define('LineChat.view.main.MainController', {
         roomRecord.set("updatetime", chatMessage.timestamp)
         roomRecord.set("talkDatetime", updatetime)
         roomRecord.set("message", chatMessage.messageText)
-        console.log('roomRecord',roomRecord)
+        //console.log('roomRecord',roomRecord)
 
         if (roomRecord.get("id") == roomInfo.down("hidden[name=id]").getValue()) {
             grid.getStore().add(chatMessage)
