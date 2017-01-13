@@ -81,6 +81,81 @@ Ext.define('LineChat.view.main.MessageChat', {
             '</div>',
         '</div>');
 
+        var imageTpl = Ext.create('Ext.XTemplate',
+        '<div class="chat-item">',
+            '<div>',
+                '<img src="{.:this.getBaseUrl}content/images/{roomId}/{messageId}.png" width="200px">',
+                '<div class="comment-by">{date:this.formatDate}</div>',
+                '<a href="{.:this.getBaseUrl}content/images/{roomId}/{messageId}.png" target="_blank">Open</a>',
+            '</div>',
+        '</div>',
+        {
+            getBaseUrl : function() {
+                //console.log(LineChat.app.baseURL)
+                return LineChat.app.baseURL
+            },
+            formatDate: function (v) {
+                return v === undefined || v === null ? '' : Ext.Date.format(v, "d/m/X H:i:s");
+            }
+        });
+
+        var audioTpl = Ext.create('Ext.XTemplate',
+        '<div class="chat-item">',
+            '<div class="bubble">',
+                '<audio controls>',
+                    '<source src="{.:this.getBaseUrl}content/audios/{roomId}/{messageId}.mp4" type="audio/mpeg">',
+                    'Your browser does not support the audio element.',
+                '</audio>',
+                '<div class="comment-by">{date:this.formatDate}</div>',
+            '</div>',
+        '</div>',
+        {
+            getBaseUrl : function() {
+                return LineChat.app.baseURL
+            },
+            formatDate: function (v) {
+                return v === undefined || v === null ? '' : Ext.Date.format(v, "d/m/X H:i:s");
+            }
+        });
+
+        var videoTpl = Ext.create('Ext.XTemplate',
+        '<div class="chat-item">',
+            '<div classx="bubble">',
+                '<video controls width="250px" height="250px">',
+                    '<source src="{.:this.getBaseUrl}content/videos/{roomId}/{messageId}.mp4" type="video/mp4">',
+                    'Your browser does not support the <code>video</code> element.',
+                '</video>',
+                '<div class="comment-by">{date:this.formatDate}</div>',
+            '</div>',
+        '</div>',
+        {
+            getBaseUrl : function() {
+                return LineChat.app.baseURL
+            },
+            formatDate: function (v) {
+                return v === undefined || v === null ? '' : Ext.Date.format(v, "d/m/X H:i:s");
+            }
+        });
+
+        var locationTpl = Ext.create('Ext.XTemplate',
+        '<div class="chat-item">',
+            '<div class="bubble">',
+                '<i class="fa fa-flag" aria-hidden="true" style="float:left; color:red"></i>',
+                '<div>',
+                    '<a style ="text-decoration:none" href="http://maps.google.com/maps?q=loc:{latitude},{longitude}" target="_blank">{title}<br/>{address}</a>',
+                '</div>',
+                '<div class="comment-by">{date:this.formatDate}</div>',
+            '</div>',
+        '</div>',
+        {
+            getBaseUrl : function() {
+                return LineChat.app.baseURL
+            },
+            formatDate: function (v) {
+                return v === undefined || v === null ? '' : Ext.Date.format(v, "d/m/X H:i:s");
+            }
+        });
+
         me.viewConfig = {
             stripeRows: false,
             preserveScrollOnRefresh: true,
@@ -102,13 +177,24 @@ Ext.define('LineChat.view.main.MessageChat', {
                 metaData.style = 'white-space: normal;'
                 if (record.get("replyToken") == '') {
                     if (record.get("messageType") == 'sticker') {
-                        return mestickerTpl.apply(record.data)
+                        return meStickerTpl.apply(record.data)
+                    } else if (record.get("messageType") == 'image') {
+                        return meImageTpl.apply(record.data)
                     }
                     return meMessageTpl.apply(record.data)
                 }
                 if (record.get("messageType") == 'sticker') {
                     return stickerTpl.apply(record.data)
+                } else if (record.get("messageType") == 'image') {
+                    return imageTpl.apply(record.data)
+                } else if (record.get("messageType") == 'audio') {
+                    return audioTpl.apply(record.data)
+                } else if (record.get("messageType") == 'video') {
+                    return videoTpl.apply(record.data)
+                } else if (record.get("messageType") == 'location') {
+                    return locationTpl.apply(record.data)
                 }
+
                 return messageTpl.apply(record.data)
             }
         }]

@@ -4,6 +4,7 @@ var path = require('path');
 var bodyParser = require('body-parser');
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+var fs = require('fs');
 // create application/json parser 
 var jsonParser = bodyParser.json()
 //app.use(bodyParser.json()); // for parsing application/json
@@ -18,15 +19,29 @@ var DATABASE_NAME = "chat.db"
 var db = new sqlite3.Database(DATABASE_NAME);
  
 db.serialize(function() {
-  var drop = false;
+  var drop = true;
   if (drop) {
     db.run("drop TABLE if exists messages")
     db.run("drop TABLE if exists chat_room")
   }
-  db.run("CREATE TABLE if not exists messages "+
-        "(roomId INTEGER, replyToken TEXT, eventType TEXT,timestamp TEXT,sourceType TEXT,sourceUserId TEXT, "+
-        "messageId TEXT, messageType TEXT, messageText TEXT, "+
-        "stickerId INTEGER, packageId INTEGER,info TEXT)");
+  db.run("CREATE TABLE if not exists messages ("+
+        "roomId INTEGER, "+
+        "replyToken TEXT, "+
+        "eventType TEXT,"+
+        "timestamp TEXT,"+
+        "sourceType TEXT,"+
+        "sourceUserId TEXT, "+
+        "messageId TEXT, "+
+        "messageType TEXT, "+
+        "messageText TEXT, "+
+        "stickerId INTEGER, "+
+        "packageId INTEGER,"+
+        "title TEXT, "+
+        "address TEXT, "+
+        "latitude TEXT, "+
+        "longitude TEXT, "+
+        "info TEXT)"
+        );
 
   db.run("CREATE TABLE if not exists chat_room "+
         "(userId TEXT, "+
@@ -97,6 +112,7 @@ function onPushMessage (data) {
 app.use('/classic',express.static('classic'))
 app.use('/modern',express.static('modern'))
 app.use('/resources',express.static('resources'))
+app.use('/content',express.static('content'))
 
 // allow CORS
 app.all('*', function(req, res, next) {
@@ -146,6 +162,25 @@ app.get('/pushMessage', function (req, res) {
     //console.log(response);
     res.send(result)
   });
+})
+
+app.get('/getImage', function (req, res) {
+  var args = {
+      headers: { "Authorization": token } // request headers 
+  };
+  client.get("https://api.line.me/v2/bot/message/5491950525289/content", args, 
+  function (result, response) {
+      // parsed response body as js object 
+      //console.log(result);
+      // raw response 
+      console.log(response);
+      fs.writeFile('logo.png', result, 'binary', function(err){
+          if (err) throw err
+          console.log('File saved.')
+      })
+      res.send('Get Image success\n')
+  });
+  
 })
 
 app.post('/message', jsonParser,function (req, res) {
@@ -242,7 +277,7 @@ app.get('/listMessage',function (req, res) {
   var messages = [];
   db.all("SELECT messages.rowid AS id, roomId, replyToken, eventType, timestamp ,messages.sourceType, "+
          "sourceUserId , messageId , messages.messageType , messageText ,info, "+
-         "stickerId, packageId "+
+         "stickerId, packageId ,title, address, latitude, longitude "+
          "FROM messages , chat_room "+
          "where messages.sourceUserId = chat_room.userId "+
          "and chat_room.rowid = ? and eventType='message'",[req.query.roomId], 
@@ -268,7 +303,11 @@ app.get('/listMessage',function (req, res) {
           messageText: row.messageText,
           message: row.info,
           stickerId : row.stickerId, 
-          packageId : row.packageId
+          packageId : row.packageId,
+          title : row.title,
+          address : row.address,
+          latitude : row.latitude,
+          longitude : row.longitude
         })
       }
       //console.log(messages)
@@ -375,6 +414,10 @@ function createRoom(room, messageEv) {
                 messageId : messageEv.message.id ,
                 stickerId : messageEv.message.stickerId, 
                 packageId : messageEv.message.packageId,
+                title : messageEv.message.title,
+                address : messageEv.message.address,
+                latitude : messageEv.message.latitude,
+                longitude : messageEv.message.longitude,
                 messageText : messageText,
                 messageType: messageEv.message.type , 
                 createtime : messageEv.timestamp ,
@@ -424,6 +467,10 @@ function updateRoom(room, messageEv) {
         messageText: messageText,
         stickerId : messageEv.message.stickerId, 
         packageId : messageEv.message.packageId,
+        title : messageEv.message.title,
+        address : messageEv.message.address,
+        latitude : messageEv.message.latitude,
+        longitude : messageEv.message.longitude,
 
       });
     });
@@ -453,8 +500,10 @@ function saveMessage(db , room, messageEv) {
               messageEv.message.id, messageEv.message.type, messageEv.message.text]);
     var stmt = db.prepare("INSERT INTO messages "+
       "(roomId ,replyToken ,eventType ,timestamp ,sourceType ,"+
-      "sourceUserId , messageId ,messageType , messageText ,stickerId, packageId, info) "+ 
-      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+      "sourceUserId , messageId ,messageType , messageText ,stickerId, packageId, "+
+      "title, address, latitude, longitude, "+
+      "info) "+ 
+      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
     stmt.run([room.id, messageEv.replyToken, messageEv.type, 
               messageEv.timestamp,messageEv.source.type,messageEv.source.userId,
@@ -462,12 +511,66 @@ function saveMessage(db , room, messageEv) {
               messageEv.message.text,
               messageEv.message.type == 'sticker'? messageEv.message.stickerId : 0,
               messageEv.message.type == 'sticker'? messageEv.message.packageId : 0,
+              messageEv.message.type == 'location'? messageEv.message.title : "",
+              messageEv.message.type == 'location'? messageEv.message.address : "",
+              messageEv.message.type == 'location'? messageEv.message.latitude : "",
+              messageEv.message.type == 'location'? messageEv.message.longitude : "",
               JSON.stringify(messageEv)],
       function(err) {
         if (err) console.log("err",err)
     });
+    
     stmt.finalize();
 
+    if (messageEv.message.type == 'image') {
+      var dir = __dirname+'/content/images/'+room.id+"/";
+      if (!fs.existsSync(dir)){
+          fs.mkdirSync(dir);
+      }
+      var args = {
+      headers: { "Authorization": token } // request headers 
+      };
+      client.get("https://api.line.me/v2/bot/message/"+messageEv.message.id+"/content", args, 
+      function (result, response) {
+          fs.writeFile(dir+messageEv.message.id+'.png', result, 'binary', 
+          function(err){
+              if (err) throw err
+              console.log('File saved.')
+          })
+      });
+    } else if (messageEv.message.type == 'audio') {
+      var dir = __dirname+'/content/audios/'+room.id+"/";
+      if (!fs.existsSync(dir)){
+          fs.mkdirSync(dir);
+      }
+      var args = {
+      headers: { "Authorization": token } // request headers 
+      };
+      client.get("https://api.line.me/v2/bot/message/"+messageEv.message.id+"/content", args, 
+      function (result, response) {
+          fs.writeFile(dir+messageEv.message.id+'.mp4', result, 'binary', 
+          function(err){
+              if (err) throw err
+              console.log('File saved.')
+          })
+      });
+    } else if (messageEv.message.type == 'video') {
+      var dir = __dirname+'/content/videos/'+room.id+"/";
+      if (!fs.existsSync(dir)){
+          fs.mkdirSync(dir);
+      }
+      var args = {
+      headers: { "Authorization": token } // request headers 
+      };
+      client.get("https://api.line.me/v2/bot/message/"+messageEv.message.id+"/content", args, 
+      function (result, response) {
+          fs.writeFile(dir+messageEv.message.id+'.mp4', result, 'binary', 
+          function(err){
+              if (err) throw err
+              console.log('File saved.')
+          })
+      });
+    }
     
 
 }

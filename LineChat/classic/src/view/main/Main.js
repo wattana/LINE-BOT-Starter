@@ -87,14 +87,16 @@ Ext.define('LineChat.view.main.Main', {
             },
             items: [{
                 title: 'Chat',
+                xtype : 'panel',
                 iconCls: 'fa-weixin',//fa-home',
-                // The following grid shares a store with the classic version's grid as well!
+                layout: 'fit',
                 items: [{
                     xtype: 'roomlist'
                 }]
             }, {
                 title: 'Users',
                 iconCls: 'fa-user',
+                layout: 'fit',
                 items: [{
                     xtype: 'userlist'
                 }]
@@ -164,6 +166,7 @@ Ext.define('LineChat.view.main.Main', {
                 }]
             }, {
                 xtype : 'messagechat',
+                minHeight : 200,
                 flex: 1
             },{
                 xtype: 'form',

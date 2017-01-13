@@ -14,10 +14,12 @@ Ext.define('LineChat.Application', {
     
     launch: function () {
         var roomStore = this.getStore('Room');
+        LineChat.app.baseURL = "";
         if (Ext.manifest['env']=='development') {
             socketUrl = "localhost:3000"
             roomStore.getProxy().setUrl("http://localhost:3000/listRoom")
             this.getStore('Message').getProxy().setUrl("http://localhost:3000/listMessage")
+            LineChat.app.baseURL = "http://localhost:3000/";
         }
         roomStore.load();
     },
