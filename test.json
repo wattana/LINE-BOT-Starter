@@ -1,0 +1,74 @@
+[
+    {
+        "id": 1,
+        "replyToken": null,
+        "eventType": "unfollow",
+        "timestamp": "1484453023515.0",
+        "sourceType": "user",
+        "sourceUserId": "Uaa89e07dfe96f3b66fe7937cf9e2c591",
+        "messageId": null,
+        "messageType": null,
+        "messageText": null,
+        "info": "{\"type\":\"unfollow\",\"source\":{\"userId\":\"Uaa89e07dfe96f3b66fe7937cf9e2c591\",\"type\":\"user\"},\"timestamp\":1484453023515}"
+    },
+    {
+        "id": 2,
+        "replyToken": "8ad5513234e84c19924cc2206dc9e627",
+        "eventType": "follow",
+        "timestamp": "1484453038510.0",
+        "sourceType": "user",
+        "sourceUserId": "Uaa89e07dfe96f3b66fe7937cf9e2c591",
+        "messageId": null,
+        "messageType": null,
+        "messageText": null,
+        "info": "{\"type\":\"follow\",\"replyToken\":\"8ad5513234e84c19924cc2206dc9e627\",\"source\":{\"userId\":\"Uaa89e07dfe96f3b66fe7937cf9e2c591\",\"type\":\"user\"},\"timestamp\":1484453038510}"
+    },
+    {
+        "id": 3,
+        "replyToken": "c3689ee99260479188f0a6269bda012f",
+        "eventType": "message",
+        "timestamp": "1484453336000.0",
+        "sourceType": "user",
+        "sourceUserId": "Uaa89e07dfe96f3b66fe7937cf9e2c591",
+        "messageId": "5503974848686",
+        "messageType": "text",
+        "messageText": "Haha",
+        "info": "{\"type\":\"message\",\"replyToken\":\"c3689ee99260479188f0a6269bda012f\",\"source\":{\"userId\":\"Uaa89e07dfe96f3b66fe7937cf9e2c591\",\"type\":\"user\"},\"timestamp\":1484453336000,\"message\":{\"type\":\"text\",\"id\":\"5503974848686\",\"text\":\"Haha\"}}"
+    },
+    {
+        "id": 4,
+        "replyToken": null,
+        "eventType": "unfollow",
+        "timestamp": "1484453431149.0",
+        "sourceType": "user",
+        "sourceUserId": "Uaa89e07dfe96f3b66fe7937cf9e2c591",
+        "messageId": null,
+        "messageType": null,
+        "messageText": null,
+        "info": "{\"type\":\"unfollow\",\"source\":{\"userId\":\"Uaa89e07dfe96f3b66fe7937cf9e2c591\",\"type\":\"user\"},\"timestamp\":1484453431149}"
+    },
+    {
+        "id": 5,
+        "replyToken": "364126f7a82e4408a13fccbc4c203055",
+        "eventType": "follow",
+        "timestamp": "1484453475759.0",
+        "sourceType": "user",
+        "sourceUserId": "Uaa89e07dfe96f3b66fe7937cf9e2c591",
+        "messageId": null,
+        "messageType": null,
+        "messageText": null,
+        "info": "{\"type\":\"follow\",\"replyToken\":\"364126f7a82e4408a13fccbc4c203055\",\"source\":{\"userId\":\"Uaa89e07dfe96f3b66fe7937cf9e2c591\",\"type\":\"user\"},\"timestamp\":1484453475759}"
+    },
+    {
+        "id": 6,
+        "replyToken": "dc8b882598844624838a4e6ce5c7f750",
+        "eventType": "follow",
+        "timestamp": "1484453607865.0",
+        "sourceType": "user",
+        "sourceUserId": "Ude781d6846f10928b51872c5634a88be",
+        "messageId": null,
+        "messageType": null,
+        "messageText": null,
+        "info": "{\"type\":\"follow\",\"replyToken\":\"dc8b882598844624838a4e6ce5c7f750\",\"source\":{\"userId\":\"Ude781d6846f10928b51872c5634a88be\",\"type\":\"user\"},\"timestamp\":1484453607865}"
+    }
+]

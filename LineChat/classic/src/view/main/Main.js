@@ -31,7 +31,7 @@ Ext.define('LineChat.view.main.Main', {
 
         var west = Ext.create("Ext.tab.Panel",{
             region : 'west',
-            width : 495,
+            width : 545,
             ui: 'navigation',
             tabBarHeaderPosition: 1,
             titleRotation: 0,
@@ -45,13 +45,18 @@ Ext.define('LineChat.view.main.Main', {
                     bind: {
                         text: '{name}'
                     },
-                    flex: 0
+                    flex: 0,
+                    style : {
+                        fontSizex:'20px',
+                        padding : 0,
+                        marginLeft: '2px'
+                    }
                 },
                 iconCls: 'fa-th-list'
             },
 
             tabBar: {
-                flex: 1,
+                flex: 2,
                 layout: {
                     align: 'stretch',
                     overflowHandler: 'none'
@@ -70,6 +75,7 @@ Ext.define('LineChat.view.main.Main', {
 
             defaults: {
                 bodyPadding: 2,
+                scrollable: true,                
                 tabConfig: {
                     plugins: 'responsive',
                     responsiveConfig: {
@@ -86,6 +92,13 @@ Ext.define('LineChat.view.main.Main', {
                 }
             },
             items: [{
+                title: 'Contact',
+                iconCls: 'fa-users',
+                layout: 'fit',
+                items: [{
+                    xtype: 'contacts'
+                }]
+            }, {
                 title: 'Chat',
                 xtype : 'panel',
                 iconCls: 'fa-weixin',//fa-home',
@@ -162,6 +175,9 @@ Ext.define('LineChat.view.main.Main', {
                     name: 'agentId'
                 }, {
                     xtype: 'hiddenfield',
+                    name: 'contactId'
+                }, {
+                    xtype: 'hiddenfield',
                     name: 'pictureUrl'
                 }]
             }, {
@@ -215,7 +231,19 @@ Ext.define('LineChat.view.main.Main', {
                             marginBottom: '5px'
                         },
                         formBind: true,
+                        hidden : true,
                         handler : 'onSendBtnClick'
+                    }, {
+                        xtype: 'button',
+                        text: 'Send',
+                        action : 'sendContactMessage',
+                        style: {
+                            marginLeft: '5px',
+                            marginBottom: '5px'
+                        },
+                        formBind: true,
+                        hidden : true,
+                        handler : 'onSendContactBtnClick'
                     }]
                 },{
                     title : 'ช่วยเหลือ',
