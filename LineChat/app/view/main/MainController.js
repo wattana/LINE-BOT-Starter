@@ -257,6 +257,35 @@ Ext.define('LineChat.view.main.MainController', {
                     record.get("name"));
     },
 
+    onStickerClick : function ( view , record , item , index , e , eOpts ){
+        console.log("record",record)
+        var me = this;
+        var roomInfo = this.getView().getReferences().roomInfoForm;
+        var roomId = roomInfo.down("hidden[name=id]").getValue()
+        var toTalkerId = roomInfo.down("hidden[name=userId]").getValue()
+        var contactId = roomInfo.down("hidden[name=contactId]").getValue()
+        me.socket.emit('pushMessage',
+        {
+            roomId : roomId,
+            replyToken: "",
+            type : "message",
+            timestamp : Date.now(),//messageEv.timestamp ,
+            sourceType : "agent" ,
+            sourceUserId : toTalkerId ,
+            contactId : contactId ,
+            "source": {
+                "type": "agent",
+                "userId": toTalkerId
+            },
+            message : {
+                id : 0 ,
+                "type": "sticker",
+                "packageId": record.get("packageId"),
+                "stickerId": record.get("stickerId")
+            }
+        });
+    },
+
     onStickerBtnClick : function(btn , state) {
         this.getReferences().helper.setVisible(state)
     }

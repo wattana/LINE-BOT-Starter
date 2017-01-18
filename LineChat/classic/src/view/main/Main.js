@@ -27,7 +27,32 @@ Ext.define('LineChat.view.main.Main', {
 
     initComponent: function() {
         var me = this;
+        var sticker1 = [];
+        for (i=1;i<=17;i++) sticker1.push([1,i])
+        sticker1.push([1,21])
+        for (i=100;i<=139;i++) sticker1.push([1,i])
+        for (i=401;i<=430;i++) sticker1.push([1,i])
         
+        var sticker2 = [];
+        for (i=18;i<=20;i++) sticker2.push([2,i])
+        for (i=22;i<=47;i++) sticker2.push([2,i])
+        for (i=140;i<=179;i++) sticker2.push([2,i])
+        for (i=501;i<=527;i++) sticker2.push([2,i])
+
+        var sticker3 = [];
+        for (i=180;i<=259;i++) sticker3.push([3,i])
+
+        var sticker4 = [];
+        for (i=260;i<=307;i++) sticker4.push([4,i])
+        for (i=601;i<=632;i++) sticker4.push([4,i])
+
+        var sticketTpl= [
+            '<tpl for=".">',
+                '<div class="dataview-multisort-item">',
+                    '<img src="http://dl.stickershop.line.naver.jp/products/0/0/100/{packageId}/PC/stickers/{stickerId}_key.png" />',
+                '</div>',
+            '</tpl>'
+        ];
 
         var west = Ext.create("Ext.tab.Panel",{
             region : 'west',
@@ -182,7 +207,6 @@ Ext.define('LineChat.view.main.Main', {
                 }]
             }, {
                 xtype : 'messagechat',
-                minHeight : 200,
                 flex: 1
             },{
                 xtype: 'form',
@@ -199,7 +223,7 @@ Ext.define('LineChat.view.main.Main', {
                         });
                     }
                 },
-                bodyPadding: 5,
+                bodyPadding: 2,
                 border: false,
                 frame : false,
                 layout: {
@@ -207,60 +231,130 @@ Ext.define('LineChat.view.main.Main', {
                     align: 'stretch'
                 },
                 items: [{
-                    title : 'ช่วยเหลือ',
+                    xtype : 'tabpanel',
                     reference : 'helper',
-                    xtype : 'fieldset',
-                    height : 200,
+                    height : 230,
                     hidden: true,
-                    layout: 'fit',
                     items : [{
-                        xtype: 'dataview',
-                        tpl: [
-                            '<tpl for=".">',
-                                '<div class="dataview-multisort-item">',
-                                    '<img src="/resources/images/{thumb}" />',
-                                    '<h3>{name}</h3>',
-                                '</div>',
-                            '</tpl>'
-                        ],
-                        scrollable : true,
-                        
-                        itemSelector: 'div.dataview-multisort-item',
-                        store: Ext.create('Ext.data.Store', {
-                            sortOnLoad: true,
-                            fields: ['name', 'thumb', 'url', 'type'],
-                            proxy: {
-                                type: 'ajax',
-                                url : 'data/sencha-touch-examples.json',
-                                reader: {
-                                    type: 'json',
-                                    rootProperty: ''
-                                }
-                            },
-                            data : [
-                                {
-                                    name: 'Address',
-                                    thumb: 'address.png',
-                                    url: 'kitchensink',
-                                    type: 'Application'
+                        title : 'ช่วยเหลือ',
+                        layout: 'fit',
+                        items : [{
+                            xtype: 'dataview',
+                            tpl: [
+                                '<tpl for=".">',
+                                    '<div class="dataview-multisort-item">',
+                                        '<img src="/resources/images/{thumb}" />',
+                                        '<h3>{name}</h3>',
+                                    '</div>',
+                                '</tpl>'
+                            ],
+                            scrollable : true,
+                            
+                            itemSelector: 'div.dataview-multisort-item',
+                            store: Ext.create('Ext.data.Store', {
+                                sortOnLoad: true,
+                                fields: ['name', 'thumb', 'url', 'type'],
+                                proxy: {
+                                    type: 'ajax',
+                                    url : 'data/sencha-touch-examples.json',
+                                    reader: {
+                                        type: 'json',
+                                        rootProperty: ''
+                                    }
                                 },
-                                {
-                                    name: 'Promotion',
-                                    thumb: 'promotion.png',
-                                    url: 'twitter',
-                                    type: 'Application'
-                                },
-                                {
-                                    name: 'News',
-                                    thumb: 'news.png',
-                                    url: 'kiva',
-                                    type: 'Application'
-                                }
-                            ]
-                        }),
-                        listeners : {
-                            itemclick : 'onHelpItemClick'
-                        }
+                                data : [
+                                    {
+                                        name: 'Address',
+                                        thumb: 'address.png',
+                                        url: 'kitchensink',
+                                        type: 'Application'
+                                    },
+                                    {
+                                        name: 'Promotion',
+                                        thumb: 'promotion.png',
+                                        url: 'twitter',
+                                        type: 'Application'
+                                    },
+                                    {
+                                        name: 'News',
+                                        thumb: 'news.png',
+                                        url: 'kiva',
+                                        type: 'Application'
+                                    }
+                                ]
+                            }),
+                            listeners : {
+                                itemclick : 'onHelpItemClick'
+                            }
+                        }]
+                    },{
+                        icon:'http://dl.stickershop.line.naver.jp/products/0/0/100/1/PC/tab_on.png',
+                        layout: 'fit',
+                        items : [{
+                            xtype: 'dataview',
+                            tpl: sticketTpl,
+                            scrollable : true,
+                            itemSelector: 'div.dataview-multisort-item',
+                            store: Ext.create('Ext.data.ArrayStore', {
+                                sortOnLoad: true,
+                                fields: ['packageId', 'stickerId'],
+                                data : sticker1
+                            }),
+                            listeners : {
+                                itemclick : 'onStickerClick'
+                            }
+                        }]
+                    },{
+                        icon:'http://dl.stickershop.line.naver.jp/products/0/0/100/2/PC/tab_off.png',
+                        layout: 'fit',
+                        items : [{
+                            xtype: 'dataview',
+                            tpl: sticketTpl,
+                            scrollable : true,
+                            itemSelector: 'div.dataview-multisort-item',
+                            store: Ext.create('Ext.data.ArrayStore', {
+                                sortOnLoad: true,
+                                fields: ['packageId', 'stickerId'],
+                                data : sticker2
+                            }),
+                            listeners : {
+                                itemclick : 'onStickerClick'
+                            }
+                        }]
+                    },{
+                        icon:'http://dl.stickershop.line.naver.jp/products/0/0/100/3/PC/tab_off.png',
+                        layout: 'fit',
+                        items : [{
+                            xtype: 'dataview',
+                            tpl: sticketTpl,
+                            scrollable : true,
+                            itemSelector: 'div.dataview-multisort-item',
+                            store: Ext.create('Ext.data.ArrayStore', {
+                                sortOnLoad: true,
+                                fields: ['packageId', 'stickerId'],
+                                data : sticker3
+                            }),
+                            listeners : {
+                                itemclick : 'onStickerClick'
+                            }
+                        }]
+                    },{
+                        icon:'http://dl.stickershop.line.naver.jp/products/0/0/100/4/PC/tab_off.png',
+                        layout: 'fit',
+                        items : [{
+                            xtype: 'dataview',
+                            tpl: sticketTpl,
+                            scrollable : true,
+                            itemSelector: 'div.dataview-multisort-item',
+                            store: Ext.create('Ext.data.ArrayStore', {
+                                sortOnLoad: true,
+                                fields: ['packageId', 'stickerId'],
+                                data : sticker4
+                            }),
+                            listeners : {
+                                itemclick : 'onStickerClick'
+                            }
+                        }]
                     }]
                 },{
                     layout: 'hbox',

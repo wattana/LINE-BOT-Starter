@@ -20,7 +20,7 @@ var db = new sqlite3.Database(DATABASE_NAME);
 var sleep = require('sleep');
  
 db.serialize(function() {
-  var drop = true;
+  var drop = false;
   if (drop) {
     db.run("drop TABLE if exists messages")
     db.run("drop TABLE if exists chat_room")
@@ -222,10 +222,7 @@ function onPushMessage (data) {
       }, // request headers 
       data : {
         "to": data.sourceUserId,
-          "messages":[{
-            "type":"text",
-            "text":data.message.text
-          }]
+        "messages":[data.message]
       }
   };
   client.post("https://api.line.me/v2/bot/message/push", args, 
