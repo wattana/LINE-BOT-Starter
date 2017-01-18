@@ -31,7 +31,7 @@ Ext.define('LineChat.view.main.Main', {
 
         var west = Ext.create("Ext.tab.Panel",{
             region : 'west',
-            width : 545,
+            width : 520,
             ui: 'navigation',
             tabBarHeaderPosition: 1,
             titleRotation: 0,
@@ -114,7 +114,7 @@ Ext.define('LineChat.view.main.Main', {
                     xtype: 'userlist'
                 }]
             }, {
-                title: 'Settings',
+                titles: 'Settings',
                 iconCls: 'fa-cog',
                 items : {
                     title : 'Settings',
@@ -130,7 +130,7 @@ Ext.define('LineChat.view.main.Main', {
             region: 'center',
             layout: {
                 type: 'vbox',
-                padding: '2',
+                padding: 1,
                 align: 'stretch'
             },
             items: [{
@@ -199,56 +199,19 @@ Ext.define('LineChat.view.main.Main', {
                         });
                     }
                 },
-                bodyPadding: 10,
+                bodyPadding: 5,
                 border: false,
+                frame : false,
                 layout: {
                     type: 'vbox',
-                    padding: '5',
                     align: 'stretch'
                 },
                 items: [{
-                    layout: 'column',
-                    items : [{
-                        xtype: 'textarea',
-                        style: {
-                            width: '100%',
-                            height: '15px'
-                        },
-                        columnWidth: 1,
-                        flex : 1,
-                        grow: true,
-                        growMin: 25,
-                        growMax: 200,
-                        growAppend: '-',
-                        name: 'message',
-                        colspan: 2
-                    }, {
-                        xtype: 'button',
-                        text: 'ส่งข้อความ',
-                        action : 'sendMessage',
-                        style: {
-                            marginLeft: '5px',
-                            marginBottom: '5px'
-                        },
-                        formBind: true,
-                        hidden : true,
-                        handler : 'onSendBtnClick'
-                    }, {
-                        xtype: 'button',
-                        text: 'Send',
-                        action : 'sendContactMessage',
-                        style: {
-                            marginLeft: '5px',
-                            marginBottom: '5px'
-                        },
-                        formBind: true,
-                        hidden : true,
-                        handler : 'onSendContactBtnClick'
-                    }]
-                },{
                     title : 'ช่วยเหลือ',
+                    reference : 'helper',
                     xtype : 'fieldset',
-                    height : 180,
+                    height : 200,
+                    hidden: true,
                     layout: 'fit',
                     items : [{
                         xtype: 'dataview',
@@ -299,6 +262,63 @@ Ext.define('LineChat.view.main.Main', {
                             itemclick : 'onHelpItemClick'
                         }
                     }]
+                },{
+                    layout: 'hbox',
+                    items : [{
+                        xtype: 'textarea',
+                        stylex: {
+                            width: '100%',
+                            height: '15px'
+                        },
+                        columnWidth: 1,
+                        emptyText : 'Please enter message.',
+                        flex : 1,
+                        grow: true,
+                        growMin: 90,
+                        growMax: 200,
+                        growAppend: '-',
+                        name: 'message',
+                        colspan: 2
+                    }, {
+                        xtype: 'button',
+                        text: 'ส่งข้อความ',
+                        scale : 'medium',
+                        action : 'sendMessage',
+                        style: {
+                            marginLeft: '5px',
+                            marginBottom: '5px'
+                        },
+                        formBind: true,
+                        hidden : true,
+                        handler : 'onSendBtnClick'
+                    }, {
+                        xtype: 'button',
+                        scale : 'medium',
+                        text: 'Send',
+                        action : 'sendContactMessage',
+                        style: {
+                            marginLeft: '5px',
+                            marginBottom: '5px'
+                        },
+                        formBind: true,
+                        hidden : true,
+                        handler : 'onSendContactBtnClick'
+                    }, {
+                        xtype: 'button',
+                        scale : 'medium',
+                        action : 'sticket',
+                        style: {
+                            marginLeft: '2px',
+                            marginBottom: '5px',
+                            backgroundColor : 'white'
+                        },
+                        frame: false,
+                        border: false,
+                        iconCls : 'icon-sticker',
+                        enableToggle : true,
+                        toggleHandler : 'onStickerBtnClick' 
+                    }]
+
                 }]
             }]
         })

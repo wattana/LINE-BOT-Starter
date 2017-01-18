@@ -15,6 +15,20 @@ curl -H "Content-Type: application/json" -X POST -d '{
       }
     },
     {
+      "replyToken": "ad0d847dcfa342da89c795a5c8b7ca2c",
+      "type": "message",
+      "timestamp": 1462629479859,
+      "source": {
+        "type": "user",
+        "userId": "Ude781d6846f10928b51872c5634a88be"
+      },
+      "message": {
+        "id": "325705",
+        "type": "text",
+        "text": "555555555"
+      }
+    },
+    {
       "replyToken": "079a4d9bb8724be19e21e31d6ae2f26d",
       "type": "follow",
       "timestamp": 1462629479859,

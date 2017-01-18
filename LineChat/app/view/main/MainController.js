@@ -110,6 +110,14 @@ Ext.define('LineChat.view.main.MainController', {
         var grid = this.getView().down('roomlist')
         grid.getStore().insert(0, chatMessage)
         
+        var contactGrid = this.getView().down('contacts')
+        if (chatMessage.contactId && contactGrid.getStore().find("contactId",chatMessage.contactId) == -1) {
+            var tmp = {}
+            Ext.apply(tmp,chatMessage)
+            tmp.displayName = chatMessage.contactName
+            contactGrid.getStore().insert(0, tmp)
+        }
+
     },
 
     onSendBtnClick: function (btn) {
@@ -197,21 +205,25 @@ Ext.define('LineChat.view.main.MainController', {
         var roomInfo = this.getView().getReferences().roomInfoForm;
         var chatRoomGrid = this.getView().down('roomlist')
         var roomRecord = chatRoomGrid.getStore().findRecord("userId", chatMessage.sourceUserId)
-        var grid = this.getView().down('messagechat')
-        var updatetime = new Date(parseInt(chatMessage.timestamp));
-        roomRecord.set("updatetime", chatMessage.timestamp)
-        roomRecord.set("talkDatetime", updatetime)
-        roomRecord.set("message", chatMessage.messageText)
-        //console.log('roomRecord',roomRecord)
+        if (roomRecord) {
+            var grid = this.getView().down('messagechat')
+            var updatetime = new Date(parseInt(chatMessage.timestamp));
+            roomRecord.set("updatetime", chatMessage.timestamp)
+            roomRecord.set("talkDatetime", updatetime)
+            roomRecord.set("message", chatMessage.messageText)
+            //console.log('roomRecord',roomRecord)
 
-        if (roomRecord.get("id") == roomInfo.down("hidden[name=id]").getValue()) {
-            grid.getStore().add(chatMessage)
-            grid.getView().focusRow(grid.getStore().getCount()-1);
-        } else {
-            roomRecord.set("unread", roomRecord.get("unread")+1);        
+            if (roomRecord.get("id") == roomInfo.down("hidden[name=id]").getValue()) {
+                grid.getStore().add(chatMessage)
+                grid.getView().focusRow(grid.getStore().getCount()-1);
+            } else {
+                roomRecord.set("unread", roomRecord.get("unread")+1);        
+            }
         }
-
-        me.addContactMessage(chatMessage);
+        if (chatMessage.contactId) {
+            console.log('wat',chatMessage.contactId)
+            me.addContactMessage(chatMessage);
+        }
     },
 
     addContactMessage: function (chatMessage) {
@@ -243,6 +255,10 @@ Ext.define('LineChat.view.main.MainController', {
                     roomInfo.down("hidden[name=agentId]").getValue(),
                     roomInfo.down("hidden[name=userId]").getValue(),
                     record.get("name"));
+    },
+
+    onStickerBtnClick : function(btn , state) {
+        this.getReferences().helper.setVisible(state)
     }
 
 });

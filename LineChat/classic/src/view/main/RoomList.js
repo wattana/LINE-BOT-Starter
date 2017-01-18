@@ -115,7 +115,7 @@ Ext.define('LineChat.view.main.RoomList', {
     },
 
     listeners: {
-        select: 'talkingWith'
+        rowclick: 'talkingWith'
     }
     
 });

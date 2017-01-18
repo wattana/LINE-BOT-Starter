@@ -85,7 +85,7 @@ Ext.define('LineChat.view.main.Contacts', {
     },
 
     listeners: {
-        select: 'contactTalkingWith'
+        rowclick: 'contactTalkingWith'
     }
     
 });

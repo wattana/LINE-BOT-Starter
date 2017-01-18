@@ -17,9 +17,10 @@ var token = 'Bearer {MVJYNb3LtA+efs7m5jbcxhIEeuMekIwto3kLBtF6qUwpykvpvSqqJSKFuHz
 var sqlite3 = require('sqlite3').verbose();
 var DATABASE_NAME = "chat.db"
 var db = new sqlite3.Database(DATABASE_NAME);
+var sleep = require('sleep');
  
 db.serialize(function() {
-  var drop = false;
+  var drop = true;
   if (drop) {
     db.run("drop TABLE if exists messages")
     db.run("drop TABLE if exists chat_room")
@@ -292,7 +293,7 @@ function onPushContactMessage (data) {
         io.emit('message', {
           roomId : room.id,
           userId: messageEv.source.userId,
-          contactId : room.contactId, 
+          contactId : room.contact_id, 
           contactPersonId : room.contact_person_id,
           replyToken: messageEv.replyToken,
           eventType : messageEv.type,
@@ -394,53 +395,54 @@ app.get('/getImage', function (req, res) {
   
 })
 
+app.get('/testSeries', function (req, res) {
+  async.series([
+        function (cb) {
+          async.series([
+                function (callback) {
+                  console.log(1.1)
+                  callback()
+                }
+          ],function() {
+            cb()
+          })
+          console.log(1)
+        }
+  ])
+  res.send('Test Series success\n')
+  
+})
+
 app.post('/message', jsonParser,function (req, res) {
     var db = new sqlite3.Database(DATABASE_NAME);
+    db.serialize(function() {
+      req.body.events.forEach(function(data) {
+          console.log('data',data);
+          if (data.type == 'message') {
+              messageHandler(db, data);
+          } else {
+              var stmt = db.prepare("INSERT INTO messages "+
+                "(replyToken ,eventType ,timestamp ,sourceType ,sourceUserId ,info) "+ 
+                "VALUES (?, ?, ?, ?, ?, ?)");
+              console.log("INSERT INTO messages ",
+                        [data.replyToken, data.type, 
+                        data.timestamp,data.source.type,data.source.userId],JSON.stringify(data));
+              stmt.run([data.replyToken, data.type, 
+                        data.timestamp, data.source.type, data.source.userId,
+                        JSON.stringify(data)],
+                function(err) {
+                  if (err) console.log("err",err)
+              });
+              stmt.finalize();
+          }
+      });
+    });
+    db.close();
+    /*
     for (var i=0; i<req.body.events.length; i++) {
         var data = req.body.events[i];
-        if (data.type == 'message') {
-              if (data.message.type == 'text') {
-                if (data.message.text == 'สอบถาม'||data.message.text.toLowerCase() == 'menu') {
-                  replyMessage(data);
-                }
-              }
-              var exists = true;
-              var messageEv = data;
-              db.get("SELECT rowid AS id, * FROM chat_room where userId = ? and active_flag=1 LIMIT 1", [messageEv.source.userId],
-              function(err, row){
-                if(err) throw err;
-                var room = {};
-                if(typeof row == "undefined") {
-                    exists = false;
-                } else {
-                    room = row
-                    console.log("row is: ", row);
-                }
-                console.log("## Is not exists",exists)
-                if (exists) {
-                  updateRoom(room, messageEv);
-                } else {
-                  createRoom(room, messageEv);
-                }       
-              });
-            
-        } else {
-            var stmt = db.prepare("INSERT INTO messages "+
-              "(replyToken ,eventType ,timestamp ,sourceType ,sourceUserId ,info) "+ 
-              "VALUES (?, ?, ?, ?, ?, ?)");
-            console.log("INSERT INTO messages ",
-                      [data.replyToken, data.type, 
-                      data.timestamp,data.source.type,data.source.userId],JSON.stringify(data));
-            stmt.run([data.replyToken, data.type, 
-                      data.timestamp, data.source.type, data.source.userId,
-                      JSON.stringify(data)],
-              function(err) {
-                if (err) console.log("err",err)
-            });
-            stmt.finalize();
-        }
     }
-    db.close();
+    */
     //console.log("message body ",JSON.stringify(req.body));
     res.send('Message success\n')
 })
@@ -542,7 +544,7 @@ app.get('/listMessage',function (req, res) {
          "where messages.sourceUserId = chat_room.userId "+
          "and chat_room.rowid = ? and eventType='message'"
   if (req.query.contactId) {
-    sql = "SELECT messages.rowid AS id, 0 as roomId, replyToken, eventType, timestamp ,messages.sourceType, "+
+    sql = "SELECT messages.rowid AS id, roomId, replyToken, eventType, timestamp ,messages.sourceType, "+
          "contact_id, sourceUserId , messageId , messages.messageType , messageText ,info, "+
          "stickerId, packageId ,title, address, latitude, longitude "+
          "FROM messages "+
@@ -675,6 +677,32 @@ http.listen(process.env.PORT || 3000, function(){
   console.log('listening on *:3000');
 });
 
+function messageHandler(db ,data) {
+  if (data.message.type == 'text') {
+    if (data.message.text == 'สอบถาม'||data.message.text.toLowerCase() == 'menu') {
+      replyMessage(data);
+    }
+  }
+  db.get("SELECT rowid AS id, * FROM chat_room where userId = ? and active_flag=1 LIMIT 1", [data.source.userId],
+    function(err, row){
+      var exists = true;
+      var messageEv = data;
+      if(err) throw err;
+      var room = {};
+      if(typeof row == "undefined") {
+          exists = false;
+      } else {
+          room = row
+          console.log("row is: ", row);
+      }
+      console.log("## Is Room exists",exists)
+      if (exists) {
+        updateRoom(room, messageEv);
+      } else {
+        createRoom(room, messageEv);
+      }    
+  });
+}
 
 function createRoom(room, messageEv) {
   var args = {
@@ -687,64 +715,73 @@ function createRoom(room, messageEv) {
       // raw response 
       //console.log(response);
       var db = new sqlite3.Database(DATABASE_NAME);
-      db.serialize(function() {
-        async.series([
-          function (callback) {
-            db.get("SELECT rowid AS id, contact_id , "+
-                    "contact_person_id , "+
-                    "line_id ,"+
-                    "line_name FROM contact_lines "+
-                    "where line_id = ? and active_flag=1 LIMIT 1", [messageEv.source.userId],
-              function(err, row){
-                if(err) throw err;
-                if(typeof row == "undefined") {
-                    room.contact_id = null
-                    room.contact_person_id = null
-                    room.line_id = null
-                    room.line_name = null
-                } else {
-                    room.contact_id = row.contact_id
-                    room.contact_person_id = row.contact_person_id
-                    room.line_id = row.line_id
-                    room.line_name = row.line_name
-                }
-                callback();
-              });
-          },
-          function (callback) {
-            db.run("INSERT INTO chat_room "+
-              "(userId ,contact_id, contact_person_id, sourceType, displayName, pictureUrl, statusMessage, active_flag) "+
-              "select ?, ?, ?, ?, ?, ?, ?, ? WHERE NOT EXISTS(SELECT 1 FROM chat_room WHERE userId = ? and active_flag=1)",
-            [messageEv.source.userId, room.contact_id, room.contact_person_id, messageEv.source.type, "", "", "" , 1, messageEv.source.userId],
-            function () {
-              room.id = this.lastID;
-              console.log("lastID",this.lastID)
+      async.series([
+        function (callback) {
+          db.get("SELECT contact_lines.rowid AS id, "+
+                  "contact_lines.contact_id , "+
+                  "contact_lines.contact_person_id , "+
+                  "contact_lines.line_id ,"+
+                  "contact_lines.line_name, "+
+                  "contacts.name as contactName "+
+                  "FROM contact_lines, contacts "+
+                  "where contact_lines.contact_id = contacts.contact_id "+
+                  "and contact_lines.line_id = ? "+
+                  "and contact_lines.active_flag=1 LIMIT 1", [messageEv.source.userId],
+            function(err, row){
+              if(err) throw err;
+              if(typeof row == "undefined") {
+                  room.contact_id = null
+                  room.contact_person_id = null
+                  room.line_id = null
+                  room.line_name = null
+                  room.contactName = null
+              } else {
+                  room.contact_id = row.contact_id
+                  room.contact_person_id = row.contact_person_id
+                  room.line_id = row.line_id
+                  room.line_name = row.line_name
+                  room.contactName = row.contactName
+              }
               callback();
-            })
-          },
-          function (callback) {
-            saveMessage(db , room, messageEv, callback)
-          },
+            });
+        },
 
-          function (callback) {
-            console.log("Update  chat_room", [room.id,messageEv.source.userId,"","","",1]);
-            var messageText = getMessageText(messageEv);
-            db.run("update chat_room set "+
-                  "displayName = ?"+
-                  ",pictureUrl = ?"+
-                  ",statusMessage = ? "+
-                  ",messageType = ? "+
-                  ",message = ? "+
-                  ",createtime = ? "+
-                  "WHERE userId = ? and active_flag=1",
-            [result.displayName, result.pictureUrl,
-            result.statusMessage, messageEv.message.type,
-            messageText, messageEv.timestamp, messageEv.source.userId])
-            console.log("Update chat_room", [result.displayName, result.pictureUrl,result.statusMessage ,messageEv.source.userId]);
+        function (callback) {
+          console.log("Insert  chat_room", [room.id,messageEv.source.userId,"","","",1]);
+          db.run("INSERT INTO chat_room "+
+            "(userId ,contact_id, contact_person_id, sourceType, displayName, pictureUrl, statusMessage, active_flag) "+
+            "select ?, ?, ?, ?, ?, ?, ?, ? WHERE NOT EXISTS(SELECT 1 FROM chat_room WHERE userId = ? and active_flag=1)",
+          [messageEv.source.userId, room.contact_id, room.contact_person_id, messageEv.source.type, "", "", "" , 1, messageEv.source.userId],
+          function () {
+            room.id = this.lastID;
+            console.log("lastID",this.lastID)
+            callback();
+          })
+        },
+        function (callback) {
+          saveMessage(db , room, messageEv, callback)
+        },
+
+        function (callback) {
+          console.log("Update chat_room", [result.displayName, result.pictureUrl,result.statusMessage ,messageEv.source.userId]);
+          var messageText = getMessageText(messageEv);
+          db.run("update chat_room set "+
+                "displayName = ?"+
+                ",pictureUrl = ?"+
+                ",statusMessage = ? "+
+                ",messageType = ? "+
+                ",message = ? "+
+                ",createtime = ? "+
+                "WHERE userId = ? and active_flag=1",
+          [result.displayName, result.pictureUrl,
+          result.statusMessage, messageEv.message.type,
+          messageText, messageEv.timestamp, messageEv.source.userId],
+          function() {
             io.emit('newroom', {
                 id : room.id,
                 userId: messageEv.source.userId,
                 contactId : room.contact_id, 
+                contactName : room.contactName, 
                 contactPersonId : room.contact_person_id,
                 sourceType : messageEv.source.type,
                 sourceUserId: messageEv.source.userId,
@@ -766,27 +803,26 @@ function createRoom(room, messageEv) {
                 active_flag : 1
             });
             callback();
-          }
-        ])
-      }, function(err) { //This function gets called after the two tasks have called their "task callbacks"
+          });
+        }
+      ],function(err) { //This function gets called after the two tasks have called their "task callbacks"
+        console.log("DBClose ++++++++")
         db.close();
         if (err) return next(err);
         //Here locals will be populated with `user` and `posts`
         //Just like in the previous example
       })
     })
+
 }
 
 function updateRoom(room, messageEv) {
-    console.log("Update chat_room", [messageEv.message.text, messageEv.timestamp, messageEv.source.userId]);
+    console.log("UpdateRoom Update chat_room", [messageEv.message.text, messageEv.timestamp, messageEv.source.userId]);
     var db = new sqlite3.Database(DATABASE_NAME);
     db.serialize(function() {
       async.series([
         function (callback) {
-          saveMessage(db , room, messageEv, callback)
-        },
-
-        function (callback) {
+          console.log("###############------- ############## wat")
           var messageText = getMessageText(messageEv);
           db.run("update chat_room set "+
                 "messageType = ? "+
@@ -795,35 +831,43 @@ function updateRoom(room, messageEv) {
                 ",updatetime = ? "+
                 "WHERE userId = ? and active_flag=1",
           [messageEv.message.type, messageText, messageEv.source.type, 
-          messageEv.timestamp, messageEv.source.userId]);
-          io.emit('message', {
-            roomId : room.id,
-            userId: messageEv.source.userId,
-            contactId : room.contact_id, 
-            contactPersonId : room.contact_person_id,
-            replyToken: messageEv.replyToken,
-            eventType : messageEv.type,
-            timestamp : Date.now(),//messageEv.timestamp ,
-            sourceType : messageEv.source.type ,
-            sourceUserId : messageEv.source.userId ,
-            message : messageEv.message ,
-            messageId : messageEv.message.id ,
-            messageType: messageEv.message.type , 
-            messageText: messageText,
-            stickerId : messageEv.message.stickerId, 
-            packageId : messageEv.message.packageId,
-            title : messageEv.message.title,
-            address : messageEv.message.address,
-            latitude : messageEv.message.latitude,
-            longitude : messageEv.message.longitude,
+          messageEv.timestamp, messageEv.source.userId],
+          function(err) {
+            callback();
+            console.log("############################# wat")
+            if (err) console.log("err",err)
+            io.emit('message', {
+              roomId : room.id,
+              userId: messageEv.source.userId,
+              contactId : room.contact_id, 
+              contactPersonId : room.contact_person_id,
+              replyToken: messageEv.replyToken,
+              eventType : messageEv.type,
+              timestamp : Date.now(),//messageEv.timestamp ,
+              sourceType : messageEv.source.type ,
+              sourceUserId : messageEv.source.userId ,
+              message : messageEv.message ,
+              messageId : messageEv.message.id ,
+              messageType: messageEv.message.type , 
+              messageText: messageText,
+              stickerId : messageEv.message.stickerId, 
+              packageId : messageEv.message.packageId,
+              title : messageEv.message.title,
+              address : messageEv.message.address,
+              latitude : messageEv.message.latitude,
+              longitude : messageEv.message.longitude,
+            });
           });
-          callback();
+        },
+        function (callback) {
+          saveMessage(db , room, messageEv, callback)
         }
       ],function(err) { 
+        console.log("DB close +++++++++++++++++++++++++")
         db.close();
         if (err) return next(err);
       })
-    });
+    })
 }
 
 function getMessageText (messageEv) {
@@ -869,64 +913,65 @@ function saveMessage(db , room, messageEv, callback) {
               JSON.stringify(messageEv)],
       function(err) {
         if (err) console.log("err",err)
+        if (messageEv.message.type == 'image') {
+          var dir = __dirname+'/content/images/'+room.id+"/";
+          if (!fs.existsSync(dir)){
+              fs.mkdirSync(dir);
+          }
+          var args = {
+          headers: { "Authorization": token } // request headers 
+          };
+          client.get("https://api.line.me/v2/bot/message/"+messageEv.message.id+"/content", args, 
+          function (result, response) {
+              fs.writeFile(dir+messageEv.message.id+'.png', result, 'binary', 
+              function(err){
+                  if (err) throw err
+                  console.log('File saved.')
+                  callback();
+              })
+          });
+        } else if (messageEv.message.type == 'audio') {
+          var dir = __dirname+'/content/audios/'+room.id+"/";
+          if (!fs.existsSync(dir)){
+              fs.mkdirSync(dir);
+          }
+          var args = {
+          headers: { "Authorization": token } // request headers 
+          };
+          client.get("https://api.line.me/v2/bot/message/"+messageEv.message.id+"/content", args, 
+          function (result, response) {
+              fs.writeFile(dir+messageEv.message.id+'.mp4', result, 'binary', 
+              function(err){
+                  if (err) throw err
+                  console.log('File saved.')
+                  callback();
+              })
+          });
+        } else if (messageEv.message.type == 'video') {
+          var dir = __dirname+'/content/videos/'+room.id+"/";
+          if (!fs.existsSync(dir)){
+              fs.mkdirSync(dir);
+          }
+          var args = {
+          headers: { "Authorization": token } // request headers 
+          };
+          client.get("https://api.line.me/v2/bot/message/"+messageEv.message.id+"/content", args, 
+          function (result, response) {
+              fs.writeFile(dir+messageEv.message.id+'.mp4', result, 'binary', 
+              function(err){
+                  if (err) throw err
+                  console.log('File saved.')
+                  callback();
+              })
+          });
+        } else {
+          callback();
+        }
     });
     
     stmt.finalize();
 
-    if (messageEv.message.type == 'image') {
-      var dir = __dirname+'/content/images/'+room.id+"/";
-      if (!fs.existsSync(dir)){
-          fs.mkdirSync(dir);
-      }
-      var args = {
-      headers: { "Authorization": token } // request headers 
-      };
-      client.get("https://api.line.me/v2/bot/message/"+messageEv.message.id+"/content", args, 
-      function (result, response) {
-          fs.writeFile(dir+messageEv.message.id+'.png', result, 'binary', 
-          function(err){
-              if (err) throw err
-              console.log('File saved.')
-              callback();
-          })
-      });
-    } else if (messageEv.message.type == 'audio') {
-      var dir = __dirname+'/content/audios/'+room.id+"/";
-      if (!fs.existsSync(dir)){
-          fs.mkdirSync(dir);
-      }
-      var args = {
-      headers: { "Authorization": token } // request headers 
-      };
-      client.get("https://api.line.me/v2/bot/message/"+messageEv.message.id+"/content", args, 
-      function (result, response) {
-          fs.writeFile(dir+messageEv.message.id+'.mp4', result, 'binary', 
-          function(err){
-              if (err) throw err
-              console.log('File saved.')
-              callback();
-          })
-      });
-    } else if (messageEv.message.type == 'video') {
-      var dir = __dirname+'/content/videos/'+room.id+"/";
-      if (!fs.existsSync(dir)){
-          fs.mkdirSync(dir);
-      }
-      var args = {
-      headers: { "Authorization": token } // request headers 
-      };
-      client.get("https://api.line.me/v2/bot/message/"+messageEv.message.id+"/content", args, 
-      function (result, response) {
-          fs.writeFile(dir+messageEv.message.id+'.mp4', result, 'binary', 
-          function(err){
-              if (err) throw err
-              console.log('File saved.')
-              callback();
-          })
-      });
-    } else {
-      callback();
-    }
+    
 
 }
 
