@@ -819,6 +819,9 @@ function updateRoom(room, messageEv) {
     db.serialize(function() {
       async.series([
         function (callback) {
+          saveMessage(db , room, messageEv, callback)
+        },
+        function (callback) {
           console.log("###############------- ############## wat")
           var messageText = getMessageText(messageEv);
           db.run("update chat_room set "+
@@ -831,7 +834,7 @@ function updateRoom(room, messageEv) {
           messageEv.timestamp, messageEv.source.userId],
           function(err) {
             callback();
-            console.log("############################# wat")
+            //console.log("############################# wat")
             if (err) console.log("err",err)
             io.emit('message', {
               roomId : room.id,
@@ -855,9 +858,6 @@ function updateRoom(room, messageEv) {
               longitude : messageEv.message.longitude,
             });
           });
-        },
-        function (callback) {
-          saveMessage(db , room, messageEv, callback)
         }
       ],function(err) { 
         console.log("DB close +++++++++++++++++++++++++")
