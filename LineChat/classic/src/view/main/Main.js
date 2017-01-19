@@ -411,6 +411,52 @@ Ext.define('LineChat.view.main.Main', {
                         iconCls : 'icon-sticker',
                         enableToggle : true,
                         toggleHandler : 'onStickerBtnClick' 
+                    }, {
+                        xtype : 'component',
+                        width : 40,
+                        height: 40,
+                        html : ['<span style="padding:10px;font-size: 20px;" class="btn btn-success fileinput-button">',
+                                    '<i class="fa fa-upload"></i>',
+                                    '<span> </span>',
+                                    '<input id="fileupload" type="file" name="upload" multiple>',
+                                '</span>'
+                            ].join(""),
+                        listeners : {
+                            afterrender : function () {
+                                /*jslint unparam: true */
+                                /*global window, $ */
+                                $(function () {
+                                    'use strict';
+                                    // Change this to the location of your server-side upload handler:
+                                    var url = window.location.hostname === 'blueimp.github.io' ?
+                                                '//jquery-file-upload.appspot.com/' : 'upload';
+                                    $('#fileupload').fileupload({
+                                        //url: "http://localhost:3000/"+url,
+                                        url : url,
+                                        dataType: 'json',
+                                        done: function (e, data) {
+                                            console.log("data",data)
+                                            /*
+                                            $.each(data.result.files, function (index, file) {
+                                                $('<p/>').text(file.name).appendTo('#files');
+                                            });
+                                            */
+                                        },
+                                        progressall: function (e, data) {
+                                            console.log("progressall",data.loaded , data.total)
+                                            /*
+                                            var progress = parseInt(data.loaded / data.total * 100, 10);
+                                            $('#progress .progress-bar').css(
+                                                'width',
+                                                progress + '%'
+                                            );
+                                            */
+                                        }
+                                    }).prop('disabled', !$.support.fileInput)
+                                        .parent().addClass($.support.fileInput ? undefined : 'disabled');
+                                });
+                            }
+                        }    
                     }]
 
                 }]

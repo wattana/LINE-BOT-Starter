@@ -1,4 +1,5 @@
 var express = require('express')
+var fileUpload = require('express-fileupload');
 var app = express()
 var path = require('path');
 var bodyParser = require('body-parser');
@@ -18,6 +19,8 @@ var sqlite3 = require('sqlite3').verbose();
 var DATABASE_NAME = "chat.db"
 var db = new sqlite3.Database(DATABASE_NAME);
 var sleep = require('sleep');
+
+app.use(fileUpload());
  
 db.serialize(function() {
   var drop = false;
@@ -665,6 +668,14 @@ app.get('/listContactRoom',function (req, res) {
       })
 });
 
+app.post('/upload', function (req, res) {
+      console.log(req.files.upload.name);
+      //sleep.sleep(30)
+      res.json({
+        success : true
+      });
+
+})
 /*
 app.listen(process.env.PORT || 3000, function () {
   console.log('Example app listening on port : ',process.env.PORT || 3000)
