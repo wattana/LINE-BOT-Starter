@@ -304,9 +304,8 @@ Ext.define('LineChat.view.main.MainController', {
             var url = window.location.hostname === 'blueimp.github.io' ?
                         '//jquery-file-upload.appspot.com/' : 'upload';
             $('#fileupload').fileupload({
-                url: "http://localhost:3000/"+url,
-                //url : url,
-                //formData : {name:'thedate',value:Date.now()},
+                //url: "http://localhost:3000/"+url,
+                url : LineChat.app.baseURL+url,
                 dataType: 'json',
                 add: function (e, data) {
                     if (data.files && data.files[0]) {
