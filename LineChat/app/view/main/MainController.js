@@ -305,7 +305,7 @@ Ext.define('LineChat.view.main.MainController', {
                         '//jquery-file-upload.appspot.com/' : 'upload';
             $('#fileupload').fileupload({
                 //url: "http://localhost:3000/"+url,
-                url : LineChat.app.baseURL+url,
+                url : url,
                 dataType: 'json',
                 add: function (e, data) {
                     if (data.files && data.files[0]) {
