@@ -201,7 +201,7 @@ Ext.define('LineChat.view.main.MainController', {
 
     addMessage: function (chatMessage) {
         var me = this;
-        //console.log(chatMessage)
+        console.log('addMessage',chatMessage)
         var roomInfo = this.getView().getReferences().roomInfoForm;
         var chatRoomGrid = this.getView().down('roomlist')
         var roomRecord = chatRoomGrid.getStore().findRecord("userId", chatMessage.sourceUserId)
@@ -215,7 +215,9 @@ Ext.define('LineChat.view.main.MainController', {
 
             if (roomRecord.get("id") == roomInfo.down("hidden[name=id]").getValue()) {
                 grid.getStore().add(chatMessage)
-                grid.getView().focusRow(grid.getStore().getCount()-1);
+                grid.getView().focusRow(grid.getStore().getCount()-1,500);
+                //grid.getView().focusRow(grid.getStore().getCount()-1);
+                //grid.getSelectionModel().select(grid.getStore().getAt(grid.getStore().getCount()-1))
             } else {
                 roomRecord.set("unread", roomRecord.get("unread")+1);        
             }
@@ -241,7 +243,7 @@ Ext.define('LineChat.view.main.MainController', {
 
         if (roomRecord.get("contactId") == roomInfo.down("hidden[name=contactId]").getValue()) {
             grid.getStore().add(chatMessage)
-            grid.getView().focusRow(grid.getStore().getCount()-1);
+            grid.getView().focusRow(grid.getStore().getCount()-1,500);
         } else {
             roomRecord.set("unread", roomRecord.get("unread")+1);        
         }
@@ -288,6 +290,99 @@ Ext.define('LineChat.view.main.MainController', {
 
     onStickerBtnClick : function(btn , state) {
         this.getReferences().helper.setVisible(state)
+    },
+
+    uploadHandler : function () {
+        var me = this;
+
+        var roomInfo = this.getView().getReferences().roomInfoForm;
+        /*jslint unparam: true */
+        /*global window, $ */
+        $(function () {
+            'use strict';
+            // Change this to the location of your server-side upload handler:
+            var url = window.location.hostname === 'blueimp.github.io' ?
+                        '//jquery-file-upload.appspot.com/' : 'upload';
+            $('#fileupload').fileupload({
+                url: "http://localhost:3000/"+url,
+                //url : url,
+                //formData : {name:'thedate',value:Date.now()},
+                dataType: 'json',
+                add: function (e, data) {
+                    if (data.files && data.files[0]) {
+                        var time = Date.now()
+                        var roomId = roomInfo.down("hidden[name=id]").getValue()
+                        var toTalkerId = roomInfo.down("hidden[name=userId]").getValue()
+                        var contactId = roomInfo.down("hidden[name=contactId]").getValue()
+
+                        me.uploadMessage = {
+                            roomId : roomId,
+                            replyToken: "",
+                            type : "image",
+                            messageType : "image",
+                            timestamp : time,//messageEv.timestamp ,
+                            sourceType : "agent" ,
+                            sourceUserId : toTalkerId ,
+                            contactId : contactId ,
+                            "source": {
+                                "type": "agent",
+                                "userId": toTalkerId
+                            },
+                            message : {
+                                id : 0 ,
+                                "type": "image"
+                            }
+                        }
+                        me.addMessage(me.uploadMessage);
+                        $("#file-picker__progress_"+me.uploadMessage.timestamp).circleProgress({
+                            value: 0,
+                            size: 80,
+                            fill: {
+                                gradient: ["red", "orange"]
+                            }
+                        });
+                        var reader = new FileReader();
+                        reader.onload = function(e) {
+                            $('#'+time).attr('src', e.target.result);
+                        }
+                        reader.readAsDataURL(data.files[0]);
+                        data.formData = roomInfo.getValues()
+                        data.submit();
+                    }
+                },
+                done: function (e, data) {
+                    console.log("data",data)
+                     var hideMask = function () {
+                        console.log("destroy","#file-picker__progress_"+me.uploadMessage.timestamp)
+                        Ext.get("file-picker__progress_"+me.uploadMessage.timestamp).destroy()
+                    };
+                    Ext.defer(hideMask, 2000);
+                    /*
+                    $.each(data.result.files, function (index, file) {
+                        $('<p/>').text(file.name).appendTo('#files');
+                    });
+                    */
+                },
+                progressall: function (e, data) {
+                    console.log("progressall",data.loaded , data.total)
+                    $("#file-picker__progress_"+me.uploadMessage.timestamp).circleProgress({
+                        value: data.loaded / data.total,
+                        size: 80,
+                        fill: {
+                            gradient: ["red", "orange"]
+                        }
+                    });
+                    /*
+                    var progress = parseInt(data.loaded / data.total * 100, 10);
+                    $('#progress .progress-bar').css(
+                        'width',
+                        progress + '%'
+                    );
+                    */
+                }
+            }).prop('disabled', !$.support.fileInput)
+                .parent().addClass($.support.fileInput ? undefined : 'disabled');
+        });
     }
 
 });

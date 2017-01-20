@@ -609,6 +609,8 @@ app.get('/listRoom',function (req, res) {
           userId: row.userId,
           contact_id : row.contact_id, 
           contact_person_id : row.contact_person_id,
+          contactId : row.contact_id, 
+          contactPersonId : row.contact_person_id,
           displayName : row.displayName,
           pictureUrl : row.pictureUrl ,
           statusMessage : row.statusMessage ,
@@ -669,11 +671,98 @@ app.get('/listContactRoom',function (req, res) {
 });
 
 app.post('/upload', function (req, res) {
-      console.log(req.files.upload.name);
-      //sleep.sleep(30)
-      res.json({
-        success : true
-      });
+  console.log(req.files);
+  console.log(req.query);
+  console.log(req.body);
+  var room = {
+    id : req.body.id,
+    contact_id : req.body.contactId 
+  }
+  
+  var uploadFile;
+ 
+  if (!req.files) {
+    res.json({
+      success : false,
+      msg : 'No files were uploaded.'
+    });
+    return;
+  }
+  var messageType = 'image';
+  var time = String(Date.now());
+  var messageEv = {
+      roomId : req.body.id,
+      replyToken: "",
+      type : "message",
+      timestamp : time,//messageEv.timestamp ,
+      sourceType : "agent" ,
+      sourceUserId : req.body.userId ,
+      contactId : req.body.contactId ,
+      "source": {
+          "type": "agent",
+          "userId": req.body.userId
+      },
+      message : {
+          id : time ,
+          type: messageType,
+          "originalContentUrl": "https://limitless-crag-52851.herokuapp.com/content/images/"+room.id+"/"+time+'.png',
+          "previewImageUrl": "https://limitless-crag-52851.herokuapp.com/content/images/"+room.id+"/"+time+'.png',
+      }
+  }
+  var dir = __dirname+'/content/images/'+room.id+"/";
+  if (!fs.existsSync(dir)){
+      fs.mkdirSync(dir);
+  }
+
+  // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file 
+  uploadFile = req.files.uploadFile;
+ 
+  // Use the mv() method to place the file somewhere on your server 
+  uploadFile.mv(dir+messageEv.message.id+'.png', function(err) {
+    if (err) {
+      res.status(500).send(err);
+    }
+    else {
+        var db = new sqlite3.Database(DATABASE_NAME);
+        db.serialize(function() {
+          async.series([
+            function (callback) {
+              saveMessage(db , room, messageEv, callback)
+            },
+            function (callback) {
+              var args = {
+              headers: { 
+                  "Authorization": token,
+                  "Content-Type": "application/json" 
+                }, // request headers 
+                data : {
+                  "to": messageEv.sourceUserId,
+                  "messages":[messageEv.message]
+                }
+              };
+              client.post("https://api.line.me/v2/bot/message/push", args, 
+              function (result, response) {
+                // parsed response body as js object 
+                console.log('result',result);
+                // raw response 
+                //console.log(response);
+                callback();
+              });
+            }
+          ],function(err) { 
+            db.close();
+            if (err) return next(err);
+            res.json({
+              success : true
+            });
+            //res.send('File uploaded!');
+          })
+        })
+    }
+  });
+  
+  //sleep.sleep(30)
+  
 
 })
 /*
@@ -921,6 +1010,10 @@ function saveMessage(db , room, messageEv, callback) {
               JSON.stringify(messageEv)],
       function(err) {
         if (err) console.log("err",err)
+        if (messageEv.source.type == 'agent') {
+          callback();
+          return;
+        }
         if (messageEv.message.type == 'image') {
           var dir = __dirname+'/content/images/'+room.id+"/";
           if (!fs.existsSync(dir)){

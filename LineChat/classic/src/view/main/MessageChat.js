@@ -8,9 +8,9 @@ Ext.define('LineChat.view.main.MessageChat', {
 
     store: 'Message',
     hideHeaders: true,
-    disableSelection: true,
+    disableSelection: false,
     columnLines: false,
-    rowLines : false,
+    rowLines : true,
 
     initComponent: function() {
         var me = this;
@@ -74,29 +74,48 @@ Ext.define('LineChat.view.main.MessageChat', {
             '</div>');
 
         var stickerTpl = Ext.create('Ext.XTemplate',
-        '<div class="chat-item">',
-            '<div>',
-                '<img src="http://dl.stickershop.line.naver.jp/products/0/0/100/{packageId}/PC/stickers/{stickerId}.png">',
-                '<div class="comment-by">{date:this.formatDate}</div>',
-            '</div>',
-        '</div>');
+            '<div class="chat-item">',
+                '<div>',
+                    '<img src="http://dl.stickershop.line.naver.jp/products/0/0/100/{packageId}/PC/stickers/{stickerId}.png">',
+                    '<div class="comment-by">{date:this.formatDate}</div>',
+                '</div>',
+            '</div>');
 
         var imageTpl = Ext.create('Ext.XTemplate',
-        '<div class="chat-item">',
-            '<div>',
-                '<img src="{.:this.getBaseUrl}content/images/{roomId}/{messageId}.png" width="200px">',
-                '<div class="comment-by">{date:this.formatDate}</div>',
-                '<a href="{.:this.getBaseUrl}content/images/{roomId}/{messageId}.png" target="_blank">Open</a>',
+            '<div class="chat-item">',
+                '<div>',
+                    '<img src="{.:this.getBaseUrl}content/images/{roomId}/{messageId}.png" width="200px">',
+                    '<div class="comment-by">{date:this.formatDate}</div>',
+                    '<a href="{.:this.getBaseUrl}content/images/{roomId}/{messageId}.png" target="_blank">Open</a>',
+                '</div>',
             '</div>',
-        '</div>',
-        {
-            getBaseUrl : function() {
-                //console.log(LineChat.app.baseURL)
-                return LineChat.app.baseURL
-            },
-            formatDate: function (v) {
-                return v === undefined || v === null ? '' : Ext.Date.format(v, "d/m/X H:i:s");
-            }
+            {
+                getBaseUrl : function() {
+                    //console.log(LineChat.app.baseURL)
+                    return LineChat.app.baseURL
+                },
+                formatDate: function (v) {
+                    return v === undefined || v === null ? '' : Ext.Date.format(v, "d/m/X H:i:s");
+                }
+        });
+
+        var meImageTpl = Ext.create('Ext.XTemplate',
+            '<div class="chat-item">',
+                '<div style="float:right;position:relative">',
+                    '<img id="{timestamp}" src="{.:this.getBaseUrl}content/images/{roomId}/{messageId}.png" width="200px">',
+                    '<div class="comment-by">{date:this.formatDate}</div>',
+                    '<a href="{.:this.getBaseUrl}content/images/{roomId}/{messageId}.png" target="_blank">Open</a>',
+                    '<div style="width:100px;height:100px;position:absolute;top:30%;left:30%" class="file-picker__progress" id="file-picker__progress_{timestamp}">pro</div>',
+                '</div>',
+            '</div>',
+            {
+                getBaseUrl : function() {
+                    //console.log(LineChat.app.baseURL)
+                    return LineChat.app.baseURL
+                },
+                formatDate: function (v) {
+                    return v === undefined || v === null ? '' : Ext.Date.format(v, "d/m/X H:i:s");
+                }
         });
 
         var audioTpl = Ext.create('Ext.XTemplate',
@@ -178,6 +197,8 @@ Ext.define('LineChat.view.main.MessageChat', {
                 if (record.get("replyToken") == '') {
                     if (record.get("messageType") == 'sticker') {
                         return meStickerTpl.apply(record.data)
+                    } else if (record.get("messageType") == 'image') {
+                        return meImageTpl.apply(record.data)
                     } else if (record.get("messageType") == 'image') {
                         return meImageTpl.apply(record.data)
                     }
