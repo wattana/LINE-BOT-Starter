@@ -764,7 +764,7 @@ app.post('/upload', function (req, res) {
             readableStream.close();
             if (err) {
               console.log(err)
-              messageEv.message.duration = 0
+              messageEv.message.duration = 200
             } else {
               messageEv.message.duration = metadata.duration              
             }
