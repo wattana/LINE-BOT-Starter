@@ -746,7 +746,7 @@ app.post('/upload', function (req, res) {
     }
     else {
         if (messageType == 'audio') {
-            messageEv.message.duration = 200
+            messageEv.message.duration = parseInt(req.body.duration)
         }
         var db = new sqlite3.Database(DATABASE_NAME);
         db.serialize(function() {
