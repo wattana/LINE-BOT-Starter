@@ -362,13 +362,19 @@ Ext.define('LineChat.view.main.MainController', {
                         }
                         me.currentRecord = me.addMessage(me.uploadMessage)[0];
                         console.log('me.currentRecord',me.currentRecord)
-                        $("#file-picker__progress_"+me.uploadMessage.timestamp).circleProgress({
+                        var c4 = $("#file-picker__progress_"+me.uploadMessage.timestamp);
+                        c4.circleProgress({
                             value: 0,
                             size: 80,
                             fill: {
                                 gradient: ["red", "orange"]
                             }
                         });
+                        /*
+                        setTimeout(function() { c4.circleProgress('value', 0.4); }, 1000);
+                        setTimeout(function() { c4.circleProgress('value', 0.6); }, 1100);
+                        setTimeout(function() { c4.circleProgress('value', 1.0); }, 2100);
+                        */
                         if (messageType == 'image') {
                             var reader = new FileReader();
                             reader.onload = function(e) {
@@ -412,9 +418,7 @@ Ext.define('LineChat.view.main.MainController', {
                 },
                 progressall: function (e, data) {
                     console.log("progressall",data.loaded , data.total,data.loaded / data.total)
-                    $("#file-picker__progress_"+me.uploadMessage.timestamp).circleProgress({
-                        value: data.loaded / data.total
-                    });
+                    $("#file-picker__progress_"+me.uploadMessage.timestamp).circleProgress('value',data.loaded / data.total);
                     /*
                     var progress = parseInt(data.loaded / data.total * 100, 10);
                     $('#progress .progress-bar').css(
