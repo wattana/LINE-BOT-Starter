@@ -6,6 +6,7 @@ var bodyParser = require('body-parser');
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var fs = require('fs');
+var mm = require('musicmetadata');
 // create application/json parser 
 var jsonParser = bodyParser.json()
 //app.use(bodyParser.json()); // for parsing application/json
@@ -84,6 +85,9 @@ db.serialize(function() {
         "address TEXT, "+
         "latitude TEXT, "+
         "longitude TEXT, "+
+        "filePath TEXT, "+
+        "fileName TEXT, "+
+        "originalFileName TEXT, "+
         "info TEXT)"
         );
 
@@ -413,6 +417,17 @@ app.get('/testSeries', function (req, res) {
   
 })
 
+app.get('/testAudio', function (req, res) {
+  var readableStream = fs.createReadStream(__dirname+'/content/upload/3/1484974839102.m4a');
+  var parser = mm(readableStream, function (err, metadata) {
+    if (err) console.log(err);
+    readableStream.close();
+    console.log(metadata);
+  });
+  res.send('Test Series success\n')
+  
+})
+
 app.post('/message', jsonParser,function (req, res) {
     var db = new sqlite3.Database(DATABASE_NAME);
     db.serialize(function() {
@@ -539,14 +554,16 @@ app.get('/listMessage',function (req, res) {
   var messages = [];
   var sql = "SELECT messages.rowid AS id, roomId, replyToken, eventType, timestamp ,messages.sourceType, "+
          "sourceUserId , messageId , messages.messageType , messageText ,info, "+
-         "stickerId, packageId ,title, address, latitude, longitude "+
+         "stickerId, packageId ,title, address, latitude, longitude, "+
+         "filePath, fileName , originalFileName "+
          "FROM messages , chat_room "+
          "where messages.sourceUserId = chat_room.userId "+
          "and chat_room.rowid = ? and eventType='message'"
   if (req.query.contactId) {
     sql = "SELECT messages.rowid AS id, roomId, replyToken, eventType, timestamp ,messages.sourceType, "+
          "contact_id, sourceUserId , messageId , messages.messageType , messageText ,info, "+
-         "stickerId, packageId ,title, address, latitude, longitude "+
+         "stickerId, packageId ,title, address, latitude, longitude, "+
+         "filePath, fileName , originalFileName "+
          "FROM messages "+
          "where messages.contact_id = ? "+
          "and eventType='message'"
@@ -579,7 +596,10 @@ app.get('/listMessage',function (req, res) {
           title : row.title,
           address : row.address,
           latitude : row.latitude,
-          longitude : row.longitude
+          longitude : row.longitude,
+          filePath : row.filePath,
+          fileName : row.fileName,
+          originalFileName : row.originalFileName,
         })
       }
       //console.log(messages)
@@ -671,15 +691,14 @@ app.get('/listContactRoom',function (req, res) {
 });
 
 app.post('/upload', function (req, res) {
-  console.log(req.files);
-  console.log(req.query);
-  console.log(req.body);
+  //console.log(req.files);
+  //console.log(req.query);
+  //console.log(req.body);
   var room = {
     id : req.body.id,
     contact_id : req.body.contactId 
   }
   
-  var uploadFile;
  
   if (!req.files) {
     res.json({
@@ -688,8 +707,22 @@ app.post('/upload', function (req, res) {
     });
     return;
   }
-  var messageType = 'image';
+  // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file 
+  var uploadFile = req.files.uploadFile;
+  var extension = path.extname(uploadFile.name)
+
   var time = String(Date.now());
+  var fileName = time+extension
+  var messageType = 'image';
+  var originalContentUrl = "https://limitless-crag-52851.herokuapp.com/content/upload/"+room.id+"/"+fileName;
+  var previewImageUrl = "https://limitless-crag-52851.herokuapp.com/content/upload/"+room.id+"/"+fileName;
+  var duration = 0;
+  if (uploadFile.mimetype.indexOf("video") != -1 ) {
+    messageType = 'video';
+    previewImageUrl = "https://limitless-crag-52851.herokuapp.com/resources/images/facetime.png";
+  } else if (uploadFile.mimetype.indexOf("audio") != -1 ) { 
+    messageType = 'audio';
+  }
   var messageEv = {
       roomId : req.body.id,
       replyToken: "",
@@ -705,24 +738,39 @@ app.post('/upload', function (req, res) {
       message : {
           id : time ,
           type: messageType,
-          "originalContentUrl": "https://limitless-crag-52851.herokuapp.com/content/images/"+room.id+"/"+time+'.png',
-          "previewImageUrl": "https://limitless-crag-52851.herokuapp.com/content/images/"+room.id+"/"+time+'.png',
+          filePath : 'content/upload/'+room.id+"/",
+          fileName : fileName,
+          originalFileName : uploadFile.name,
+          originalContentUrl : originalContentUrl,
+          previewImageUrl : previewImageUrl,
       }
   }
-  var dir = __dirname+'/content/images/'+room.id+"/";
+  var dir = __dirname+'/content/upload/'+room.id+"/";
   if (!fs.existsSync(dir)){
       fs.mkdirSync(dir);
   }
 
-  // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file 
-  uploadFile = req.files.uploadFile;
  
   // Use the mv() method to place the file somewhere on your server 
-  uploadFile.mv(dir+messageEv.message.id+'.png', function(err) {
+  uploadFile.mv(dir+fileName, function(err) {
     if (err) {
       res.status(500).send(err);
     }
     else {
+        if (messageType == 'audio') {
+          // create a new parser from a node ReadStream 
+          var readableStream = fs.createReadStream(dir+fileName);
+          var parser = mm(readableStream, function (err, metadata) {
+            readableStream.close();
+            if (err) {
+              console.log(err)
+              messageEv.message.duration = 0
+            } else {
+              messageEv.message.duration = metadata.duration              
+            }
+            console.log(metadata);
+          });
+        }
         var db = new sqlite3.Database(DATABASE_NAME);
         db.serialize(function() {
           async.series([
@@ -730,8 +778,9 @@ app.post('/upload', function (req, res) {
               saveMessage(db , room, messageEv, callback)
             },
             function (callback) {
+              
               var args = {
-              headers: { 
+                headers: { 
                   "Authorization": token,
                   "Content-Type": "application/json" 
                 }, // request headers 
@@ -741,19 +790,21 @@ app.post('/upload', function (req, res) {
                 }
               };
               client.post("https://api.line.me/v2/bot/message/push", args, 
-              function (result, response) {
-                // parsed response body as js object 
-                console.log('result',result);
-                // raw response 
-                //console.log(response);
-                callback();
+                function (result, response) {
+                  // parsed response body as js object 
+                  console.log('result',result);
+                  // raw response 
+                  //console.log(response);
               });
+              
+              callback();
             }
           ],function(err) { 
             db.close();
             if (err) return next(err);
             res.json({
-              success : true
+              success : true,
+              message : messageEv
             });
             //res.send('File uploaded!');
           })
@@ -993,8 +1044,9 @@ function saveMessage(db , room, messageEv, callback) {
       "contact_id, sourceUserId , messageId ,messageType , "+
       "messageText, stickerId, packageId, "+
       "title, address, latitude, longitude, "+
+      "filePath, fileName, originalFileName, "+
       "info) "+ 
-      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?)");
 
     stmt.run([room.id, messageEv.replyToken, messageEv.type, 
               messageEv.timestamp,messageEv.source.type,
@@ -1007,6 +1059,9 @@ function saveMessage(db , room, messageEv, callback) {
               messageEv.message.type == 'location'? messageEv.message.address : "",
               messageEv.message.type == 'location'? messageEv.message.latitude : "",
               messageEv.message.type == 'location'? messageEv.message.longitude : "",
+              messageEv.message.filePath,
+              messageEv.message.fileName,
+              messageEv.message.originalFileName,
               JSON.stringify(messageEv)],
       function(err) {
         if (err) console.log("err",err)

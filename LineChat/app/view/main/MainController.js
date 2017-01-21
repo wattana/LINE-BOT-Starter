@@ -202,6 +202,7 @@ Ext.define('LineChat.view.main.MainController', {
     addMessage: function (chatMessage) {
         var me = this;
         console.log('addMessage',chatMessage)
+        var chatRecord ;
         var roomInfo = this.getView().getReferences().roomInfoForm;
         var chatRoomGrid = this.getView().down('roomlist')
         var roomRecord = chatRoomGrid.getStore().findRecord("userId", chatMessage.sourceUserId)
@@ -214,7 +215,7 @@ Ext.define('LineChat.view.main.MainController', {
             //console.log('roomRecord',roomRecord)
 
             if (roomRecord.get("id") == roomInfo.down("hidden[name=id]").getValue()) {
-                grid.getStore().add(chatMessage)
+                chatRecord = grid.getStore().add(chatMessage)
                 grid.getView().focusRow(grid.getStore().getCount()-1,500);
                 //grid.getView().focusRow(grid.getStore().getCount()-1);
                 //grid.getSelectionModel().select(grid.getStore().getAt(grid.getStore().getCount()-1))
@@ -224,12 +225,15 @@ Ext.define('LineChat.view.main.MainController', {
         }
         if (chatMessage.contactId) {
             console.log('wat',chatMessage.contactId)
-            me.addContactMessage(chatMessage);
+            var tmp = me.addContactMessage(chatMessage);
+            if (tmp) chatRecord = tmp;
         }
+        return chatRecord;
     },
 
     addContactMessage: function (chatMessage) {
         var me = this;
+        var chatRecord ;
         //console.log(chatMessage)
         var roomInfo = this.getView().getReferences().roomInfoForm;
         var chatRoomGrid = this.getView().down('contacts')
@@ -242,11 +246,12 @@ Ext.define('LineChat.view.main.MainController', {
         //console.log('roomRecord',roomRecord)
 
         if (roomRecord.get("contactId") == roomInfo.down("hidden[name=contactId]").getValue()) {
-            grid.getStore().add(chatMessage)
+            chatRecord = grid.getStore().add(chatMessage)
             grid.getView().focusRow(grid.getStore().getCount()-1,500);
         } else {
             roomRecord.set("unread", roomRecord.get("unread")+1);        
         }
+        return chatRecord
     },
         
     onHelpItemClick : function ( view , record , item , index , e , eOpts ){
@@ -308,17 +313,40 @@ Ext.define('LineChat.view.main.MainController', {
                 url : url,
                 dataType: 'json',
                 add: function (e, data) {
+                    //console.log('this add upload',$(this))
+                    //console.log('add upload',data)
                     if (data.files && data.files[0]) {
+                        //console.log(data.files[0])
+                        var messageType = null;
+                        if (data.files[0].type.indexOf("image") != -1 ) {
+                            messageType = 'image';
+                        } else if (data.files[0].type.indexOf("video") != -1 ) {
+                            messageType = 'video';
+                        } else if (data.files[0].type.indexOf("audio") != -1 ) { 
+                            messageType = 'audio';
+                        }
+                        if (!messageType) {
+                            Ext.Msg.alert('Error', 'Not support file type.');
+                            return;
+                        }
                         var time = Date.now()
                         var roomId = roomInfo.down("hidden[name=id]").getValue()
                         var toTalkerId = roomInfo.down("hidden[name=userId]").getValue()
                         var contactId = roomInfo.down("hidden[name=contactId]").getValue()
+                        if (toTalkerId) {
+                            data.url = LineChat.app.baseURL+'upload'
+                        } else {
+                            data.url = LineChat.app.baseURL+'contactUpload',
+                            Ext.Msg.alert('Error', 'Not support file from contact');
+                            return;
+                        }
 
                         me.uploadMessage = {
                             roomId : roomId,
                             replyToken: "",
-                            type : "image",
-                            messageType : "image",
+                            type : 'message',
+                            upload : true,
+                            messageType : messageType,
                             timestamp : time,//messageEv.timestamp ,
                             sourceType : "agent" ,
                             sourceUserId : toTalkerId ,
@@ -329,10 +357,11 @@ Ext.define('LineChat.view.main.MainController', {
                             },
                             message : {
                                 id : 0 ,
-                                "type": "image"
+                                "type": messageType
                             }
                         }
-                        me.addMessage(me.uploadMessage);
+                        me.currentRecord = me.addMessage(me.uploadMessage)[0];
+                        console.log('me.currentRecord',me.currentRecord)
                         $("#file-picker__progress_"+me.uploadMessage.timestamp).circleProgress({
                             value: 0,
                             size: 80,
@@ -340,11 +369,13 @@ Ext.define('LineChat.view.main.MainController', {
                                 gradient: ["red", "orange"]
                             }
                         });
-                        var reader = new FileReader();
-                        reader.onload = function(e) {
-                            $('#'+time).attr('src', e.target.result);
+                        if (messageType == 'image') {
+                            var reader = new FileReader();
+                            reader.onload = function(e) {
+                                $('#'+time).attr('src', e.target.result);
+                            }
+                            reader.readAsDataURL(data.files[0]);
                         }
-                        reader.readAsDataURL(data.files[0]);
                         data.formData = roomInfo.getValues()
                         data.submit();
                     }
@@ -354,8 +385,25 @@ Ext.define('LineChat.view.main.MainController', {
                      var hideMask = function () {
                         console.log("destroy","#file-picker__progress_"+me.uploadMessage.timestamp)
                         Ext.get("file-picker__progress_"+me.uploadMessage.timestamp).destroy()
+                        var message = data.result.message
+                        if (message.message.type == 'audio') {
+                            var src = LineChat.app.baseURL+message.message.filePath+message.message.fileName
+                            $('#'+me.uploadMessage.timestamp).attr('src', src);
+                            $('#audio_'+me.uploadMessage.timestamp).load();
+                        } else if (message.message.type == 'video') {
+                            var src = LineChat.app.baseURL+message.message.filePath+message.message.fileName
+                            $('#'+me.uploadMessage.timestamp).attr('src', src);                        
+                            $('#video_'+me.uploadMessage.timestamp).load();
+                        }
+                        me.currentRecord.set({
+                            upload : false,
+                            "fileName" : message.message.fileName,
+                            "filePath" : message.message.filePath,
+                            "originalFileName" : message.message.originalFileName
+                        })
                     };
                     Ext.defer(hideMask, 2000);
+                    
                     /*
                     $.each(data.result.files, function (index, file) {
                         $('<p/>').text(file.name).appendTo('#files');
