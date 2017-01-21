@@ -413,11 +413,7 @@ Ext.define('LineChat.view.main.MainController', {
                 progressall: function (e, data) {
                     console.log("progressall",data.loaded , data.total,data.loaded / data.total)
                     $("#file-picker__progress_"+me.uploadMessage.timestamp).circleProgress({
-                        value: data.loaded / data.total,
-                        size: 80,
-                        fill: {
-                            gradient: ["red", "orange"]
-                        }
+                        value: data.loaded / data.total
                     });
                     /*
                     var progress = parseInt(data.loaded / data.total * 100, 10);
