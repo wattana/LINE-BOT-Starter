@@ -766,7 +766,7 @@ app.post('/upload', function (req, res) {
               console.log(err)
               messageEv.message.duration = 200
             } else {
-              messageEv.message.duration = metadata.duration || 200              
+              messageEv.message.duration = metadata.duration || 20000              
             }
             console.log(metadata);
           });
