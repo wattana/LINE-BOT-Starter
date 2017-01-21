@@ -6,7 +6,6 @@ var bodyParser = require('body-parser');
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var fs = require('fs');
-var mm = require('musicmetadata');
 // create application/json parser 
 var jsonParser = bodyParser.json()
 //app.use(bodyParser.json()); // for parsing application/json
@@ -417,17 +416,6 @@ app.get('/testSeries', function (req, res) {
   
 })
 
-app.get('/testAudio', function (req, res) {
-  var readableStream = fs.createReadStream(__dirname+'/content/upload/3/1484974839102.m4a');
-  var parser = mm(readableStream, function (err, metadata) {
-    if (err) console.log(err);
-    readableStream.close();
-    console.log(metadata);
-  });
-  res.send('Test Series success\n')
-  
-})
-
 app.post('/message', jsonParser,function (req, res) {
     var db = new sqlite3.Database(DATABASE_NAME);
     db.serialize(function() {
@@ -693,7 +681,7 @@ app.get('/listContactRoom',function (req, res) {
 app.post('/upload', function (req, res) {
   //console.log(req.files);
   //console.log(req.query);
-  //console.log(req.body);
+  console.log(req.body);
   var room = {
     id : req.body.id,
     contact_id : req.body.contactId 
@@ -758,18 +746,7 @@ app.post('/upload', function (req, res) {
     }
     else {
         if (messageType == 'audio') {
-          // create a new parser from a node ReadStream 
-          var readableStream = fs.createReadStream(dir+fileName);
-          var parser = mm(readableStream, function (err, metadata) {
-            readableStream.close();
-            if (err) {
-              console.log(err)
-              messageEv.message.duration = 200
-            } else {
-              messageEv.message.duration = metadata.duration || 20000              
-            }
-            console.log(metadata);
-          });
+            messageEv.message.duration = 200
         }
         var db = new sqlite3.Database(DATABASE_NAME);
         db.serialize(function() {
