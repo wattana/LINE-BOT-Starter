@@ -76,6 +76,10 @@ Ext.define('LineChat.view.main.MainController', {
     },
 
     contactTalkingWith: function (view, record, item, index, e, options) {
+        if (record.get("userId")) {
+            this.talkingWith(view, record, item, index, e, options)
+            return
+        }
         if (e && e.getTarget('div.x-delete-btn')) return;
         var roomInfo = this.getView().getReferences().roomInfoForm;
         var sendMessageForm = this.getReferences().sendMessageForm;
@@ -336,9 +340,9 @@ Ext.define('LineChat.view.main.MainController', {
                         if (toTalkerId) {
                             data.url = LineChat.app.baseURL+'upload'
                         } else {
-                            data.url = LineChat.app.baseURL+'contactUpload',
-                            Ext.Msg.alert('Error', 'Not support file from contact');
-                            return;
+                            data.url = LineChat.app.baseURL+'contactUpload'
+                            //Ext.Msg.alert('Error', 'Not support file from contact');
+                            //return;
                         }
 
                         me.uploadMessage = {

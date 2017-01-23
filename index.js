@@ -678,6 +678,54 @@ app.get('/listContactRoom',function (req, res) {
       })
 });
 
+app.get('/listContactTree',function (req, res) {
+  //console.log(req)
+  var db = new sqlite3.Database(DATABASE_NAME);
+  var messages = {
+    text : ".",
+    "children": []
+  }
+  async.series([
+    function (callback) {
+      db.all("SELECT chat_room.contact_id, contacts.name ,max(chat_room.updatetime) as updatetime"+ 
+            " FROM chat_room , contacts "+
+            "Where chat_room.contact_id = contacts.contact_id"+
+            " group by  chat_room.contact_id, contacts.name",
+      function(err, rows) {
+          /*
+          console.log(row.id + ": " , row.replyToken, row.eventType, row.timestamp ,
+          row.sourceType ,row.sourceUserId , row.messageId , row.messageType , 
+          row.messageText,row.info);
+          */
+          for (var i=0; i<rows.length; i++) {
+            var row = rows[i]
+            messages.children.push({
+              contactId : row.contact_id, 
+              displayName : row.name,
+              updatetime : row.updatetime,
+              "children": []
+            })
+          }
+          callback()
+      });
+    },
+    function (callback) {
+      for (var j=0; j<messages.children.length; j++) {
+        if (j == messages.children.length-1) {
+          contactRoom (db , messages.children[j], callback ) 
+        } else {
+          contactRoom (db , messages.children[j], null ) 
+        }
+      }
+    }],function(err) { //This function gets called after the two tasks have called their "task callbacks"
+        db.close();
+        if (err) return next(err);
+        //Here locals will be populated with `user` and `posts`
+        //Just like in the previous example
+        res.json(messages);
+    })
+});
+
 app.post('/upload', function (req, res) {
   //console.log(req.files);
   //console.log(req.query);
@@ -793,6 +841,135 @@ app.post('/upload', function (req, res) {
   
 
 })
+
+app.post('/contactUpload', function (req, res) {
+  //console.log(req.files);
+  //console.log(req.query);
+  console.log(req.body);
+  var room = {
+    id : 0,
+    contact_id : req.body.contactId 
+  }
+ 
+  if (!req.files) {
+    res.json({
+      success : false,
+      msg : 'No files were uploaded.'
+    });
+    return;
+  }
+  // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file 
+  var uploadFile = req.files.uploadFile;
+  var extension = path.extname(uploadFile.name)
+
+  var time = String(Date.now());
+  var fileName = time+extension
+  var messageType = 'image';
+  var originalContentUrl = "https://limitless-crag-52851.herokuapp.com/content/upload/"+room.contact_id+"/"+fileName;
+  var previewImageUrl = "https://limitless-crag-52851.herokuapp.com/content/upload/"+room.contact_id+"/"+fileName;
+  var duration = 0;
+  if (uploadFile.mimetype.indexOf("video") != -1 ) {
+    messageType = 'video';
+    previewImageUrl = "https://limitless-crag-52851.herokuapp.com/resources/images/facetime.png";
+  } else if (uploadFile.mimetype.indexOf("audio") != -1 ) { 
+    messageType = 'audio';
+  }
+  var messageEv = {
+      roomId : 0,
+      replyToken: "",
+      type : "message",
+      timestamp : time,//messageEv.timestamp ,
+      sourceType : "agent" ,
+      sourceUserId : req.body.userId ,
+      contactId : req.body.contactId ,
+      "source": {
+          "type": "agent",
+          "userId": req.body.userId
+      },
+      message : {
+          id : time ,
+          type: messageType,
+          filePath : 'content/upload/'+room.contact_id+"/",
+          fileName : fileName,
+          originalFileName : uploadFile.name,
+          originalContentUrl : originalContentUrl,
+          previewImageUrl : previewImageUrl,
+      }
+  }
+  var dir = __dirname+'/content/upload/'+room.contact_id+"/";
+  if (!fs.existsSync(dir)){
+      fs.mkdirSync(dir);
+  }
+
+ 
+  // Use the mv() method to place the file somewhere on your server 
+  uploadFile.mv(dir+fileName, function(err) {
+    if (err) {
+      res.status(500).send(err);
+    }
+    else {
+        if (messageType == 'audio') {
+            messageEv.message.duration = parseInt(req.body.duration)
+        }
+        var db = new sqlite3.Database(DATABASE_NAME);
+        var lineIds = []
+        db.serialize(function() {
+          async.series([
+            function (callback) {
+              db.all("SELECT line_id "+
+                    " FROM contact_lines "+
+                    "Where active_flag=1 and contact_id = ?",[messageEv.contactId],
+              function(err, rows) {
+                  for (var i=0; i<rows.length; i++) {
+                    lineIds.push(rows[i].line_id)
+                  }
+                  callback()
+              });
+            },
+
+            function (callback) {
+              saveMessage(db , room, messageEv, callback)
+            },
+            function (callback) {
+              for (var i=0; i<lineIds.length; i++) {
+                var args = {
+                  headers: { 
+                    "Authorization": token,
+                    "Content-Type": "application/json" 
+                  }, // request headers 
+                  data : {
+                    "to": lineIds[i],
+                    "messages":[messageEv.message]
+                  }
+                };
+                client.post("https://api.line.me/v2/bot/message/push", args, 
+                  function (result, response) {
+                    // parsed response body as js object 
+                    console.log('result',result);
+                    // raw response 
+                    //console.log(response);
+                });
+              }
+              
+              callback();
+            }
+          ],function(err) { 
+            db.close();
+            if (err) return next(err);
+            res.json({
+              success : true,
+              message : messageEv
+            });
+            //res.send('File uploaded!');
+          })
+        })
+    }
+  });
+  
+  //sleep.sleep(30)
+  
+
+})
 /*
 app.listen(process.env.PORT || 3000, function () {
   console.log('Example app listening on port : ',process.env.PORT || 3000)
@@ -802,6 +979,43 @@ http.listen(process.env.PORT || 3000, function(){
   console.log('listening on *:3000');
 });
 
+function contactRoom (db , contact, callback ) {
+    db.all("SELECT rowid AS id, sourceType,userId ,contact_id, contact_person_id, displayName, pictureUrl,"+ 
+      "statusMessage, messageType, message ,createtime, updatetime, active_flag FROM chat_room "+
+      "where contact_id = ?",[contact.contactId],
+    function(err, rows) {
+        /*
+        console.log(row.id + ": " , row.replyToken, row.eventType, row.timestamp ,
+        row.sourceType ,row.sourceUserId , row.messageId , row.messageType , 
+        row.messageText,row.info);
+        */
+        for (var i=0; i<rows.length; i++) {
+          var row = rows[i]
+          contact.children.push({
+            id : row.id,
+            userId: row.userId,
+            contact_id : row.contact_id, 
+            contact_person_id : row.contact_person_id,
+            contactId : row.contact_id, 
+            contactPersonId : row.contact_person_id,
+            displayName : row.displayName,
+            pictureUrl : row.pictureUrl ,
+            icon : row.pictureUrl+"/small" ,
+            cls : 'leaf-icon',
+            statusMessage : row.statusMessage ,
+            message : row.message ,
+            messageType : row.messageType,
+            messageText : row.message ,
+            sourceType : row.sourceType,
+            createtime : row.createtime ,
+            updatetime : row.updatetime ,
+            active_flag : row.active_flag,
+            "leaf": true
+          })
+        }
+        if (callback) callback()
+    });
+}
 function messageHandler(db ,data) {
   if (data.message.type == 'text') {
     if (data.message.text == 'สอบถาม'||data.message.text.toLowerCase() == 'menu') {

@@ -9,22 +9,28 @@ Ext.define('LineChat.Application', {
     name: 'LineChat',
 
     stores: [
-        "Contact","Room", "Message"
+        "Contact","Room", "Message", "ContactTree"
     ],
     
-    launch: function () {
+    init : function ( app) {
         var roomStore = this.getStore('Room');
         var contactStore = this.getStore('Contact');
-        LineChat.app.baseURL = "";
+        var contactTreeStore = this.getStore('ContactTree');
+        app.baseURL = "";
         if (Ext.manifest['env']=='development') {
             socketUrl = "localhost:3000"
             roomStore.getProxy().setUrl("http://localhost:3000/listRoom")
             contactStore.getProxy().setUrl("http://localhost:3000/listContactRoom")
+            contactTreeStore.getProxy().setUrl("http://localhost:3000/listContactTree")
             this.getStore('Message').getProxy().setUrl("http://localhost:3000/listMessage")
-            LineChat.app.baseURL = "http://localhost:3000/";
+            app.baseURL = "http://localhost:3000/";
         }
         roomStore.load();
         contactStore.load();
+        contactTreeStore.load();
+
+    },
+    launch: function () {
     },
 
     onAppUpdate: function () {

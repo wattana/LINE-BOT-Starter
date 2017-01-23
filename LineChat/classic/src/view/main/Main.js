@@ -121,9 +121,18 @@ Ext.define('LineChat.view.main.Main', {
                 iconCls: 'fa-users',
                 layout: 'fit',
                 items: [{
+                    xtype: 'contact-tree'
+                }]
+            
+            }, {
+                title: 'Contact',
+                hidden : true,
+                iconCls: 'fa-users',
+                layout: 'fit',
+                items: [{
                     xtype: 'contacts'
                 }]
-            }, {
+            },{
                 title: 'Chat',
                 xtype : 'panel',
                 iconCls: 'fa-weixin',//fa-home',
