@@ -388,22 +388,25 @@ Ext.define('LineChat.view.main.MainController', {
                             data.formData = roomInfo.getValues()
                             data.submit();
                         } else if (messageType == 'audio' ){
-                            var audio = document.getElementById('audio_'+me.uploadMessage.timestamp)
-                            audio.onloadedmetadata = function() {
-                                //alert(audio.duration);
-                                if (me.currentRecord.get("upload")) {
-                                    data.formData = roomInfo.getValues()
-                                    data.formData.duration = audio.duration*1000
-                                    data.submit();
+                            var uploadAudio = function () {
+                                var audio = document.getElementById('audio_'+me.uploadMessage.timestamp)
+                                audio.onloadedmetadata = function() {
+                                    //alert(audio.duration);
+                                    if (me.currentRecord.get("upload")) {
+                                        data.formData = roomInfo.getValues()
+                                        data.formData.duration = audio.duration*1000
+                                        data.submit();
+                                    }
+                                };
+                                var reader = new FileReader();
+                                reader.onload = function(e) {
+                                    $('#'+time).attr('src', e.target.result);
+                                    audio.load();
+                                    //console.log(audio.duration);
                                 }
-                            };
-                            var reader = new FileReader();
-                            reader.onload = function(e) {
-                                $('#'+time).attr('src', e.target.result);
-                                audio.load();
-                                //console.log(audio.duration);
+                                reader.readAsDataURL(data.files[0]);
                             }
-                            reader.readAsDataURL(data.files[0]);
+                            Ext.defer(uploadAudio, 200);
                         } else {
                             data.formData = roomInfo.getValues()
                             data.submit();
