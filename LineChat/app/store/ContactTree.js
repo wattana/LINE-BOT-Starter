@@ -8,7 +8,7 @@ Ext.define('LineChat.store.ContactTree', {
     }],
     proxy: {
         type: 'ajax',
-        url: 'http://localhost:3000/listContactTree'
+        url: '/listContactTree'
     },
     folderSort: true,
     autoLoad : false
