@@ -6,7 +6,10 @@ Ext.define('LineChat.store.Message', {
     fields: [
         'replyToken',
         'eventType',
-        'timestamp',
+        {
+            name : 'timestamp',
+            type : 'int'
+        },
         'sourceType',
         'sourceUserId', 
         'messageId', 
@@ -14,6 +17,12 @@ Ext.define('LineChat.store.Message', {
         'messageText',
         {
             name : 'message'
+        },
+        {
+            name : 'date',
+            convert: function (value, record) {
+                return new Date(record.get("timestamp"));
+            }
         },
         'info'
     ],

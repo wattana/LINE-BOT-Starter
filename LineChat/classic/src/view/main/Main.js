@@ -195,6 +195,13 @@ Ext.define('LineChat.view.main.Main', {
                     fieldLabel: 'Talk Time',
                     name: 'talktime',
                     value :""
+                },{
+                    flex : 1
+                } ,{
+                    xtype : 'button',
+                    glyph: 'xf24d@FontAwesome',
+                    glyphx: 'xf005@FontAwesome',
+                    text : 'ออกใบงาน'
                 }, {
                     xtype: 'hiddenfield',
                     name: 'id'
@@ -409,7 +416,8 @@ Ext.define('LineChat.view.main.Main', {
                     }, {
                         xtype: 'button',
                         scale : 'medium',
-                        action : 'sticket',
+                        reference : 'stickerBtn',
+                        action : 'sticker',
                         style: {
                             marginLeft: '2px',
                             marginBottom: '5px',

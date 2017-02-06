@@ -70,5 +70,17 @@
         "messageType": null,
         "messageText": null,
         "info": "{\"type\":\"follow\",\"replyToken\":\"dc8b882598844624838a4e6ce5c7f750\",\"source\":{\"userId\":\"Ude781d6846f10928b51872c5634a88be\",\"type\":\"user\"},\"timestamp\":1484453607865}"
+    },
+    {
+        "id": 27,
+        "replyToken": "af267338b08e4418980660b1b135dd3b",
+        "eventType": "message",
+        "timestamp": "1486362617152.0",
+        "sourceType": "user",
+        "sourceUserId": "Uaa89e07dfe96f3b66fe7937cf9e2c591",
+        "messageId": "5607484349649",
+        "messageType": "file",
+        "messageText": null,
+        "info": "{\"type\":\"message\",\"replyToken\":\"af267338b08e4418980660b1b135dd3b\",\"source\":{\"userId\":\"Uaa89e07dfe96f3b66fe7937cf9e2c591\",\"type\":\"user\"},\"timestamp\":1486362617152,\"message\":{\"type\":\"file\",\"id\":\"5607484349649\",\"fileName\":\"_0032339347_0240712504.pdf\",\"fileSize\":294236}}"
     }
 ]

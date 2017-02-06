@@ -153,7 +153,7 @@ Ext.define('LineChat.view.main.MainController', {
             contactId : contactId ,
             "source": {
                 "type": "agent",
-                "userId": toTalkerId
+                "userId": LineChat.app.info.agentId
             },
             message : {
                 id : 0 ,
@@ -188,11 +188,11 @@ Ext.define('LineChat.view.main.MainController', {
             type : "message",
             timestamp : Date.now(),//messageEv.timestamp ,
             sourceType : "agent" ,
-            sourceUserId : contactId ,
+            sourceUserId : LineChat.app.info.agentId ,
             contactId : contactId ,
             "source": {
                 "type": "agent",
-                "userId": contactId
+                "userId": LineChat.app.info.agentId
             },
             message : {
                 id : 0 ,
@@ -286,7 +286,7 @@ Ext.define('LineChat.view.main.MainController', {
             contactId : contactId ,
             "source": {
                 "type": "agent",
-                "userId": toTalkerId
+                "userId": LineChat.app.info.agentId
             },
             message : {
                 id : 0 ,
@@ -295,6 +295,7 @@ Ext.define('LineChat.view.main.MainController', {
                 "stickerId": record.get("stickerId")
             }
         });
+        this.getReferences().stickerBtn.toggle()
     },
 
     onStickerBtnClick : function(btn , state) {
@@ -362,7 +363,9 @@ Ext.define('LineChat.view.main.MainController', {
                             message : {
                                 id : 0 ,
                                 "type": messageType
-                            }
+                            },
+                            lineName : LineChat.app.info.agentName,
+                            pictureUrl : null
                         }
                         me.currentRecord = me.addMessage(me.uploadMessage)[0];
                         console.log('me.currentRecord',me.currentRecord)
@@ -386,6 +389,7 @@ Ext.define('LineChat.view.main.MainController', {
                             }
                             reader.readAsDataURL(data.files[0]);
                             data.formData = roomInfo.getValues()
+                            data.formData.agentId = LineChat.app.info.agentId
                             data.submit();
                         } else if (messageType == 'audio' ){
                             var uploadAudio = function () {
@@ -395,6 +399,7 @@ Ext.define('LineChat.view.main.MainController', {
                                     if (me.currentRecord.get("upload")) {
                                         data.formData = roomInfo.getValues()
                                         data.formData.duration = audio.duration*1000
+                                        data.formData.agentId = LineChat.app.info.agentId
                                         data.submit();
                                     }
                                 };
@@ -409,6 +414,7 @@ Ext.define('LineChat.view.main.MainController', {
                             Ext.defer(uploadAudio, 200);
                         } else {
                             data.formData = roomInfo.getValues()
+                            data.formData.agentId = LineChat.app.info.agentId
                             data.submit();
                         }
                         
@@ -433,7 +439,9 @@ Ext.define('LineChat.view.main.MainController', {
                             upload : false,
                             "fileName" : message.message.fileName,
                             "filePath" : message.message.filePath,
-                            "originalFileName" : message.message.originalFileName
+                            "originalFileName" : message.message.originalFileName,
+                            "lineName" : data.result.room.lineName,
+                            "pictureUrl" : data.result.room.pictureUrl
                         })
                     };
                     Ext.defer(hideMask, 2000);

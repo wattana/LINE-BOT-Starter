@@ -11,18 +11,29 @@ Ext.define('LineChat.view.main.MessageChat', {
     disableSelection: false,
     columnLines: false,
     rowLines : true,
+    selType: 'checkboxmodel',
 
     initComponent: function() {
         var me = this;
         var meMessageTpl = Ext.create('Ext.XTemplate',
-            '<div class="bubble bubble--alt" style="float:right">',
-                '<div class="chat-message">',
-                    '<span>{messageText:this.getContent}</span>',
-                    //'<tpl if="attachmentId == \'\' || attachmentId==null">',
-                    //'<tpl else>',
-                    //    ' <a class="item-link" href="DownloadFile.ashx?attachmentId={attachmentId}">{fileName} </a>',
-                    //'</tpl>',
-                    '<div class="comment-by">{date:this.formatDate}</div>',
+            '<div class="chat-item" style="float:right">',
+                '<div class="chat-datetime">{date:this.formatDate}</div>',
+                '<div class="bubble bubble--alt">',
+                    '<div class="chat-message">',
+                        '<span>{messageText:this.getContent}</span>',
+                        //'<tpl if="attachmentId == \'\' || attachmentId==null">',
+                        //'<tpl else>',
+                        //    ' <a class="item-link" href="DownloadFile.ashx?attachmentId={attachmentId}">{fileName} </a>',
+                        //'</tpl>',
+                    '</div>',
+                '</div>',
+                '<div style="position:absolute;bottom:5px;right: 2px;color:gray">',
+                    '<tpl if="pictureUrl == \'\' || pictureUrl==null">',
+                        '<i class="fa fa-user fa-2x"></i>',
+                    '<tpl else>',
+                        '<img src="{pictureUrl}/small" height=32 width=32 title="{lineName}">',
+                    '</tpl>',
+                    '<div class="chat-by-name" style>{lineName}</div>',
                 '</div>',
             '</div>',
         {
@@ -32,24 +43,18 @@ Ext.define('LineChat.view.main.MessageChat', {
         });
         var messageTpl = Ext.create('Ext.XTemplate',
             '<div class="chat-item">',
-            /*
-                '<div style="display:none;float:left;padding:5px;margin-right: 8px;color:gray">',
-                    '<tpl if="messageId == \'\' || messageId==null">',
+                '<div style="position:absolute;bottom:5px;color:gray">',
+                    '<tpl if="pictureUrl == \'\' || pictureUrl==null">',
                         '<i class="fa fa-user fa-2x"></i>',
                     '<tpl else>',
-                        '<img src="DisplayImage.ashx?agentId={talkerId}&imageName={messageId}" height=32 width=32 title="{createBy}">',
+                        '<img src="{pictureUrl}/small" height=32 width=32 title="{lineName}">',
                     '</tpl>',
-                    '<span class="chat-by-name" style="padding:4px;margin-right: 2px">{talker} </span>',
+                    '<div class="chat-by-name" style>{lineName}</div>',
                 '</div>',
-                */
                 '<div class="bubble">',
                     '<span>{messageText:this.getContent}</span>',
-                    //'<tpl if="attachmentId == \'\' || attachmentId==null">',
-                    //'<tpl else>',
-                    //    ' <a class="item-link" target="_blank" href="DownloadFile.ashx?attachmentId={attachmentId}">{fileName} </a>',
-                    //'</tpl>',
-                    '<div class="comment-by">{date:this.formatDate}</div>',
                 '</div>',
+                '<div class="chat-datetime">{date:this.formatDate}</div>',
             '</div>',
         {
             getBaseUrl : me.getBaseUrl,
@@ -58,10 +63,18 @@ Ext.define('LineChat.view.main.MessageChat', {
         });
 
         var meStickerTpl = Ext.create('Ext.XTemplate',
-            '<div class="chat-item">',
-                '<div style="float:right">',
+            '<div class="chat-item" style="float:right">',
+                '<div class="chat-datetime">{date:this.formatDate}</div>',
+                '<div style="margin-right: 55px;">',
                     '<img src="http://dl.stickershop.line.naver.jp/products/0/0/100/{packageId}/PC/stickers/{stickerId}.png">',
-                    '<div class="comment-by">{date:this.formatDate}</div>',
+                '</div>',
+                '<div style="position:absolute;bottom:5px;right: 2px;color:gray">',
+                    '<tpl if="pictureUrl == \'\' || pictureUrl==null">',
+                        '<i class="fa fa-user fa-2x"></i>',
+                    '<tpl else>',
+                        '<img src="{pictureUrl}/small" height=32 width=32 title="{lineName}">',
+                    '</tpl>',
+                    '<div class="chat-by-name" style>{lineName}</div>',
                 '</div>',
             '</div>',
         {
@@ -72,10 +85,18 @@ Ext.define('LineChat.view.main.MessageChat', {
 
         var stickerTpl = Ext.create('Ext.XTemplate',
             '<div class="chat-item">',
-                '<div>',
-                    '<img src="http://dl.stickershop.line.naver.jp/products/0/0/100/{packageId}/PC/stickers/{stickerId}.png">',
-                    '<div class="comment-by">{date:this.formatDate}</div>',
+                '<div style="position:absolute;bottom:5px;color:gray">',
+                    '<tpl if="pictureUrl == \'\' || pictureUrl==null">',
+                        '<i class="fa fa-user fa-2x"></i>',
+                    '<tpl else>',
+                        '<img src="{pictureUrl}/small" height=32 width=32 title="{lineName}">',
+                    '</tpl>',
+                    '<div class="chat-by-name" style>{lineName}</div>',
                 '</div>',
+                '<div style="float:left;margin-left:55px;">',
+                    '<img src="http://dl.stickershop.line.naver.jp/products/0/0/100/{packageId}/PC/stickers/{stickerId}.png">',
+                '</div>',
+                '<div class="chat-datetime">{date:this.formatDate}</div>',
             '</div>',
         {
             getBaseUrl : me.getBaseUrl,
@@ -85,11 +106,19 @@ Ext.define('LineChat.view.main.MessageChat', {
 
         var imageTpl = Ext.create('Ext.XTemplate',
             '<div class="chat-item">',
-                '<div>',
-                    '<img src="{.:this.getBaseUrl}content/images/{roomId}/{messageId}.png" width="200px">',
-                    '<div class="comment-by">{date:this.formatDate}</div>',
+                '<div style="position:absolute;bottom:5px;color:gray">',
+                    '<tpl if="pictureUrl == \'\' || pictureUrl==null">',
+                        '<i class="fa fa-user fa-2x"></i>',
+                    '<tpl else>',
+                        '<img src="{pictureUrl}/small" height=32 width=32 title="{lineName}">',
+                    '</tpl>',
+                    '<div class="chat-by-name" style>{lineName}</div>',
+                '</div>',
+                '<div style="float:left;margin-left:55px;">',
+                    '<div><img src="{.:this.getBaseUrl}content/images/{roomId}/{messageId}.png" width="200px"></div>',
                     '<a href="{.:this.getBaseUrl}content/images/{roomId}/{messageId}.png" target="_blank">Open</a>',
                 '</div>',
+                '<div class="chat-datetime">{date:this.formatDate}</div>',
             '</div>',
             {
             getBaseUrl : me.getBaseUrl,
@@ -98,14 +127,20 @@ Ext.define('LineChat.view.main.MessageChat', {
         });
 
         var meImageTpl = Ext.create('Ext.XTemplate',
-            '<div class="chat-item">',
-                '<div style="float:right;position:relative">',
-                //'<tpl if="upload == true">',
+            '<div class="chat-item" style="float:right;position:relative">',
+                '<div class="chat-datetime">{date:this.formatDate}</div>',
+                '<div style="margin-right: 55px;">',
                     '<img id="{timestamp}" src="{.:this.getBaseUrl}{filePath}{fileName}" width="200px">',
-                    '<div class="comment-by">{date:this.formatDate}</div>',
-                    '<a href="{.:this.getBaseUrl}{filePath}{fileName}" target="_blank">Open</a>',
                     '<div style="width:100px;height:100px;position:absolute;top:30%;left:30%" class="file-picker__progress" id="file-picker__progress_{timestamp}"></div>',
-                //'</tpl>',
+                '</div>',
+                '<a href="{.:this.getBaseUrl}{filePath}{fileName}" target="_blank">Open</a>',
+                '<div style="position:absolute;bottom:5px;right: 2px;color:gray">',
+                    '<tpl if="pictureUrl == \'\' || pictureUrl==null">',
+                        '<i class="fa fa-user fa-2x"></i>',
+                    '<tpl else>',
+                        '<img src="{pictureUrl}/small" height=32 width=32 title="{lineName}">',
+                    '</tpl>',
+                    '<div class="chat-by-name" style>{lineName}</div>',
                 '</div>',
             '</div>',
             {
@@ -116,13 +151,21 @@ Ext.define('LineChat.view.main.MessageChat', {
 
         var audioTpl = Ext.create('Ext.XTemplate',
         '<div class="chat-item">',
-            '<div class="bubble  bubble--alt">',
+            '<div style="position:absolute;bottom:5px;color:gray">',
+                '<tpl if="pictureUrl == \'\' || pictureUrl==null">',
+                    '<i class="fa fa-user fa-2x"></i>',
+                '<tpl else>',
+                    '<img src="{pictureUrl}/small" height=32 width=32 title="{lineName}">',
+                '</tpl>',
+                '<div class="chat-by-name" style>{lineName}</div>',
+            '</div>',
+            '<div class="bubble">',
                 '<audio controls>',
                     '<source src="{.:this.getBaseUrl}content/audios/{roomId}/{messageId}.mp4" type="audio/mpeg">',
                     'Your browser does not support the audio element.',
                 '</audio>',
-                '<div class="comment-by">{date:this.formatDate}</div>',
             '</div>',
+            '<div class="chat-datetime">{date:this.formatDate}</div>',
         '</div>',
         {
             getBaseUrl : me.getBaseUrl,
@@ -130,14 +173,22 @@ Ext.define('LineChat.view.main.MessageChat', {
             formatDate: me.formatDate
         });
         var meAudioTpl = Ext.create('Ext.XTemplate',
-        '<div class="chat-item">',
-            '<div class="bubble  bubble--alt"  style="float:right;position:relative">',
+        '<div class="chat-item" style="float:right;position:relative">',
+            '<div class="chat-datetime">{date:this.formatDate}</div>',
+            '<div class="bubble  bubble--alt">',
                 '<audio id="audio_{timestamp}" controls>',
                     '<source id="{timestamp}" src="{.:this.getBaseUrl}{filePath}{fileName}" type="audio/mpeg">',
                     'Your browser does not support the audio element.',
                 '</audio>',
-                '<div class="comment-by">{date:this.formatDate}</div>',
                 '<div style="width:100px;height:100px;position:absolute;top:30%;left:30%" class="file-picker__progress" id="file-picker__progress_{timestamp}"></div>',
+            '</div>',
+            '<div style="position:absolute;bottom:5px;right: 2px;color:gray">',
+                '<tpl if="pictureUrl == \'\' || pictureUrl==null">',
+                    '<i class="fa fa-user fa-2x"></i>',
+                '<tpl else>',
+                    '<img src="{pictureUrl}/small" height=32 width=32 title="{lineName}">',
+                '</tpl>',
+                '<div class="chat-by-name" style>{lineName}</div>',
             '</div>',
         '</div>',
         {
@@ -148,13 +199,21 @@ Ext.define('LineChat.view.main.MessageChat', {
 
         var videoTpl = Ext.create('Ext.XTemplate',
         '<div class="chat-item">',
-            '<div classx="bubble">',
+            '<div style="position:absolute;bottom:5px;color:gray">',
+                '<tpl if="pictureUrl == \'\' || pictureUrl==null">',
+                    '<i class="fa fa-user fa-2x"></i>',
+                '<tpl else>',
+                    '<img src="{pictureUrl}/small" height=32 width=32 title="{lineName}">',
+                '</tpl>',
+                '<div class="chat-by-name" style>{lineName}</div>',
+            '</div>',
+            '<div style="float:left;margin-left:55px;">',
                 '<video controls width="250px" height="250px">',
                     '<source src="{.:this.getBaseUrl}content/videos/{roomId}/{messageId}.mp4" type="video/mp4">',
                     'Your browser does not support the <code>video</code> element.',
                 '</video>',
-                '<div class="comment-by">{date:this.formatDate}</div>',
             '</div>',
+            '<div class="chat-datetime">{date:this.formatDate}</div>',            
         '</div>',
         {
             getBaseUrl : me.getBaseUrl,
@@ -163,14 +222,22 @@ Ext.define('LineChat.view.main.MessageChat', {
         });
 
         var meVideoTpl = Ext.create('Ext.XTemplate',
-        '<div class="chat-item">',
-            '<div classx="bubble" style="float:right;position:relative">',
+        '<div class="chat-item"  style="float:right;position:relative">',
+            '<div class="chat-datetime">{date:this.formatDate}</div>',
+            '<div style="margin-right: 55px;">',
                 '<video id="video_{timestamp}" controls width="250px" height="250px">',
                     '<source id="{timestamp}" src="{.:this.getBaseUrl}{filePath}{fileName}" type="video/mp4">',
                     'Your browser does not support the <code>video</code> element.',
                 '</video>',
-                '<div class="comment-by">{date:this.formatDate}</div>',
                 '<div style="width:100px;height:100px;position:absolute;top:30%;left:30%" class="file-picker__progress" id="file-picker__progress_{timestamp}"></div>',
+            '</div>',
+            '<div style="position:absolute;bottom:5px;right: 2px;color:gray">',
+                '<tpl if="pictureUrl == \'\' || pictureUrl==null">',
+                    '<i class="fa fa-user fa-2x"></i>',
+                '<tpl else>',
+                    '<img src="{pictureUrl}/small" height=32 width=32 title="{lineName}">',
+                '</tpl>',
+                '<div class="chat-by-name" style>{lineName}</div>',
             '</div>',
         '</div>',
         {
@@ -181,13 +248,21 @@ Ext.define('LineChat.view.main.MessageChat', {
 
         var locationTpl = Ext.create('Ext.XTemplate',
         '<div class="chat-item">',
+            '<div style="position:absolute;bottom:5px;color:gray">',
+                '<tpl if="pictureUrl == \'\' || pictureUrl==null">',
+                    '<i class="fa fa-user fa-2x"></i>',
+                '<tpl else>',
+                    '<img src="{pictureUrl}/small" height=32 width=32 title="{lineName}">',
+                '</tpl>',
+                '<div class="chat-by-name" style>{lineName}</div>',
+            '</div>',
             '<div class="bubble">',
                 '<i class="fa fa-flag" aria-hidden="true" style="float:left; color:red"></i>',
                 '<div>',
-                    '<a style ="text-decoration:none" href="http://maps.google.com/maps?q=loc:{latitude},{longitude}" target="_blank">{title}<br/>{address}</a>',
+                    '<a style ="text-decoration:none" href="http://maps.google.com/maps?q=loc:{latitude},{longitude}" target="_blank">&nbsp; {title} <br/> {address}</a>',
                 '</div>',
-                '<div class="comment-by">{date:this.formatDate}</div>',
             '</div>',
+            '<div class="chat-datetime">{date:this.formatDate}</div>',            
         '</div>',
         {
             getBaseUrl : me.getBaseUrl,
@@ -241,6 +316,7 @@ Ext.define('LineChat.view.main.MessageChat', {
                 return messageTpl.apply(record.data)
             }
         }]
+
         me.callParent();
     },
     
@@ -248,7 +324,16 @@ Ext.define('LineChat.view.main.MessageChat', {
         return LineChat.app.baseURL
     },
     formatDate: function (v) {
-        return v === undefined || v === null ? '' : Ext.Date.format(v, "d/m/X H:i:s");
+        if (v === undefined || v === null) return '';
+        if (LineChat.app.info.currentYear != v.getFullYear()){
+            return Ext.Date.format(v, "d/m/Y H:i")
+        } else if(LineChat.app.info.currentMonth != v.getMonth()){
+            return Ext.Date.format(v, "d,M H:i")
+        } else if(LineChat.app.info.currentDay == v.getDay()){
+            return Ext.Date.format(v, "H:i")
+        } else {
+            return Ext.Date.format(v, "d,M H:i")
+        }
     },
     getContent: function (v) {
         //if (v == END_CHAT_SIGNAL) return "<font color=blue>Exit chat ...</font>"

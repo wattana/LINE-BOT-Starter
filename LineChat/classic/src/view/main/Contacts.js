@@ -13,7 +13,7 @@ Ext.define('LineChat.view.main.Contacts', {
     initComponent: function() {
         var me = this;
         var talkerWithTpl = Ext.create('Ext.XTemplate',
-            '<div class="chat-item">',
+            '<div class="chat-room-item ">',
                 '<div class="chat-message" style="padding:3px;float:right">',
                     '<div style="float:left;margin-right: 1px;color:{[this.statusColor(values.waitFlag,values.talkDatetime)]}">',
                         '<i class="fa fa-comment fa-lg"></i>',

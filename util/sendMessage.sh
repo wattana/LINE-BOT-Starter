@@ -11,12 +11,12 @@ curl -H "Content-Type: application/json" -X POST -d '{
       "message": {
         "id": "325708",
         "type": "text",
-        "text": "menu"
+        "text": "menu ok I am storing time in a MySQL database as a Unix timestamp and that gets sent to some JavaScript code. How would I get just the time out of it? For example, in HH/MM/SS format."
       }
     },
     {
       "replyToken": "079a4d9bb8724be19e21e31d6ae2f26d",
-      "type": "follow",
+      "type": "followx",
       "timestamp": 1462629479859,
       "source": {
         "type": "user",
@@ -39,12 +39,12 @@ curl -H "Content-Type: application/json" -X POST -d '{
       "message": {
         "id": "325705",
         "type": "text",
-        "text": "555555555"
+        "text": "555555555 สวัสดีค่ะ"
       }
     },
     {
       "replyToken": "079a4d9bb8724be19e21e31d6ae2f26d",
-      "type": "follow",
+      "type": "followx",
       "timestamp": 1462629479859,
       "source": {
         "type": "user",
@@ -73,7 +73,7 @@ curl -H "Content-Type: application/json" -X POST -d '{
     },
     {
       "replyToken": "079a4d9bb8724be19e21e31d6ae2f26d",
-      "type": "follow",
+      "type": "followx",
       "timestamp": 1462629479859,
       "source": {
         "type": "user",

@@ -13,7 +13,7 @@ Ext.define('LineChat.view.main.UserList', {
     initComponent: function() {
         var me = this;
         var talkerWithTpl = Ext.create('Ext.XTemplate',
-            '<div class="chat-item">',
+            '<div class="chat-room-item ">',
                 '<div class="chat-message" style="padding:3px;float:right">',
                     '<div style="float:left;margin-right: 1px;color:{[this.statusColor(values.waitFlag,values.talkDatetime)]}">',
                         '<i class="fa fa-comment fa-lg"></i>',
@@ -80,7 +80,7 @@ Ext.define('LineChat.view.main.UserList', {
             }
         );
         var talkerTpl = Ext.create('Ext.XTemplate',
-        '<div class="chat-item">',                
+        '<div class="chat-room-item ">',                
             '<div style="float:left;margin-right: 8px;color:gray">',
                 '<tpl if="imgUrl == \'\'">',
                     '<i class="fa fa-user fa-2x"></i>',
