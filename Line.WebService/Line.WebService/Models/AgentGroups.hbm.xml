@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<hibernate-mapping assembly="Line.WebService" namespace="Line.WebService.Models" xmlns="urn:nhibernate-mapping-2.2">
+  <class name="AgentGroups" table="agent_groups" lazy="true" >
+    <id name="GroupId" column="group_id" />
+    <property name="ActiveFlag">
+      <column name="active_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="GroupName">
+      <column name="group_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="GroupManager">
+      <column name="group_manager" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="GroupLeader">
+      <column name="group_leader" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="GroupDefaultPerson">
+      <column name="group_default_person" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="ReqCategoryId">
+      <column name="req_category_id" sql-type="int" not-null="true" />
+    </property>
+    <property name="TeamId">
+      <column name="team_id" sql-type="int" not-null="true" />
+    </property>
+    <property name="MenuPermission">
+      <column name="menu_permission" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="EditPermission">
+      <column name="edit_permission" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ShowOnList">
+      <column name="show_on_list" sql-type="char" not-null="true" />
+    </property>
+    <property name="UpdateDate">
+      <column name="update_date" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="UpdateBy">
+      <column name="update_by" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="SaleFlag">
+      <column name="sale_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="ShortName">
+      <column name="short_name" sql-type="nvarchar" not-null="true" />
+    </property>
+  </class>
+</hibernate-mapping>

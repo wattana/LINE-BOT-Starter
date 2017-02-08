@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<hibernate-mapping assembly="Line.WebService" namespace="Line.WebService.Models" xmlns="urn:nhibernate-mapping-2.2">
+  <class name="RequestCategories" table="request_categories" lazy="true" >
+    <id name="ReqCategoryId" column="req_category_id">
+      <generator class="identity" />
+    </id>
+    <property name="ReqCategoryName">
+      <column name="req_category_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ReqCategoryCode">
+      <column name="req_category_code" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ActiveFlag">
+      <column name="active_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="ReqCategoryDetail">
+      <column name="req_category_detail" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="RelationCaption">
+      <column name="relation_caption" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="RelationCategory">
+      <column name="relation_category" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ParentId">
+      <column name="parent_id" sql-type="int" not-null="true" />
+    </property>
+    <property name="ComplainFlag">
+      <column name="complain_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="HasChild">
+      <column name="has_child" sql-type="char" not-null="true" />
+    </property>
+    <property name="DefaultStatus">
+      <column name="default_status" sql-type="char" not-null="true" />
+    </property>
+    <property name="DefaultFeeling">
+      <column name="default_feeling" sql-type="char" not-null="true" />
+    </property>
+    <property name="DefaultGroup">
+      <column name="default_group" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="DefaultAssignee">
+      <column name="default_assignee" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="ShowOnList">
+      <column name="show_on_list" sql-type="char" not-null="true" />
+    </property>
+    <property name="ShowSeq">
+      <column name="show_seq" sql-type="smallint" not-null="true" />
+    </property>
+    <property name="SlaPeriod">
+      <column name="sla_period" sql-type="smallint" not-null="true" />
+    </property>
+    <property name="SlaUnit">
+      <column name="sla_unit" sql-type="char" not-null="true" />
+    </property>
+    <property name="DefaultFlow">
+      <column name="default_flow" sql-type="char" not-null="true" />
+    </property>
+    <property name="SlaInHour">
+      <column name="sla_in_hour" sql-type="int" not-null="true" />
+    </property>
+    <property name="OftenFlag">
+      <column name="often_flag" sql-type="char" not-null="false" />
+    </property>
+    <property name="DefaultProgress">
+      <column name="default_progress" sql-type="int" not-null="true" />
+    </property>
+    <property name="DefaultKbId">
+      <column name="default_kb_id" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="IntraFlag">
+      <column name="intra_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="UpdateDate">
+      <column name="update_date" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="UpdateBy">
+      <column name="update_by" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="RelateId">
+      <column name="relate_id" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="InternalFlag">
+      <column name="internal_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="BuId">
+      <column name="bu_id" sql-type="int" not-null="true" />
+    </property>
+    <property name="CustomerGroup">
+      <column name="CUSTOMER_GROUP" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="ServiceType">
+      <column name="SERVICE_TYPE" sql-type="decimal" not-null="false" />
+    </property>
+    <property name="QuestionId">
+      <column name="QUESTION_ID" sql-type="decimal" not-null="false" />
+    </property>
+    <property name="LocationFlag">
+      <column name="location_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="ProductFlag">
+      <column name="product_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="DocumentId">
+      <column name="document_id" sql-type="int" not-null="false" />
+    </property>
+    <property name="SurveyFlag">
+      <column name="survey_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="MsreplTranVersion">
+      <column name="msrepl_tran_version" sql-type="uniqueidentifier" not-null="true" />
+    </property>
+    <property name="NotifyDay">
+      <column name="notify_day" sql-type="int" not-null="true" />
+    </property>
+  </class>
+</hibernate-mapping>

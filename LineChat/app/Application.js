@@ -9,7 +9,7 @@ Ext.define('LineChat.Application', {
     name: 'LineChat',
 
     stores: [
-        "Contact","Room", "Message", "ContactTree"
+        "Contact","Room", "Message", "ContactTree","Request"
     ],
     glyphFontFamily: 'Pictos',
 
@@ -18,18 +18,27 @@ Ext.define('LineChat.Application', {
         var roomStore = this.getStore('Room');
         var contactStore = this.getStore('Contact');
         var contactTreeStore = this.getStore('ContactTree');
+        var requestStore = this.getStore('Request');
         app.baseURL = "";
         if (Ext.manifest['env']=='development') {
             socketUrl = "localhost:3000"
             roomStore.getProxy().setUrl("http://localhost:3000/listRoom")
             contactStore.getProxy().setUrl("http://localhost:3000/listContactRoom")
             contactTreeStore.getProxy().setUrl("http://localhost:3000/listContactTree")
+            requestStore.getProxy().setUrl("http://localhost:3000/listRequest")
             this.getStore('Message').getProxy().setUrl("http://localhost:3000/listMessage")
             app.baseURL = "http://localhost:3000/";
         }
         roomStore.load();
         contactStore.load();
         contactTreeStore.load();
+        /*
+        requestStore.load({
+            callback : function (records) {
+                console.log('requestStore',records)
+            }
+        });
+        */
         var today = new Date();
         app.info = {
             today : today,

@@ -269,7 +269,29 @@ Ext.define('LineChat.view.main.MessageChat', {
             getContent: me.getContent,
             formatDate: me.formatDate
         });
-
+        var fileTpl = Ext.create('Ext.XTemplate',
+            '<div class="chat-item">',
+                '<div style="position:absolute;bottom:5px;color:gray">',
+                    '<tpl if="pictureUrl == \'\' || pictureUrl==null">',
+                        '<i class="fa fa-user fa-2x"></i>',
+                    '<tpl else>',
+                        '<img src="{pictureUrl}/small" height=32 width=32 title="{lineName}">',
+                    '</tpl>',
+                    '<div class="chat-by-name" style>{lineName}</div>',
+                '</div>',
+                '<div class="bubble">',
+                    '<i class="fa fa-file-archive-o" aria-hidden="true" style="float:left; color:red"></i>',
+                    '<div>',
+                        '<a style ="text-decoration:none" href="{.:this.getBaseUrl}{filePath}{fileName}" target="_blank">&nbsp; {fileName}</a>',
+                    '</div>',
+                '</div>',
+            '<div class="chat-datetime">{date:this.formatDate}</div>',
+            '</div>',
+            {
+            getBaseUrl : me.getBaseUrl,
+            getContent: me.getContent,
+            formatDate: me.formatDate
+        });
         me.viewConfig = {
             stripeRows: false,
             preserveScrollOnRefresh: true,
@@ -311,6 +333,8 @@ Ext.define('LineChat.view.main.MessageChat', {
                     return videoTpl.apply(record.data)
                 } else if (record.get("messageType") == 'location') {
                     return locationTpl.apply(record.data)
+                } else if (record.get("messageType") == 'file') {
+                    return fileTpl.apply(record.data)
                 }
 
                 return messageTpl.apply(record.data)

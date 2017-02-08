@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<hibernate-mapping assembly="Line.WebService" namespace="Line.WebService.Models" xmlns="urn:nhibernate-mapping-2.2">
+  <class name="Agents" table="agents" lazy="true" >
+    <id name="AgentId" column="agent_id" />
+    <property name="ActiveFlag">
+      <column name="active_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="AgentGroupId">
+      <column name="agent_group_id" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="AgentName">
+      <column name="agent_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="DepartmentName">
+      <column name="department_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="DepartmentId">
+      <column name="department_id" sql-type="int" not-null="true" />
+    </property>
+    <property name="PositionName">
+      <column name="position_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="Phone">
+      <column name="phone" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="Fax">
+      <column name="fax" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="Mobile">
+      <column name="mobile" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="Email">
+      <column name="email" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="UserId">
+      <column name="user_id" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="UserPwd">
+      <column name="user_pwd" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="DataLevel">
+      <column name="data_level" sql-type="char" not-null="true" />
+    </property>
+    <property name="ViewId">
+      <column name="view_id" sql-type="int" not-null="true" />
+    </property>
+    <property name="DataPeriod">
+      <column name="data_period" sql-type="char" not-null="true" />
+    </property>
+    <property name="AgentNote">
+      <column name="agent_note" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ShowOnList">
+      <column name="show_on_list" sql-type="char" not-null="true" />
+    </property>
+    <property name="ShortName">
+      <column name="short_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="Extension">
+      <column name="extension" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="AgentImg">
+      <column name="agent_img" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="CategoryId">
+      <column name="category_id" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="UpdateDate">
+      <column name="update_date" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="UpdateBy">
+      <column name="update_by" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="ReportPermission">
+      <column name="report_permission" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="FlagClose">
+      <column name="flag_close" sql-type="char" not-null="true" />
+    </property>
+    <property name="FlagComplete">
+      <column name="flag_complete" sql-type="char" not-null="true" />
+    </property>
+    <property name="AdminPermission">
+      <column name="admin_permission" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ChatRoom">
+      <column name="chat_room" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="BuId">
+      <column name="bu_id" sql-type="int" not-null="true" />
+    </property>
+    <property name="FlagFollowup">
+      <column name="flag_followup" sql-type="char" not-null="true" />
+    </property>
+    <property name="ImportLock">
+      <column name="import_lock" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="ImportStatus">
+      <column name="import_status" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="Mantype">
+      <column name="mantype" sql-type="char" not-null="true" />
+    </property>
+    <property name="Mansalecode">
+      <column name="mansalecode" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="SupervisorFlag">
+      <column name="supervisor_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="Signature">
+      <column name="signature" sql-type="image" not-null="false" />
+    </property>
+    <property name="ThailandPostUserId">
+      <column name="thailand_post_user_id" sql-type="int" not-null="true" />
+    </property>
+    <property name="HiddencustFlag">
+      <column name="hiddencust_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="DeptDataLevel">
+      <column name="dept_data_level" sql-type="char" not-null="true" />
+    </property>
+    <property name="DeptViewId">
+      <column name="dept_view_id" sql-type="int" not-null="true" />
+    </property>
+  </class>
+</hibernate-mapping>

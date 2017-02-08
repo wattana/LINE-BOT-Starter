@@ -121,9 +121,23 @@ Ext.define('LineChat.view.main.Main', {
                 iconCls: 'fa-users',
                 layout: 'fit',
                 items: [{
-                    xtype: 'contact-tree'
+                    xtype: 'contact-tree',
+                    glyph: 'xf0c0@FontAwesome'
                 }]
-            
+            }, {
+                title: 'Request',
+                layout: 'fit',
+                hidden : true,
+                items: [{
+                    xtype: 'mainlist',
+                    store : 'Request',
+                    dockedItems: [{
+                        xtype: 'pagingtoolbar',
+                        store: 'Request', // same store GridPanel is using
+                        dock: 'bottom',
+                        displayInfo: true
+                    }]
+                }]            
             }, {
                 title: 'Contact',
                 hidden : true,
@@ -162,6 +176,9 @@ Ext.define('LineChat.view.main.Main', {
 
         var center  = Ext.create("Ext.panel.Panel",{
             region: 'center',
+            disabled : true,
+            bodyPadding : 1,
+            reference : 'center',
             layout: {
                 type: 'vbox',
                 padding: 1,
@@ -169,13 +186,13 @@ Ext.define('LineChat.view.main.Main', {
             },
             items: [{
                 title: 'Message',
+                glyph: 'xf1d7@FontAwesome',
                 xtype : 'form',
                 reference : 'roomInfoForm',
                 layout: 'hbox',
                 bodyStyle: {
                     background: '#eeeeee'
                 },
-                bodyPadding : 2,
                 items: [{
                     xtype: 'image',
                     name: 'picture',
@@ -200,8 +217,10 @@ Ext.define('LineChat.view.main.Main', {
                 } ,{
                     xtype : 'button',
                     glyph: 'xf24d@FontAwesome',
-                    glyphx: 'xf005@FontAwesome',
-                    text : 'ออกใบงาน'
+                    text : 'ออกใบงาน',
+                    disabled : true,
+                    reference : 'createRequestBtn',
+                    handler : 'onCreateRequestClick'
                 }, {
                     xtype: 'hiddenfield',
                     name: 'id'
@@ -223,7 +242,18 @@ Ext.define('LineChat.view.main.Main', {
                 }]
             }, {
                 xtype : 'messagechat',
-                flex: 1
+                flex: 1,
+                listeners : {
+                    selectionchange :  function( sm , selected , eOpts ) {
+                        var btn = me.down("button[reference=createRequestBtn]")
+                        var selection = sm.getSelection()
+                        if (selected.length)
+                            btn.setText("ออกใบงาน ("+sm.getSelection().length+")")
+                        else
+                            btn.setText("ออกใบงาน")
+                        btn.setDisabled(selection == 0) 
+                    }
+                }
             },{
                 xtype: 'form',
                 name : 'sendMessageForm',

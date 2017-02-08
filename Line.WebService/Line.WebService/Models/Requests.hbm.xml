@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<hibernate-mapping assembly="Line.WebService" namespace="Line.WebService.Models" xmlns="urn:nhibernate-mapping-2.2">
+  <class name="Requests" table="requests" lazy="true" >
+	<id name="RequestId" column="request_id">
+		  <generator class="guid"/>
+	</id>
+    <property name="RequestNumber">
+      <column name="request_number" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ContactId">
+      <column name="contact_id" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="PersonName">
+      <column name="person_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="CategoryId">
+      <column name="category_id" sql-type="int" not-null="true" />
+    </property>
+    <property name="RequestStatus">
+      <column name="request_status" sql-type="char" not-null="true" />
+    </property>
+    <property name="RequestPriority">
+      <column name="request_priority" sql-type="char" not-null="true" />
+    </property>
+    <property name="AssigneeGroupId">
+      <column name="assignee_group_id" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="AssigneeId">
+      <column name="assignee_id" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="ContactFeeling">
+      <column name="contact_feeling" sql-type="char" not-null="true" />
+    </property>
+    <property name="ProductId">
+      <column name="product_id" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="RequestDetail">
+      <column name="request_detail" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="RequestDetail2">
+      <column name="request_detail2" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="OpenDate">
+      <column name="open_date" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ExpireDate">
+      <column name="expire_date" sql-type="nvarchar" not-null="false" />
+    </property>
+    <property name="CloseDate">
+      <column name="close_date" sql-type="nvarchar" not-null="false" />
+    </property>
+    <property name="CloseBy">
+      <column name="close_by" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="CompleteDate">
+      <column name="complete_date" sql-type="nvarchar" not-null="false" />
+    </property>
+    <property name="ExpireFlag">
+      <column name="expire_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="LogBy">
+      <column name="log_by" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="ActiveFlag">
+      <column name="active_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="ContactClass">
+      <column name="contact_class" sql-type="char" not-null="true" />
+    </property>
+    <property name="SurveyRate">
+      <column name="survey_rate" sql-type="char" not-null="false" />
+    </property>
+    <property name="EscalateRound">
+      <column name="escalate_round" sql-type="int" not-null="true" />
+    </property>
+    <property name="ChannelType">
+      <column name="channel_type" sql-type="char" not-null="true" />
+    </property>
+    <property name="KbNumber">
+      <column name="kb_number" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="FirstClose">
+      <column name="first_close" sql-type="char" not-null="true" />
+    </property>
+    <property name="ReopenDate">
+      <column name="reopen_date" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ReopenBy">
+      <column name="reopen_by" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="ReopenReason">
+      <column name="reopen_reason" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="PolicyNumber">
+      <column name="policy_number" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="RootCauseId">
+      <column name="root_cause_id" sql-type="int" not-null="false" />
+    </property>
+    <property name="ProgressId">
+      <column name="progress_id" sql-type="int" not-null="false" />
+    </property>
+    <property name="LastupdateProgress">
+      <column name="lastupdate_progress" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="RequestPhone">
+      <column name="request_phone" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="RelateId">
+      <column name="relate_id" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="AlertExpireFlag">
+      <column name="alert_expire_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="ViewBy">
+      <column name="view_by" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="ViewDate">
+      <column name="view_date" sql-type="char" not-null="true" />
+    </property>
+    <property name="SurveyResult">
+      <column name="survey_result" sql-type="int" not-null="true" />
+    </property>
+    <property name="SurveyNote">
+      <column name="survey_note" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="Corrective">
+      <column name="corrective" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="Preventive">
+      <column name="preventive" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="DelayReasonId">
+      <column name="delay_reason_id" sql-type="int" not-null="true" />
+    </property>
+    <property name="UncontrollableFlag">
+      <column name="uncontrollable_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="ServiceFlag">
+      <column name="service_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="CloseType">
+      <column name="close_type" sql-type="int" not-null="true" />
+    </property>
+    <property name="OpenTime">
+      <column name="open_time" sql-type="nchar" not-null="true" />
+    </property>
+    <property name="SurveyDate">
+      <column name="survey_date" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="SurveyBy">
+      <column name="survey_by" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="Open2Date">
+      <column name="open2_date" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="CompleteBy">
+      <column name="complete_by" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="ChatSessionId">
+      <column name="chat_session_id" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="LastupdateAgent">
+      <column name="lastupdate_agent" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="LastupdateCust">
+      <column name="lastupdate_cust" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="ComplaintStore">
+      <column name="complaint_store" sql-type="int" not-null="true" />
+    </property>
+    <property name="CommercialGroup">
+      <column name="commercial_group" sql-type="char" not-null="true" />
+    </property>
+    <property name="MediaType">
+      <column name="media_type" sql-type="int" not-null="true" />
+    </property>
+    <property name="MediaName">
+      <column name="media_name" sql-type="int" not-null="true" />
+    </property>
+    <property name="AssigneeLastView">
+      <column name="assignee_last_view" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="SupCheckFlag">
+      <column name="sup_check_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="SupComment">
+      <column name="sup_comment" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ReserveFlag1">
+      <column name="reserve_flag1" sql-type="char" not-null="true" />
+    </property>
+    <property name="ReserverFlag2">
+      <column name="reserver_flag2" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="ReserveField1">
+      <column name="reserve_field1" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ReserveField2">
+      <column name="reserve_field2" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="FollowFlag">
+      <column name="follow_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="ComplaintAt">
+      <column name="complaint_at" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="ComplaintTo">
+      <column name="complaint_to" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="ComplaintProduct">
+      <column name="complaint_product" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="LastEscalateDate">
+      <column name="last_escalate_date" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="ComplaintToName">
+      <column name="complaint_to_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="EscalateCount">
+      <column name="escalate_count" sql-type="int" not-null="true" />
+    </property>
+    <property name="HiddencustFlag">
+      <column name="hiddencust_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="PlaceLat">
+      <column name="place_lat" sql-type="decimal" not-null="false" />
+    </property>
+    <property name="PlaceLng">
+      <column name="place_lng" sql-type="decimal" not-null="false" />
+    </property>
+    <property name="ImpactArea1">
+      <column name="impact_area1" sql-type="int" not-null="true" />
+    </property>
+    <property name="ImpactArea2">
+      <column name="impact_area2" sql-type="int" not-null="true" />
+    </property>
+    <property name="ImpactAreaDetail">
+      <column name="impact_area_detail" sql-type="varchar" not-null="true" />
+    </property>
+  </class>
+</hibernate-mapping>

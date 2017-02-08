@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<hibernate-mapping assembly="Line.WebService" namespace="Line.WebService.Models" xmlns="urn:nhibernate-mapping-2.2">
+  <class name="Prefix" table="prefix" lazy="true" >
+    <id name="PrefixId" column="prefix_id" />
+    <property name="ObjectType">
+      <column name="object_type" sql-type="char" not-null="true" />
+    </property>
+    <property name="ObjectPrefix">
+      <column name="object_prefix" sql-type="char" not-null="true" />
+    </property>
+    <property name="ObjectRunningId">
+      <column name="object_running_id" sql-type="char" not-null="true" />
+    </property>
+    <property name="UpdateDate">
+      <column name="update_date" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="UpdateBy">
+      <column name="update_by" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="PeriodFlag">
+      <column name="period_flag" sql-type="char" not-null="true" />
+    </property>
+  </class>
+</hibernate-mapping>

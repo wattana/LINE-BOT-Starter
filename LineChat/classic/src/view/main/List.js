@@ -6,19 +6,19 @@ Ext.define('LineChat.view.main.List', {
     xtype: 'mainlist',
 
     requires: [
-        'LineChat.store.Personnel'
+        'LineChat.store.Request'
     ],
 
-    title: 'Personnel',
+    title: 'Request',
 
     store: {
-        type: 'personnel'
+        type: 'request'
     },
 
     columns: [
-        { text: 'Name',  dataIndex: 'name' },
-        { text: 'Email', dataIndex: 'email', flex: 1 },
-        { text: 'Phone', dataIndex: 'phone', flex: 1 }
+        { text: 'request_no',  dataIndex: 'request_number' },
+        { text: 'open_date', dataIndex: 'open_date' },
+        { text: 'request_detail', dataIndex: 'request_detail', flex: 1 }
     ],
 
     listeners: {

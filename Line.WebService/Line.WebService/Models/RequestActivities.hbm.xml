@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<hibernate-mapping assembly="Line.WebService" namespace="Line.WebService.Models" xmlns="urn:nhibernate-mapping-2.2">
+  <class name="RequestActivities" table="request_activities" lazy="true" >
+	<id name="RequestActivityId" column="request_activity_id">
+		  <generator class="guid"/>
+	</id>    
+	<property name="RequestId">
+      <column name="request_id" sql-type="uniqueidentifier" not-null="true" />
+    </property>
+    <property name="ActivityDate">
+      <column name="activity_date" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ActivityType">
+      <column name="activity_type" sql-type="char" not-null="true" />
+    </property>
+    <property name="ActionBy">
+      <column name="action_by" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="ActionDate">
+      <column name="action_date" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ActivityDetail">
+      <column name="activity_detail" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ContactFeeling">
+      <column name="contact_feeling" sql-type="char" not-null="true" />
+    </property>
+    <property name="AckFlag">
+      <column name="ack_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="ContactFlow">
+      <column name="contact_flow" sql-type="char" not-null="true" />
+    </property>
+    <property name="ActiveFlag">
+      <column name="active_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="ActivityPersonName">
+      <column name="activity_person_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ActivityPriority">
+      <column name="activity_priority" sql-type="char" not-null="true" />
+    </property>
+    <property name="RequestStatus">
+      <column name="request_status" sql-type="char" not-null="false" />
+    </property>
+    <property name="ProgressId">
+      <column name="progress_id" sql-type="int" not-null="true" />
+    </property>
+	<!--
+    <property name="RunningSort">
+      <column name="running_sort" sql-type="int" not-null="true" />
+    </property>
+	-->
+    <property name="InternalFlag">
+      <column name="internal_flag" sql-type="char" not-null="true" />
+    </property>
+  </class>
+</hibernate-mapping>

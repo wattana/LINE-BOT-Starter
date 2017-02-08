@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<hibernate-mapping assembly="Line.WebService" namespace="Line.WebService.Models" xmlns="urn:nhibernate-mapping-2.2">
+  <class name="ContactPersons" table="contact_persons" lazy="true" >
+    <id name="ContactPersonId" column="contact_person_id" />
+    <property name="ContactId">
+      <column name="contact_id" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="PersonName">
+      <column name="person_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="DepartmentName">
+      <column name="department_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="PositionName">
+      <column name="position_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="PersonNote">
+      <column name="person_note" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ShowNote">
+      <column name="show_note" sql-type="char" not-null="true" />
+    </property>
+    <property name="ShowSeq">
+      <column name="show_seq" sql-type="char" not-null="true" />
+    </property>
+    <property name="PreferChannel">
+      <column name="prefer_channel" sql-type="char" not-null="true" />
+    </property>
+    <property name="EmailAddr">
+      <column name="email_addr" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ActiveFlag">
+      <column name="active_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="ContactPersonImg">
+      <column name="contact_person_img" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="UpdateDate">
+      <column name="update_date" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="UpdateBy">
+      <column name="update_by" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="DefaultFlag">
+      <column name="default_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="PersonCode">
+      <column name="person_code" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="PersonAdd1">
+      <column name="person_add1" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="PersonPhone">
+      <column name="person_phone" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="PhoneText">
+      <column name="phone_text" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="AgentId">
+      <column name="agent_id" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="EmpId">
+      <column name="emp_id" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="CompId">
+      <column name="comp_id" sql-type="int" not-null="true" />
+    </property>
+    <property name="LineId">
+      <column name="line_id" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="LineName">
+      <column name="line_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="LineInvite">
+      <column name="line_invite" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="LineJoin">
+      <column name="line_join" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="FbId">
+      <column name="fb_id" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="FbName">
+      <column name="fb_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="FbInvite">
+      <column name="fb_invite" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="FbJoin">
+      <column name="fb_join" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="TwId">
+      <column name="tw_id" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="TwName">
+      <column name="tw_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="TwInvite">
+      <column name="tw_invite" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="TwJoin">
+      <column name="tw_join" sql-type="varchar" not-null="true" />
+    </property>
+  </class>
+</hibernate-mapping>

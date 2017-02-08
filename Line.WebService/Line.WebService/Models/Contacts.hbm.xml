@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="utf-8"?>
+<hibernate-mapping assembly="Line.WebService" namespace="Line.WebService.Models" xmlns="urn:nhibernate-mapping-2.2">
+  <class name="Contacts" table="contacts" lazy="true" >
+    <id name="ContactId" column="contact_id" />
+    <property name="Code">
+      <column name="code" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="Name">
+      <column name="name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ShortName">
+      <column name="short_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ContactClass">
+      <column name="contact_class" sql-type="int" not-null="true" />
+    </property>
+    <property name="BusinessType">
+      <column name="business_type" sql-type="int" not-null="true" />
+    </property>
+    <property name="ContactType">
+      <column name="contact_type" sql-type="int" not-null="true" />
+    </property>
+    <property name="ContactGroup">
+      <column name="contact_group" sql-type="int" not-null="true" />
+    </property>
+    <property name="SegmentId">
+      <column name="segment_id" sql-type="int" not-null="true" />
+    </property>
+    <property name="ActiveFlag">
+      <column name="active_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="FirstContract">
+      <column name="first_contract" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="StartContract">
+      <column name="start_contract" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="EndContract">
+      <column name="end_contract" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="TotalSale">
+      <column name="total_sale" sql-type="decimal" not-null="true" />
+    </property>
+    <property name="TotalPay">
+      <column name="total_pay" sql-type="decimal" not-null="true" />
+    </property>
+    <property name="TotalDebt">
+      <column name="total_debt" sql-type="decimal" not-null="true" />
+    </property>
+    <property name="SalesTeam">
+      <column name="sales_team" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="SalesPerson">
+      <column name="sales_person" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="SalesZone">
+      <column name="sales_zone" sql-type="int" not-null="false" />
+    </property>
+    <property name="NewFlag">
+      <column name="new_flag" sql-type="char" not-null="false" />
+    </property>
+    <property name="Sex">
+      <column name="sex" sql-type="char" not-null="true" />
+    </property>
+    <property name="Status">
+      <column name="status" sql-type="char" not-null="true" />
+    </property>
+    <property name="BirthDate">
+      <column name="birth_date" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="ContactCondition">
+      <column name="contact_condition" sql-type="char" not-null="true" />
+    </property>
+    <property name="ContactImg">
+      <column name="contact_img" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="Age">
+      <column name="age" sql-type="smallint" not-null="true" />
+    </property>
+    <property name="VipType">
+      <column name="vip_type" sql-type="char" not-null="true" />
+    </property>
+    <property name="UpdateDate">
+      <column name="update_date" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="UpdateBy">
+      <column name="update_by" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="Note">
+      <column name="note" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="CreditTerm">
+      <column name="credit_term" sql-type="nvarchar" not-null="false" />
+    </property>
+    <property name="AgentId">
+      <column name="agent_id" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="IsLoad">
+      <column name="is_load" sql-type="char" not-null="true" />
+    </property>
+    <property name="CstuserId">
+      <column name="cstuser_id" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="CstuserPwd">
+      <column name="cstuser_pwd" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="CreateVia">
+      <column name="create_via" sql-type="char" not-null="true" />
+    </property>
+    <property name="ReferenceId">
+      <column name="reference_id" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="CreateBy">
+      <column name="create_by" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="CreateDate">
+      <column name="create_date" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="PreferLanguage">
+      <column name="prefer_language" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="MemberCode">
+      <column name="member_code" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="KnowChannel">
+      <column name="know_channel" sql-type="int" not-null="true" />
+    </property>
+    <property name="BuId">
+      <column name="bu_id" sql-type="int" not-null="true" />
+    </property>
+    <property name="Code1">
+      <column name="code1" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="Code2">
+      <column name="code2" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="TitleName">
+      <column name="title_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="CustName">
+      <column name="cust_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="CustName2">
+      <column name="cust_name2" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="BirthdateName">
+      <column name="birthdate_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="SexName">
+      <column name="sex_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="MaritalStatus">
+      <column name="marital_status" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="NationalId">
+      <column name="national_id" sql-type="int" not-null="true" />
+    </property>
+    <property name="NationalName">
+      <column name="national_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="AuthorizePerson">
+      <column name="authorize_person" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="BillName">
+      <column name="bill_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="BizLine">
+      <column name="biz_line" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="Payment">
+      <column name="payment" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ZoneId">
+      <column name="zone_id" sql-type="int" not-null="true" />
+    </property>
+    <property name="CustCat">
+      <column name="cust_cat" sql-type="int" not-null="true" />
+    </property>
+    <property name="CustLevel">
+      <column name="cust_level" sql-type="int" not-null="true" />
+    </property>
+    <property name="ProvinceId">
+      <column name="province_id" sql-type="int" not-null="true" />
+    </property>
+    <property name="Zipcode">
+      <column name="zipcode" sql-type="char" not-null="true" />
+    </property>
+    <property name="CustDebt">
+      <column name="cust_debt" sql-type="int" not-null="true" />
+    </property>
+    <property name="CustDelivery">
+      <column name="cust_delivery" sql-type="int" not-null="true" />
+    </property>
+    <property name="RegistNumber">
+      <column name="regist_number" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="RegistDate">
+      <column name="regist_date" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="RegistType">
+      <column name="regist_type" sql-type="int" not-null="true" />
+    </property>
+    <property name="RegistAmount">
+      <column name="regist_amount" sql-type="money" not-null="true" />
+    </property>
+    <property name="TaxId">
+      <column name="tax_id" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="CstEmail">
+      <column name="cst_email" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="CstWeb">
+      <column name="cst_web" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="WorkFollow">
+      <column name="work_follow" sql-type="int" not-null="true" />
+    </property>
+    <property name="LabelFlag">
+      <column name="label_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="LabelFlag2">
+      <column name="label_flag2" sql-type="char" not-null="true" />
+    </property>
+    <property name="Vat">
+      <column name="vat" sql-type="decimal" not-null="true" />
+    </property>
+    <property name="Wht">
+      <column name="wht" sql-type="decimal" not-null="true" />
+    </property>
+    <property name="Flag1">
+      <column name="flag1" sql-type="char" not-null="true" />
+    </property>
+    <property name="Flag2">
+      <column name="flag2" sql-type="char" not-null="true" />
+    </property>
+    <property name="String1">
+      <column name="string1" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="String2">
+      <column name="string2" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="FirstSale">
+      <column name="first_sale" sql-type="nchar" not-null="false" />
+    </property>
+    <property name="NonvatMember">
+      <column name="nonvat_member" sql-type="decimal" not-null="true" />
+    </property>
+    <property name="VatMember">
+      <column name="vat_member" sql-type="decimal" not-null="true" />
+    </property>
+    <property name="NonvatReserve">
+      <column name="nonvat_reserve" sql-type="decimal" not-null="true" />
+    </property>
+    <property name="VatReserve">
+      <column name="vat_reserve" sql-type="decimal" not-null="true" />
+    </property>
+    <property name="MemberFlag">
+      <column name="member_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="ImportDate">
+      <column name="import_date" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="RowId">
+      <column name="row_id" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="RaceId">
+      <column name="race_id" sql-type="int" not-null="true" />
+    </property>
+    <property name="RaceName">
+      <column name="race_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ClassName">
+      <column name="class_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="LastPrint">
+      <column name="last_print" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="RunningSort">
+      <column name="running_sort" sql-type="int" not-null="true" />
+    </property>
+    <property name="AgentGroupId">
+      <column name="agent_group_id" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="OpenDate">
+      <column name="open_date" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="ConvertDate">
+      <column name="convert_date" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="RenewDateFrom">
+      <column name="renew_date_from" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="RenewDateTo">
+      <column name="renew_date_to" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="CloseDate">
+      <column name="close_date" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="CofcType">
+      <column name="cofc_type" sql-type="int" not-null="true" />
+    </property>
+    <property name="CeopName">
+      <column name="ceop_name" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="LdName">
+      <column name="ld_name" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="SvName">
+      <column name="sv_name" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="NameEn">
+      <column name="name_en" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="OldCode">
+      <column name="old_code" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="Channel">
+      <column name="channel" sql-type="int" not-null="true" />
+    </property>
+    <property name="PreferTime">
+      <column name="prefer_time" sql-type="varchar" not-null="true" />
+    </property>
+  </class>
+</hibernate-mapping>

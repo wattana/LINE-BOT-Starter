@@ -49,11 +49,13 @@ Ext.define('LineChat.view.main.MainController', {
 
     talkingWith: function (view, record, item, index, e, options) {
         if (e && e.getTarget('div.x-delete-btn')) return;
+        this.getView().getReferences().center.enable()
         var roomInfo = this.getView().getReferences().roomInfoForm;
         var sendMessageForm = this.getReferences().sendMessageForm;
 
-        console.log(record)
+        //console.log(record)
         roomInfo.loadRecord(record);
+        roomInfo.down("hidden[name=agentId]").setValue(LineChat.app.info.agentId);
         roomInfo.down("image[name=picture]").setSrc(record.get("pictureUrl")+"/small");
         sendMessageForm.down("button[action=sendMessage]").show()
         sendMessageForm.down("button[action=sendContactMessage]").hide()
@@ -81,11 +83,13 @@ Ext.define('LineChat.view.main.MainController', {
             return
         }
         if (e && e.getTarget('div.x-delete-btn')) return;
+        this.getView().getReferences().center.enable()
         var roomInfo = this.getView().getReferences().roomInfoForm;
         var sendMessageForm = this.getReferences().sendMessageForm;
 
-        console.log('contactTalkingWith',record)
+        //console.log('contactTalkingWith',record)
         roomInfo.loadRecord(record);
+        roomInfo.down("hidden[name=agentId]").setValue(LineChat.app.info.agentId);
         roomInfo.down("image[name=picture]").setSrc(null);
         sendMessageForm.down("button[action=sendMessage]").hide()
         sendMessageForm.down("button[action=sendContactMessage]").show()
@@ -466,6 +470,73 @@ Ext.define('LineChat.view.main.MainController', {
             }).prop('disabled', !$.support.fileInput)
                 .parent().addClass($.support.fileInput ? undefined : 'disabled');
         });
+    },
+
+    onCreateRequestClick : function(btn) {
+        var me = this;
+        var form = this.getView().getReferences().roomInfoForm;
+        if (form.isValid()) {
+            Ext.create('Ext.window.Window', {
+            title: 'สร้างใบงาน',
+            xheight: 200,
+            xwidth: 400,
+            items: { 
+                xtype : 'fieldset',
+                title : 'อ้างถึงเลขที่ใบงาน',
+                items :[{
+                    xtype : 'textfield',
+                    width : 300,
+                    name : 'requestNumber'
+                }]
+            },
+            buttons : [{
+                text : 'Ok',
+                handler : function (btn) {
+                    var grid = me.getView().down('messagechat')
+                    var selected = grid.getSelection()
+                    var ids = [];
+                    for (var i=0; i<selected.length; i++) {
+                        ids.push(selected[i].get("id"));
+                    }
+                    form.submit({
+                        url: LineChat.app.baseURL+"createRequest", 
+                        waitMsg: 'Saving ...',
+                        params : {
+                            //payments : Ext.encode(payments)
+                            ids : Ext.util.JSON.encode(ids),
+                            requestNumber : btn.up("window").down('textfield[name=requestNumber]').getValue()
+                        },
+                        success: function (form, action) {
+                            var result = action.result;
+                            if (!result.success) {
+                                Ext.Msg.alert('Error', result.msg);
+                            } else {
+                                Ext.Msg.alert('Success', "บันทึกข้อมูลสำเร็จ เลขที่เอกสาร "+action.result.msg, function () {
+                                    //view.fireEvent("saved", form , action);
+                                    grid.getSelectionModel().deselectAll();
+                                    btn.up("window").close();
+                                });
+                            }   
+                        },
+                        failure: function (form, action) {
+                            Ext.Msg.alert('Failed', action.result.msg, function () {                                                    
+                            });
+                        }
+                    });
+                }
+            },{
+                text : 'Cancel',
+                handler : function () {
+                    this.up("window").close();
+                }
+            }]
+
+        }).show();
+            
+        } else {
+            Ext.Msg.alert('Failed', "กรุณาป้อนข้อมูลให้ครบ", function () {                                                    
+                    });
+        }
     }
 
 });

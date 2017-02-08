@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<hibernate-mapping assembly="Line.WebService" namespace="Line.WebService.Models" xmlns="urn:nhibernate-mapping-2.2">
+  <class name="Attachments" table="attachments" lazy="true" >
+	  <id name="AttachmentId" column="attachment_id">
+		  <generator class="identity" />
+	  </id>
+    <property name="RelateType">
+      <column name="relate_type" sql-type="char" not-null="true" />
+    </property>
+    <property name="RelateId">
+      <column name="relate_id" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="RelateId2">
+      <column name="relate_id2" sql-type="int" not-null="true" />
+    </property>
+    <property name="FileName">
+      <column name="file_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="FileType">
+      <column name="file_type" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="FileSize">
+      <column name="file_size" sql-type="decimal" not-null="true" />
+    </property>
+    <property name="FileDate">
+      <column name="file_date" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="OriginalFilename">
+      <column name="original_filename" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="Description">
+      <column name="description" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="FolderName">
+      <column name="folder_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ActiveFlag">
+      <column name="active_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="CreateDate">
+      <column name="create_date" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="CreateBy">
+      <column name="create_by" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="UpdateDate">
+      <column name="update_date" sql-type="varchar" not-null="true" />
+    </property>
+    <property name="UpdateBy">
+      <column name="update_by" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="UseFlag">
+      <column name="use_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="FileVersion">
+      <column name="file_version" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="VisibleFlag">
+      <column name="visible_flag" sql-type="char" not-null="true" />
+    </property>
+  </class>
+</hibernate-mapping>

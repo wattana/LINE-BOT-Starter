@@ -15,15 +15,20 @@ var async = require('async');
 var Client = require('node-rest-client').Client;
 var client = new Client();
 var token = 'Bearer {MVJYNb3LtA+efs7m5jbcxhIEeuMekIwto3kLBtF6qUwpykvpvSqqJSKFuHzDJf5tKklfG+BFSx0zuEAG0zFv8IU+tM8tOTUG0uU0Q3lJ/xWg3shdp/wUnph+j+tvIHRfE1zac0+dCe1tFNFbztgKqQdB04t89/1O/w1cDnyilFU=}'
-
+var WebServiceURL = "http://vm:46233/";
+var mime = require('mime');
 var Connection = require('tedious').Connection;
 var DbRequest = require('tedious').Request;
 var TYPES = require('tedious').TYPES;
 
+process.on('uncaughtException', function(e){
+    console.log(e.stack);
+});
+
 var dbConfig = {
-    userName: '******',
-    password: '******',
-    server: '*******',
+    userName: '*******',
+    password: '*******',
+    server: '172.16.93.***',
 
     // If you're on Windows Azure, you will need this:
     options: {
@@ -222,9 +227,28 @@ function onPushContactMessage (data) {
     async.series([
       function (callback) {
         var request = new DbRequest(
-          "SELECT line_id "+
+          "select line_name as lineName, pictureUrl from contact_lines where line_id = @lineId", 
+          function(err, rowCount , row) {
+            if (err) {
+              console.log("select line_messages error ",err);
+            }  
+            callback()     
+          });
+
+          request.on('row', function(columns) {
+            //console.log('-------------------',columns[0])
+            columns.forEach(function(column) {
+              room[column.metadata.colName] = column.value
+            });
+        });
+        request.addParameter('lineId', TYPES.VarChar, data.source.userId);
+        db.execSql(request);
+      },
+      function (callback) {
+        var request = new DbRequest(
+          "SELECT line_id ,line_name as lineName, pictureUrl "+
           " FROM contact_lines "+
-          "Where active_flag=1 and contact_id = @contactId", 
+          "Where active_flag='1' and contact_id = @contactId", 
           function(err, rowCount , row) {
             if (err) {
               console.log("select line_messages error ",err);
@@ -279,6 +303,7 @@ function onPushContactMessage (data) {
             console.log('result',result);
           });
         }
+        console.log("push contact message")
         io.emit('message', {
           roomId : room.id,
           userId: messageEv.source.userId,
@@ -299,6 +324,8 @@ function onPushContactMessage (data) {
           address : messageEv.message.address,
           latitude : messageEv.message.latitude,
           longitude : messageEv.message.longitude,
+          pictureUrl : room.pictureUrl,
+          lineName : room.lineName
         });
         callback();
       }
@@ -424,6 +451,74 @@ app.get('/testDb', function (req, res) {
   
 })
 
+var soap = require('soap');
+app.get('/testSoapUpload', function (req, res) {
+    var url = 'http://vm:46233/requestaeroservice.asmx?WSDL';
+    var args = {name: 'value'};
+  
+    soap.createClient(url, function(err, client) {
+      console.log(client.describe().RequestAeroService.RequestAeroServiceSoap.upload)
+      //res.send("ok") 
+      /*
+      client.search({
+        start : 0,
+        limit : 10
+      }, function(err, result) {
+          //console.log(result);
+          res.send(result) 
+      });
+      */
+      var dir = __dirname+'/content/';
+      var file_payload;
+      // Load the file into a buffer
+      fs.readFile(dir+'DashBoardSpec.pdf', function(err, the_data) {
+        if (err) console.error(err);
+        
+        // Encode the buffer to base64
+        file_payload = new Buffer(the_data, 'binary').toString('base64');
+        
+        // Set the parameters before we call the Web Service
+        var parameters = {
+          fileName : 'test.pdf',
+          buffer : file_payload,
+          Offset : 0
+        };
+        
+        console.log('      sending...')
+        // Make the Web Service call, remember node likes callbacks
+        client.upload(parameters, function(err, result) {
+          if (err) console.error(err);
+          
+          console.log(result);
+          
+          // This file is done, next!
+          res.send(result) 
+        });
+      });
+    });  
+    
+})
+
+app.get('/testSoap', function (req, res) {
+    var url = WebServiceURL+'requestsservice.asmx?WSDL';
+  
+    soap.createClient(url, function(err, client) {
+      console.log(client.describe().RequestsService.RequestsServiceSoap.save)
+      client.save({
+        data : {
+          RequestDetail : "RequestDetail",
+          ContactId : 'EBE65C2F-963B-4C3F-82C5-021465467FD3',
+          LogBy : 'AB30D036-5F28-44B4-9138-59A09DC49A5A'
+        }
+      }, function(err, result) {
+          //console.log(result);
+          res.send(result) 
+      });
+      
+      
+    });      
+})
+
 app.post('/message', jsonParser,function (req, res) {
     if (req.body.events.length <=0) {
         res.send('No Message !!! \n')
@@ -449,7 +544,7 @@ app.post('/message', jsonParser,function (req, res) {
                         saveNotMessageType(db , data, callback)
                     }
                 }
-            ],function() {
+            ],function(err , result) {
                 if (i==req.body.events.length-1)
                     db.close();
                 i++;
@@ -465,6 +560,180 @@ app.post('/message', jsonParser,function (req, res) {
     //console.log("message body ",JSON.stringify(req.body));
     res.send('Message success\n')
 })
+
+app.post('/createRequest', jsonParser,function (req, res) {
+    var ids = JSON.parse(req.body.ids) 
+    console.log("ids",ids)
+    var messages = [];
+    var messageTexts = [];
+    var db = new Connection(dbConfig);
+    db.on('connect', function(err) {
+        if (err) {
+            console.log(err)
+            return;
+        }
+        var request = new DbRequest(
+          "select * from line_messages where id in ("+ids.join(",")+")", 
+          function(err, rowCount , row) {
+              db.close();
+              if (err) {
+                console.log("select line_messages error ",err);
+              }       
+              //console.log("message",messages)
+
+              var url = WebServiceURL+'requestsservice.asmx?WSDL';
+              soap.createClient(url, function(err, client) {
+                  //console.log(client.describe().RequestsService.RequestsServiceSoap.save)
+                  var attachList = [];
+                  async.series([
+                    function (callback) {
+                        if (req.body.requestNumber) {
+                            client.loadRequests({
+                                requestNumber : req.body.requestNumber,
+                            }, function(err, result) {
+                                console.log("loadRequests", result)
+                                if (result.loadRequestsResult.RowXs) {
+                                  callback()
+                                } else {
+                                  callback({
+                                    success : false,
+                                    msg : 'ไม่พบใบงาน กรุณาป้อนใหม่'
+                                  });
+                                }
+                            });
+                        } else {
+                            callback();
+                        }
+                    },
+                    function (callback) {
+                        var i =0;
+                        async.eachSeries(messages , function(data, cbx) {
+                            //console.log('messages data',data );
+                             var isContent = data.messageType == 'image' || data.messageType == 'audio' ||
+                                             data.messageType == 'video' || data.messageType == 'file'
+                            if (isContent) {
+                                //console.log(client.describe().RequestsService.RequestsServiceSoap.saveAttach)
+                                var filePath = __dirname+'/'+data.filePath+data.fileName;
+                                var minetype = mime.lookup(filePath);
+                                //console.log("minetype",minetype)
+                                var file_payload;
+                                // Load the file into a buffer
+                                fs.readFile(filePath, function(err, the_data) {
+                                  if (err) console.error(err);
+                                  
+                                  // Encode the buffer to base64
+                                  file_payload = new Buffer(the_data, 'binary').toString('base64');
+                                  
+                                  // Set the parameters before we call the Web Service
+                                  var parameters = {
+                                    data: { 
+                                        FileName: data.fileName,
+                                        FileType: minetype,
+                                        FileSize: the_data.length,
+                                        OriginalFilename: data.originalFileName,
+                                        Description: '',
+                                        ActiveFlag: '1'
+                                    },
+                                    fileName : data.originalFileName,
+                                    buffer : file_payload,
+                                    Offset : 0
+                                  };
+                                  
+                                  //console.log('      sending...')
+                                  // Make the Web Service call, remember node likes callbacks
+                                  client.saveAttach(parameters, function(err, result) {
+                                      if (err) console.error(err);
+                                      //console.log("upload result",result)
+                                      attachList.push({
+                                        id : result.saveAttachResult.refId,
+                                        description : ""
+                                      })
+                                      if (i==messages.length-1)
+                                          callback();
+                                      i++;
+                                      cbx()
+                                  });
+                                });
+                            } else {
+                              if (i==messages.length-1)
+                                  callback();
+                              i++;
+                              cbx()
+                            }
+                        });
+                    },
+                    function (callback) {
+                        //console.log("attachList",attachList)
+                        client.save({
+                          data : {
+                            RequestNumber : req.body.requestNumber,
+                            RequestDetail : messageTexts.join("\n"),
+                            ContactId : req.body.contactId,
+                            LogBy : req.body.agentId,
+                            AttachmentList : JSON.stringify(attachList)
+                          }
+                        }, function(err, result) {
+                            callback(null, result);
+                        });
+                    }
+                  ],function (err , result) {
+                    console.log("result",result)
+                    if (err) {
+                        console.log("result",err,result)
+                        res.json(err);
+                    } else {
+                        res.json(result[2].saveResult);
+                    }
+                  });  
+              })
+          });
+
+          request.on('row', function(columns) {
+            //console.log('-------------------',columns[0])
+            var record = {};
+            columns.forEach(function(column) {
+              record[column.metadata.colName] = column.value
+            });
+            messages.push(record)
+            if (record.messageType == 'text') {
+                messageTexts.push(record.messageText)
+            }
+        });
+        db.execSql(request);
+    })
+})
+
+app.get('/listRequest',function (req, res) {
+  //console.log(req)
+  var messages = [];
+  var db = new Connection(dbConfig);
+  db.on('connect', function(err) {
+      if (err) {
+          console.log(err)
+          return;
+      }
+      var request = new DbRequest(
+        "SELECT top 10 * FROM requests order by open_date desc ", 
+        function(err, rowCount , row) {
+          db.close();
+          if (err) {
+            console.log("select requests error ",err);
+          }       
+          res.json(messages);
+        });
+
+        request.on('row', function(columns) {
+          //console.log('-------------------',columns[0])
+          var record = {};
+          columns.forEach(function(column) {
+            record[column.metadata.colName] = column.value
+          });
+          record.request_detail= record.request_detail.replace(/\n/g,"<br/>")
+          messages.push(record)
+        });
+        db.execSql(request);
+  })
+});
 
 app.get('/listAllMessage',function (req, res) {
     //console.log(req)
@@ -1170,7 +1439,7 @@ app.post('/contactUpload', function (req, res) {
       contactId : req.body.contactId ,
       "source": {
           "type": "agent",
-          "userId": req.body.userId
+          "userId": req.body.agentId
       },
       message : {
           id : time ,
@@ -1197,8 +1466,97 @@ app.post('/contactUpload', function (req, res) {
         if (messageType == 'audio') {
             messageEv.message.duration = parseInt(req.body.duration)
         }
-        var db = new sqlite3.Database(DATABASE_NAME);
+        var db = new Connection(dbConfig);
         var lineIds = []
+        db.on('connect', function(err) {
+          if (err) {
+              console.log(err)
+              return;
+          }
+          async.series([
+            function (callback) {
+              var request = new DbRequest(
+                "select line_name as lineName, pictureUrl from contact_lines where line_id = @lineId", 
+                function(err, rowCount , row) {
+                  if (err) {
+                    console.log("select line_messages error ",err);
+                  }  
+                  callback()     
+                });
+
+                request.on('row', function(columns) {
+                  //console.log('-------------------',columns[0])
+                  columns.forEach(function(column) {
+                    room[column.metadata.colName] = column.value
+                  });
+              });
+              request.addParameter('lineId', TYPES.VarChar, messageEv.source.userId);
+              db.execSql(request);
+            },
+            function (callback) {
+                var request = new DbRequest(
+                  "SELECT line_id "+
+                    " FROM contact_lines "+
+                    "Where active_flag=1 and contact_id = @contactId", 
+                  function(err, rowCount , row) {
+                    if (err) {
+                      console.log("select line_messages error ",err);
+                    }  
+                    callback()     
+                  });
+
+                  request.on('row', function(columns) {
+                    //console.log('-------------------',columns[0])
+                    var record = {}
+                    columns.forEach(function(column) {
+                      record[column.metadata.colName] = column.value
+                    });
+                    lineIds.push(record.line_id)
+                });
+                request.addParameter('contactId', TYPES.VarChar, messageEv.contactId);
+                db.execSql(request);
+            },
+            function (callback) {
+              saveMessage(db , room, messageEv, callback)
+            },
+            function (callback) {
+              console.log('line ids',lineIds)
+              for (var i=0; i<lineIds.length; i++) {
+                var args = {
+                  headers: { 
+                    "Authorization": token,
+                    "Content-Type": "application/json" 
+                  }, // request headers 
+                  data : {
+                    "to": lineIds[i],
+                    "messages":[messageEv.message]
+                  }
+                };
+                client.post("https://api.line.me/v2/bot/message/push", args, 
+                  function (result, response) {
+                    // parsed response body as js object 
+                    console.log('result',result);
+                    // raw response 
+                    //console.log(response);
+                });
+              }
+              callback();
+            }
+          ],function(err) { 
+            db.close();
+            if (err) return next(err);
+            res.json({
+              success : true,
+              message : messageEv,
+              room : room
+            });
+          });
+        });
+    }
+
+
+      /*
+        var db = new sqlite3.Database(DATABASE_NAME);
         db.serialize(function() {
           async.series([
             function (callback) {
@@ -1249,7 +1607,7 @@ app.post('/contactUpload', function (req, res) {
             //res.send('File uploaded!');
           })
         })
-    }
+        */
   });
   
   //sleep.sleep(30)
@@ -1697,6 +2055,8 @@ function createRoom(db, room, messageEv, cb) {
                       createtime : messageEv.timestamp ,
                       updatetime : messageEv.timestamp ,
                       lineName : result.displayName,
+                      filePath : messageEv.message.filePath,
+                      fileName : messageEv.message.fileName,
                       active_flag : 1
                   });
                   callback();                  
@@ -1828,6 +2188,8 @@ function updateRoom(db, room, messageEv, cb) {
                   latitude : messageEv.message.latitude,
                   longitude : messageEv.message.longitude,
                   pictureUrl : room.pictureUrl,
+                  filePath : messageEv.message.filePath,
+                  fileName : messageEv.message.fileName,
                   lineName : room.lineName
                 });
                 callback();                  
@@ -1895,6 +2257,8 @@ function getMessageText (messageEv) {
       return "send you a location"
     } else if (messageEv.message.type == 'sticker'){
       return "send you a sticker"
+    } else if (messageEv.message.type == 'file'){
+      return "send you a sticker"
     }
 }
 
@@ -1903,8 +2267,8 @@ function saveMessage(db , room, messageEv, callback) {
               [room.id, messageEv.replyToken, messageEv.type, 
               messageEv.timestamp,messageEv.source.type,messageEv.source.userId,
               messageEv.message.id, messageEv.message.type, messageEv.message.text]);
-  var request = new DbRequest(
-  "INSERT INTO line_messages "+
+    var request = new DbRequest(
+      "INSERT INTO line_messages "+
       "(roomId ,replyToken ,eventType ,timestamp ,sourceType ,"+
       "contact_id, sourceUserId , messageId ,messageType , "+
       "messageText, stickerId, packageId, "+
@@ -1927,8 +2291,10 @@ function saveMessage(db , room, messageEv, callback) {
           callback();
           return;
         }
-        if (messageEv.message.type == 'image') {
-          var dir = __dirname+'/content/images/'+room.id+"/";
+        var isContent = messageEv.message.type == 'image' || messageEv.message.type == 'audio' ||
+                        messageEv.message.type == 'video' || messageEv.message.type == 'file'
+        if (isContent) {
+          var dir = __dirname+'/'+messageEv.message.filePath;
           if (!fs.existsSync(dir)){
               fs.mkdirSync(dir);
           }
@@ -1937,41 +2303,7 @@ function saveMessage(db , room, messageEv, callback) {
           };
           client.get("https://api.line.me/v2/bot/message/"+messageEv.message.id+"/content", args, 
           function (result, response) {
-              fs.writeFile(dir+messageEv.message.id+'.png', result, 'binary', 
-              function(err){
-                  if (err) throw err
-                  console.log('File saved.')
-                  callback();
-              })
-          });
-        } else if (messageEv.message.type == 'audio') {
-          var dir = __dirname+'/content/audios/'+room.id+"/";
-          if (!fs.existsSync(dir)){
-              fs.mkdirSync(dir);
-          }
-          var args = {
-          headers: { "Authorization": token } // request headers 
-          };
-          client.get("https://api.line.me/v2/bot/message/"+messageEv.message.id+"/content", args, 
-          function (result, response) {
-              fs.writeFile(dir+messageEv.message.id+'.mp4', result, 'binary', 
-              function(err){
-                  if (err) throw err
-                  console.log('File saved.')
-                  callback();
-              })
-          });
-        } else if (messageEv.message.type == 'video') {
-          var dir = __dirname+'/content/videos/'+room.id+"/";
-          if (!fs.existsSync(dir)){
-              fs.mkdirSync(dir);
-          }
-          var args = {
-          headers: { "Authorization": token } // request headers 
-          };
-          client.get("https://api.line.me/v2/bot/message/"+messageEv.message.id+"/content", args, 
-          function (result, response) {
-              fs.writeFile(dir+messageEv.message.id+'.mp4', result, 'binary', 
+              fs.writeFile(dir+messageEv.message.fileName, result, 'binary', 
               function(err){
                   if (err) throw err
                   console.log('File saved.')
@@ -1981,7 +2313,24 @@ function saveMessage(db , room, messageEv, callback) {
         } else {
           callback();
         }
-      });
+     });
+
+    if (messageEv.source.type == 'user') {
+        if (messageEv.message.type == 'image') {
+          messageEv.message.filePath = 'content/images/'+room.id+"/"
+          messageEv.message.fileName = messageEv.message.id+'.png'
+        } else if (messageEv.message.type == 'audio') {
+          messageEv.message.filePath = 'content/audios/'+room.id+"/"
+          messageEv.message.fileName = messageEv.message.id+'.mp4'
+        } else if (messageEv.message.type == 'video') {
+          messageEv.message.filePath = 'content/videos/'+room.id+"/"
+          messageEv.message.fileName = messageEv.message.id+'.mp4'
+        } else if (messageEv.message.type == 'file') {
+          messageEv.message.filePath = 'content/files/'+room.id+"/"
+          messageEv.message.fileName = messageEv.message.id+path.extname(messageEv.message.fileName)
+          messageEv.message.originalFileName = messageEv.message.fileName;
+        }
+    }
     request.addParameter('roomId', TYPES.Int, room.id);
     request.addParameter('replyToken', TYPES.VarChar, messageEv.replyToken);
     request.addParameter('eventType', TYPES.VarChar, messageEv.type);

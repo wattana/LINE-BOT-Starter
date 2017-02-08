@@ -1,0 +1,117 @@
+using System;
+using System.Text;
+using System.Collections.Generic;
+
+
+namespace Line.WebService.Models {
+    
+    public class Contacts {
+        public virtual System.Guid ContactId { get; set; }
+        public virtual string Code { get; set; }
+        public virtual string Name { get; set; }
+        public virtual string ShortName { get; set; }
+        public virtual int ContactClass { get; set; }
+        public virtual int BusinessType { get; set; }
+        public virtual int ContactType { get; set; }
+        public virtual int ContactGroup { get; set; }
+        public virtual int SegmentId { get; set; }
+        public virtual string ActiveFlag { get; set; }
+        public virtual string FirstContract { get; set; }
+        public virtual string StartContract { get; set; }
+        public virtual string EndContract { get; set; }
+        public virtual decimal TotalSale { get; set; }
+        public virtual decimal TotalPay { get; set; }
+        public virtual decimal TotalDebt { get; set; }
+        public virtual System.Nullable<System.Guid> SalesTeam { get; set; }
+        public virtual System.Nullable<System.Guid> SalesPerson { get; set; }
+        public virtual int? SalesZone { get; set; }
+        public virtual string NewFlag { get; set; }
+        public virtual string Sex { get; set; }
+        public virtual string Status { get; set; }
+        public virtual string BirthDate { get; set; }
+        public virtual string ContactCondition { get; set; }
+        public virtual string ContactImg { get; set; }
+        public virtual short Age { get; set; }
+        public virtual string VipType { get; set; }
+        public virtual string UpdateDate { get; set; }
+        public virtual System.Nullable<System.Guid> UpdateBy { get; set; }
+        public virtual string Note { get; set; }
+        public virtual string CreditTerm { get; set; }
+        public virtual System.Nullable<System.Guid> AgentId { get; set; }
+        public virtual string IsLoad { get; set; }
+        public virtual string CstuserId { get; set; }
+        public virtual string CstuserPwd { get; set; }
+        public virtual string CreateVia { get; set; }
+        public virtual string ReferenceId { get; set; }
+        public virtual System.Nullable<System.Guid> CreateBy { get; set; }
+        public virtual string CreateDate { get; set; }
+        public virtual string PreferLanguage { get; set; }
+        public virtual string MemberCode { get; set; }
+        public virtual int KnowChannel { get; set; }
+        public virtual int BuId { get; set; }
+        public virtual string Code1 { get; set; }
+        public virtual string Code2 { get; set; }
+        public virtual string TitleName { get; set; }
+        public virtual string CustName { get; set; }
+        public virtual string CustName2 { get; set; }
+        public virtual string BirthdateName { get; set; }
+        public virtual string SexName { get; set; }
+        public virtual string MaritalStatus { get; set; }
+        public virtual int NationalId { get; set; }
+        public virtual string NationalName { get; set; }
+        public virtual string AuthorizePerson { get; set; }
+        public virtual string BillName { get; set; }
+        public virtual string BizLine { get; set; }
+        public virtual string Payment { get; set; }
+        public virtual int ZoneId { get; set; }
+        public virtual int CustCat { get; set; }
+        public virtual int CustLevel { get; set; }
+        public virtual int ProvinceId { get; set; }
+        public virtual string Zipcode { get; set; }
+        public virtual int CustDebt { get; set; }
+        public virtual int CustDelivery { get; set; }
+        public virtual string RegistNumber { get; set; }
+        public virtual string RegistDate { get; set; }
+        public virtual int RegistType { get; set; }
+        public virtual decimal RegistAmount { get; set; }
+        public virtual string TaxId { get; set; }
+        public virtual string CstEmail { get; set; }
+        public virtual string CstWeb { get; set; }
+        public virtual int WorkFollow { get; set; }
+        public virtual string LabelFlag { get; set; }
+        public virtual string LabelFlag2 { get; set; }
+        public virtual decimal Vat { get; set; }
+        public virtual decimal Wht { get; set; }
+        public virtual string Flag1 { get; set; }
+        public virtual string Flag2 { get; set; }
+        public virtual string String1 { get; set; }
+        public virtual string String2 { get; set; }
+        public virtual string FirstSale { get; set; }
+        public virtual decimal NonvatMember { get; set; }
+        public virtual decimal VatMember { get; set; }
+        public virtual decimal NonvatReserve { get; set; }
+        public virtual decimal VatReserve { get; set; }
+        public virtual string MemberFlag { get; set; }
+        public virtual string ImportDate { get; set; }
+        public virtual string RowId { get; set; }
+        public virtual int RaceId { get; set; }
+        public virtual string RaceName { get; set; }
+        public virtual string ClassName { get; set; }
+        public virtual string LastPrint { get; set; }
+        public virtual int RunningSort { get; set; }
+        public virtual System.Nullable<System.Guid> AgentGroupId { get; set; }
+        public virtual string OpenDate { get; set; }
+        public virtual string ConvertDate { get; set; }
+        public virtual string RenewDateFrom { get; set; }
+        public virtual string RenewDateTo { get; set; }
+        public virtual string CloseDate { get; set; }
+        public virtual int CofcType { get; set; }
+        public virtual string CeopName { get; set; }
+        public virtual string LdName { get; set; }
+        public virtual string SvName { get; set; }
+        public virtual string NameEn { get; set; }
+        public virtual string OldCode { get; set; }
+        public virtual int Channel { get; set; }
+        public virtual string PreferTime { get; set; }
+    }
+}
