@@ -18,7 +18,7 @@ var token = 'Bearer {MVJYNb3LtA+efs7m5jbcxhIEeuMekIwto3kLBtF6qUwpykvpvSqqJSKFuHz
 var sqlite3 = require('sqlite3').verbose();
 var DATABASE_NAME = "chat.db"
 var db = new sqlite3.Database(DATABASE_NAME);
-var sleep = require('sleep');
+//var sleep = require('sleep');
 
 app.use(fileUpload());
  

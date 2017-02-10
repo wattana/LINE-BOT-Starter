@@ -39,6 +39,7 @@ Ext.define('LineChat.Application', {
             }
         });
         */
+        
         var today = new Date();
         app.info = {
             today : today,

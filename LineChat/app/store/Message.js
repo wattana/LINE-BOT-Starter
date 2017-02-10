@@ -26,6 +26,10 @@ Ext.define('LineChat.store.Message', {
         },
         'info'
     ],
+    sorters: [{
+         property: 'timestamp',
+         direction: 'ASC'
+     }],
     autoLoad : false,
     proxy: {
          type: 'ajax',

@@ -49,8 +49,10 @@ Ext.define('LineChat.view.main.MainController', {
 
     talkingWith: function (view, record, item, index, e, options) {
         if (e && e.getTarget('div.x-delete-btn')) return;
+        var me = this;
         this.getView().getReferences().center.enable()
         var roomInfo = this.getView().getReferences().roomInfoForm;
+        roomInfo.reset();
         var sendMessageForm = this.getReferences().sendMessageForm;
 
         //console.log(record)
@@ -66,12 +68,22 @@ Ext.define('LineChat.view.main.MainController', {
         grid.getStore().load({
             callback: function (records, operation, success) {
                 //if (grid.getStore().getCount() > 0) grid.view.bufferedRenderer.scrollTo(grid.getStore().getCount());
+                /*
                 grid.getStore().suspendAutoSync();
                 Ext.each(records, function (record) {
                     if (record.get("readFlag") == '0') record.set("readFlag", '1')
                 })
                 grid.getStore().sync();
                 grid.getStore().resumeAutoSync();
+                */
+                //grid.getView().focusRow(grid.getStore().getCount()-1,1000);
+                if (record.get("unread")>0) {
+                    record.set("unread",0)
+                    me.socket.emit('messageReaded',
+                    {
+                        roomId : record.get('id')
+                    });
+                }
             }
         })
         
@@ -85,6 +97,7 @@ Ext.define('LineChat.view.main.MainController', {
         if (e && e.getTarget('div.x-delete-btn')) return;
         this.getView().getReferences().center.enable()
         var roomInfo = this.getView().getReferences().roomInfoForm;
+        roomInfo.reset();
         var sendMessageForm = this.getReferences().sendMessageForm;
 
         //console.log('contactTalkingWith',record)
@@ -101,12 +114,16 @@ Ext.define('LineChat.view.main.MainController', {
         grid.getStore().load({
             callback: function (records, operation, success) {
                 //if (grid.getStore().getCount() > 0) grid.view.bufferedRenderer.scrollTo(grid.getStore().getCount());
+                /*
                 grid.getStore().suspendAutoSync();
                 Ext.each(records, function (record) {
                     if (record.get("readFlag") == '0') record.set("readFlag", '1')
                 })
                 grid.getStore().sync();
                 grid.getStore().resumeAutoSync();
+                */
+                //grid.getView().focusRow(grid.getStore().getCount()-1,1000);
+
             }
         })
         
@@ -209,11 +226,11 @@ Ext.define('LineChat.view.main.MainController', {
 
     addMessage: function (chatMessage) {
         var me = this;
-        console.log('addMessage',chatMessage)
+        //console.log('addMessage',chatMessage)
         var chatRecord ;
         var roomInfo = this.getView().getReferences().roomInfoForm;
         var chatRoomGrid = this.getView().down('roomlist')
-        var roomRecord = chatRoomGrid.getStore().findRecord("userId", chatMessage.sourceUserId)
+        var roomRecord = chatRoomGrid.getStore().findRecord("id", chatMessage.roomId)
         if (roomRecord) {
             var grid = this.getView().down('messagechat')
             var updatetime = new Date(parseInt(chatMessage.timestamp));
@@ -225,14 +242,16 @@ Ext.define('LineChat.view.main.MainController', {
             if (roomRecord.get("id") == roomInfo.down("hidden[name=id]").getValue()) {
                 chatRecord = grid.getStore().add(chatMessage)
                 grid.getView().focusRow(grid.getStore().getCount()-1,500);
-                //grid.getView().focusRow(grid.getStore().getCount()-1);
-                //grid.getSelectionModel().select(grid.getStore().getAt(grid.getStore().getCount()-1))
+                me.socket.emit('messageReaded',
+                {
+                    roomId : chatMessage.roomId
+                });
             } else {
                 roomRecord.set("unread", roomRecord.get("unread")+1);        
             }
         }
         if (chatMessage.contactId) {
-            console.log('wat',chatMessage.contactId)
+            //console.log('wat',chatMessage.contactId)
             var tmp = me.addContactMessage(chatMessage);
             if (tmp) chatRecord = tmp;
         }
@@ -244,6 +263,10 @@ Ext.define('LineChat.view.main.MainController', {
         var chatRecord ;
         //console.log(chatMessage)
         var roomInfo = this.getView().getReferences().roomInfoForm;
+        if (roomInfo.down("hidden[name=userId]").getValue()) {
+            //console.log('why not return',roomInfo.down("hidden[name=userId]").getValue())
+            return;
+        }
         var chatRoomGrid = this.getView().down('contacts')
         var roomRecord = chatRoomGrid.getStore().findRecord("contactId", chatMessage.contactId)
         var grid = this.getView().down('messagechat')
@@ -279,7 +302,11 @@ Ext.define('LineChat.view.main.MainController', {
         var roomId = roomInfo.down("hidden[name=id]").getValue()
         var toTalkerId = roomInfo.down("hidden[name=userId]").getValue()
         var contactId = roomInfo.down("hidden[name=contactId]").getValue()
-        me.socket.emit('pushMessage',
+        var event = 'pushContactMessage';
+        if (roomInfo.down("hidden[name=userId]").getValue()) {
+            var event = 'pushMessage';
+        }
+        me.socket.emit(event,
         {
             roomId : roomId,
             replyToken: "",

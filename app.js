@@ -16,19 +16,24 @@ var Client = require('node-rest-client').Client;
 var client = new Client();
 var token = 'Bearer {MVJYNb3LtA+efs7m5jbcxhIEeuMekIwto3kLBtF6qUwpykvpvSqqJSKFuHzDJf5tKklfG+BFSx0zuEAG0zFv8IU+tM8tOTUG0uU0Q3lJ/xWg3shdp/wUnph+j+tvIHRfE1zac0+dCe1tFNFbztgKqQdB04t89/1O/w1cDnyilFU=}'
 var WebServiceURL = "http://vm:46233/";
+var WebHookBaseURL = "https://limitless-crag-52851.herokuapp.com";
 var mime = require('mime');
 var Connection = require('tedious').Connection;
 var DbRequest = require('tedious').Request;
 var TYPES = require('tedious').TYPES;
+
+var soap = require('soap');
+
+var thumbler = require('video-thumb');
 
 process.on('uncaughtException', function(e){
     console.log(e.stack);
 });
 
 var dbConfig = {
-    userName: '*******',
-    password: '*******',
-    server: '172.16.93.***',
+    userName: '****',
+    password: '****',
+    server: '****',
 
     // If you're on Windows Azure, you will need this:
     options: {
@@ -79,7 +84,7 @@ db.on('connect', function(err) {
                         "line_id [nvarchar](100) NOT NULL,"+
                         "line_name [nvarchar](100) NOT NULL, "+
                         "sourceType [varchar](35) DEFAULT (''), "+
-                        "statusMessage [nvarchar](250) NOT NULL, "+
+                        "statusMessage [nvarchar](250) NULL, "+
                         "pictureUrl [nvarchar](250) DEFAULT (''), "+
                         "active_flag [char](1) NOT NULL, "+
                         "join_date bigint, "+
@@ -140,10 +145,11 @@ db.on('connect', function(err) {
                         "contact_person_id [uniqueidentifier], "+
                         "displayName [nvarchar](100) DEFAULT (''), "+
                         "pictureUrl [nvarchar](200) DEFAULT (''), "+
-                        "statusMessage [nvarchar](100) DEFAULT (''),"+
+                        "statusMessage [nvarchar](250) DEFAULT (''),"+
                         "sourceType [nvarchar](20) DEFAULT (''),"+
                         "messageType [nvarchar](20) DEFAULT (''),"+
                         "message [nvarchar](500) DEFAULT (''),"+
+                        "unread [int] NOT NULL DEFAULT(0),"+
                         "createtime bigint,"+
                         "updatetime bigint,"+
                         "active_flag [char](1) NOT NULL)",
@@ -162,11 +168,13 @@ db.on('connect', function(err) {
         })
     }
 });
+
 io.on('connection', function(socket){
   console.log('a user connected');
   socket.emit('news', { hello: 'world' });
   socket.on('pushMessage', onPushMessage);
   socket.on('pushContactMessage', onPushContactMessage);
+  socket.on('messageReaded', onMessageReaded);
 });
 
 function onPushMessage (data) {
@@ -292,10 +300,7 @@ function onPushContactMessage (data) {
               }, // request headers 
               data : {
                 "to": lineIds[i],
-                  "messages":[{
-                    "type":"text",
-                    "text":data.message.text
-                  }]
+                  "messages":[data.message]
               }
           };
           client.post("https://api.line.me/v2/bot/message/push", args, 
@@ -335,6 +340,27 @@ function onPushContactMessage (data) {
     })
   });
   
+}
+
+function onMessageReaded (data) {
+    var db = new Connection(dbConfig);
+    db.on('connect', function(err) {
+        if (err) {
+            console.log(err)
+            return;
+        }
+        var request = new DbRequest(
+           "update line_chat_room set unread=0 where id=@roomId",
+          function(err, rowCount , row) {
+            db.close();
+            if (err) {
+              console.log("UpdateRoom error ",err);
+              throw err;
+            }
+        });
+        request.addParameter('roomId', TYPES.Int, data.roomId);
+        db.execSql(request);
+    });
 }
 
 app.use(fileUpload());
@@ -451,7 +477,6 @@ app.get('/testDb', function (req, res) {
   
 })
 
-var soap = require('soap');
 app.get('/testSoapUpload', function (req, res) {
     var url = 'http://vm:46233/requestaeroservice.asmx?WSDL';
     var args = {name: 'value'};
@@ -583,6 +608,13 @@ app.post('/createRequest', jsonParser,function (req, res) {
 
               var url = WebServiceURL+'requestsservice.asmx?WSDL';
               soap.createClient(url, function(err, client) {
+                  if (err) {
+                      res.json({
+                        success : false,
+                        msg : JSON.stringify(err)
+                      })
+                      return;
+                  };
                   //console.log(client.describe().RequestsService.RequestsServiceSoap.save)
                   var attachList = [];
                   async.series([
@@ -897,19 +929,9 @@ app.get('/listContact',function (req, res) {
 app.get('/listMessage',function (req, res) {
   //console.log(req)
   var messages = [];
-  var sql = "SELECT messages.id AS id, roomId, replyToken, eventType, timestamp ,messages.sourceType, "+
-         "messages.contact_id as contactId, sourceUserId , messageId,"+
-         "messages.messageType , messageText ,info as message ,contact_lines.pictureUrl, "+
-         "stickerId, packageId ,title, address, latitude, longitude, "+
-         "filePath, fileName , originalFileName ,line_name as lineName "+
-         "FROM line_messages messages , line_chat_room chat_room "+
-         ",contact_lines "+
-         "where messages.roomId = chat_room.id "+
-         "and contact_lines.line_id = messages.sourceUserId "+
-         "and chat_room.id = @roomId and eventType='message' "+
-         "order by messages.timestamp"
+  var sql;
   if (req.query.contactId) {
-    sql = "SELECT messages.id AS id, roomId, replyToken, eventType, timestamp ,messages.sourceType, "+
+    sql = "SELECT top 100 messages.id AS id, roomId, replyToken, eventType, timestamp ,messages.sourceType, "+
          "messages.contact_id as contactId, sourceUserId , messageId, "+
          "messages.messageType , messageText ,info as message, contact_lines.pictureUrl,"+
          "stickerId, packageId ,title, address, latitude, longitude, "+
@@ -919,7 +941,19 @@ app.get('/listMessage',function (req, res) {
          "where messages.contact_id = @contactId "+
          "and contact_lines.line_id = messages.sourceUserId "+
          "and eventType='message' "+
-         "order by messages.timestamp"
+         "order by messages.timestamp desc"
+  } else {
+     sql = "SELECT top 100 messages.id AS id, roomId, replyToken, eventType, timestamp ,messages.sourceType, "+
+         "messages.contact_id as contactId, sourceUserId , messageId,"+
+         "messages.messageType , messageText ,info as message ,contact_lines.pictureUrl, "+
+         "stickerId, packageId ,title, address, latitude, longitude, "+
+         "filePath, fileName , originalFileName ,line_name as lineName "+
+         "FROM line_messages messages , line_chat_room chat_room "+
+         ",contact_lines "+
+         "where messages.roomId = chat_room.id "+
+         "and contact_lines.line_id = messages.sourceUserId "+
+         "and chat_room.id = @roomId and eventType='message' "+
+         "order by messages.timestamp desc"
   }
   //console.log("listMessage", sql)
   var messages = [];
@@ -949,7 +983,7 @@ app.get('/listMessage',function (req, res) {
       if (req.query.contactId)
         request.addParameter('contactId', TYPES.VarChar, req.query.contactId);
       else 
-        request.addParameter('roomId', TYPES.VarChar, req.query.roomId);
+        request.addParameter('roomId', TYPES.Int, req.query.roomId);
       db.execSql(request);
   })
  /*  
@@ -1006,7 +1040,7 @@ app.get('/listRoom',function (req, res) {
       }
       var request = new DbRequest(
         "SELECT id, sourceType,userId ,contact_id, contact_person_id, displayName, pictureUrl,"+ 
-        "statusMessage, messageType, message ,createtime, updatetime, active_flag FROM line_chat_room", 
+        "statusMessage, messageType, message ,createtime, updatetime, unread, active_flag FROM line_chat_room", 
         function(err, rowCount , row) {
           db.close();
           if (err) {
@@ -1240,13 +1274,14 @@ app.post('/upload', function (req, res) {
 
   var time = String(Date.now());
   var fileName = time+extension
+  var thumbFileName = time+"_thumb.png"
   var messageType = 'image';
-  var originalContentUrl = "https://limitless-crag-52851.herokuapp.com/content/upload/"+room.id+"/"+fileName;
-  var previewImageUrl = "https://limitless-crag-52851.herokuapp.com/content/upload/"+room.id+"/"+fileName;
+  var originalContentUrl = WebHookBaseURL+"/content/upload/"+room.id+"/"+fileName;
+  var previewImageUrl = WebHookBaseURL+"content/upload/"+room.id+"/"+fileName;
   var duration = 0;
   if (uploadFile.mimetype.indexOf("video") != -1 ) {
     messageType = 'video';
-    previewImageUrl = "https://limitless-crag-52851.herokuapp.com/resources/images/facetime.png";
+    previewImageUrl = WebHookBaseURL+"content/upload/"+room.id+"/"+thumbFileName;  //"/resources/images/facetime.png";
   } else if (uploadFile.mimetype.indexOf("audio") != -1 ) { 
     messageType = 'audio';
   }
@@ -1286,6 +1321,10 @@ app.post('/upload', function (req, res) {
     else {
         if (messageType == 'audio') {
             messageEv.message.duration = parseInt(req.body.duration)
+        } else if (messageType == 'video') {
+            thumbler.extract(dir+fileName, dir+thumbFileName, '00:00:22', '200x125', function(result){
+                console.log('snapshot saved to snapshot.png (200x125) with a frame at 00:00:22',result);
+            });
         }
         var db = new Connection(dbConfig);
         db.on('connect', function(err) {
@@ -1419,13 +1458,15 @@ app.post('/contactUpload', function (req, res) {
 
   var time = String(Date.now());
   var fileName = time+extension
+  var thumbFileName = time+"_thumb.png"
+  
   var messageType = 'image';
-  var originalContentUrl = "https://limitless-crag-52851.herokuapp.com/content/upload/"+room.contact_id+"/"+fileName;
-  var previewImageUrl = "https://limitless-crag-52851.herokuapp.com/content/upload/"+room.contact_id+"/"+fileName;
+  var originalContentUrl = WebHookBaseURL+"/content/upload/"+room.contact_id+"/"+fileName;
+  var previewImageUrl = WebHookBaseURL+"/content/upload/"+room.contact_id+"/"+fileName;
   var duration = 0;
   if (uploadFile.mimetype.indexOf("video") != -1 ) {
     messageType = 'video';
-    previewImageUrl = "https://limitless-crag-52851.herokuapp.com/resources/images/facetime.png";
+    previewImageUrl = WebHookBaseURL+"/resources/images/facetime.png";
   } else if (uploadFile.mimetype.indexOf("audio") != -1 ) { 
     messageType = 'audio';
   }
@@ -1671,7 +1712,7 @@ function followHandler(db ,data , cb) {
       async.series([
           function (callback) {
             var request = new DbRequest(
-            "select contact_id, contact_person_id from contact_persons where line_name = @line_name and line_id = ''", 
+            "select contact_id, contact_person_id from contact_persons where line_name = @line_name", // and line_id = ''", 
             function(err, rowCount , row) {
               if (err) {
                 console.log("select line_messages error ",err);
@@ -1685,7 +1726,7 @@ function followHandler(db ,data , cb) {
                 result[column.metadata.colName] = column.value
               });
             });
-            request.addParameter('line_name', TYPES.VarChar, result.displayName);
+            request.addParameter('line_name', TYPES.NVarChar, result.displayName);
             db.execSql(request);
           },
           function (callback) {
@@ -1901,8 +1942,8 @@ function createRoom(db, room, messageEv, cb) {
       //console.log(response);
       async.series([
         function (callback) {
-          var request = new DbRequest(
-            "SELECT top 1 contact_lines.id AS id, "+
+            var request = new DbRequest(
+              "SELECT top 1 contact_lines.id AS id, "+
                   "contact_lines.contact_id , "+
                   "contact_lines.contact_person_id , "+
                   "contact_lines.line_id ,"+
@@ -1925,18 +1966,27 @@ function createRoom(db, room, messageEv, cb) {
                         room.line_id = null
                         room.line_name = null
                         room.contactName = null
+                      /*
                     } else {
                         room.contact_id = row.contact_id
                         room.contact_person_id = row.contact_person_id
                         room.line_id = row.line_id
                         room.line_name = row.line_name
                         room.contactName = row.contactName
+                        */
                     }
                   }
                   callback();
-                });
-                request.addParameter('line_id', TYPES.VarChar, messageEv.source.userId);
-                db.execSql(request);
+            });
+            request.on('row', function(columns) {
+              //console.log('-------------------',columns[0])
+              columns.forEach(function(column) {
+                room[column.metadata.colName] = column.value
+              });
+            });
+
+            request.addParameter('line_id', TYPES.VarChar, messageEv.source.userId);
+            db.execSql(request);
 
                 /*
           db.get("SELECT contact_lines.rowid AS id, "+
@@ -1973,8 +2023,8 @@ function createRoom(db, room, messageEv, cb) {
             console.log("Insert  line_chat_room", [room.id,messageEv.source.userId,"","","",1]);
             var request = new DbRequest(
             "INSERT INTO line_chat_room "+
-            "(userId ,contact_id, contact_person_id, sourceType, displayName, pictureUrl, statusMessage, active_flag) values "+
-            "(@userId ,@contact_id, @contact_person_id, @sourceType, @displayName, @pictureUrl, @statusMessage, @active_flag);"+
+            "(userId ,contact_id, contact_person_id, sourceType, displayName, pictureUrl, statusMessage, active_flag, unread) values "+
+            "(@userId ,@contact_id, @contact_person_id, @sourceType, @displayName, @pictureUrl, @statusMessage, @active_flag, 1);"+
             "select @@identity",
                 function(err, rowCount , row) {
                   if (err) {
@@ -2057,6 +2107,7 @@ function createRoom(db, room, messageEv, cb) {
                       lineName : result.displayName,
                       filePath : messageEv.message.filePath,
                       fileName : messageEv.message.fileName,
+                      unread : 1,
                       active_flag : 1
                   });
                   callback();                  
@@ -2131,7 +2182,7 @@ function updateRoom(db, room, messageEv, cb) {
           return;
         }
         var request = new DbRequest(
-          "select line_name as lineName, pictureUrl from contact_lines where line_id = @lineId", 
+          "select contact_id, contact_person_id, line_name as lineName, pictureUrl from contact_lines where line_id = @lineId", 
           function(err, rowCount , row) {
             if (err) {
               console.log("select line_messages error ",err);
@@ -2139,7 +2190,7 @@ function updateRoom(db, room, messageEv, cb) {
             callback()     
           });
 
-          request.on('row', function(columns) {
+        request.on('row', function(columns) {
             //console.log('-------------------',columns[0])
             columns.forEach(function(column) {
               room[column.metadata.colName] = column.value
@@ -2157,8 +2208,11 @@ function updateRoom(db, room, messageEv, cb) {
         var messageText = getMessageText(messageEv);
         var request = new DbRequest(
            "update line_chat_room set "+
-              "messageType = @messageType "+
+              "contact_id = @contactId "+
+              ",contact_person_id = @contactPersonId "+
+              ",messageType = @messageType "+
               ",message = @message "+
+              ",unread = unread+1 "+
               ",sourceType = @sourceType "+
               ",updatetime = @updatetime "+
               "WHERE userId = @userId and active_flag='1'",
@@ -2168,6 +2222,7 @@ function updateRoom(db, room, messageEv, cb) {
                   throw err;
                 }
                 io.emit('message', {
+                  id : messageEv.id,
                   roomId : room.id,
                   userId: messageEv.source.userId,
                   contactId : room.contact_id, 
@@ -2194,6 +2249,8 @@ function updateRoom(db, room, messageEv, cb) {
                 });
                 callback();                  
               });
+              request.addParameter('contactId', TYPES.VarChar, room.contact_id);
+              request.addParameter('contactPersonId', TYPES.VarChar, room.contact_person_id);
               request.addParameter('messageType', TYPES.VarChar, messageEv.message.type);
               request.addParameter('message', TYPES.NVarChar, messageText);
               request.addParameter('sourceType', TYPES.NVarChar, messageEv.source.type);
@@ -2280,7 +2337,7 @@ function saveMessage(db , room, messageEv, callback) {
       "@messageText, @stickerId, @packageId, "+
       "@title, @address, @latitude, @longitude, "+
       "@filePath, @fileName, @originalFileName, "+
-      "@info)",
+      "@info);select @@identity",
       function(err, rowCount , row) {
         if (err) {
           console.log("INSERT messages  error ",err);
@@ -2314,6 +2371,11 @@ function saveMessage(db , room, messageEv, callback) {
           callback();
         }
      });
+    request.on('row', function(columns) {
+        //console.log("function 2  row ",columns);
+        messageEv.id = columns[0].value;
+        console.log("Message lastID",columns[0].value)
+    });
 
     if (messageEv.source.type == 'user') {
         if (messageEv.message.type == 'image') {

@@ -12,6 +12,8 @@ Ext.define('LineChat.view.main.MessageChat', {
     columnLines: false,
     rowLines : true,
     selType: 'checkboxmodel',
+    syncRowHeight: true,
+    numFromEdgexx : 10000,
 
     initComponent: function() {
         var me = this;
@@ -280,10 +282,8 @@ Ext.define('LineChat.view.main.MessageChat', {
                     '<div class="chat-by-name" style>{lineName}</div>',
                 '</div>',
                 '<div class="bubble">',
-                    '<i class="fa fa-file-archive-o" aria-hidden="true" style="float:left; color:red"></i>',
-                    '<div>',
-                        '<a style ="text-decoration:none" href="{.:this.getBaseUrl}{filePath}{fileName}" target="_blank">&nbsp; {fileName}</a>',
-                    '</div>',
+                    '<i class="fa fa-file-archive-o" aria-hidden="true" style="float:left;font-size: 18px;font-weight: bold;color: brown;"></i>',
+                    '<a style ="text-decoration:none" href="{.:this.getBaseUrl}{filePath}{fileName}" target="_blank">&nbsp; {fileName}</a>',
                 '</div>',
             '<div class="chat-datetime">{date:this.formatDate}</div>',
             '</div>',
@@ -294,14 +294,24 @@ Ext.define('LineChat.view.main.MessageChat', {
         });
         me.viewConfig = {
             stripeRows: false,
-            preserveScrollOnRefresh: true,
+            preserveScrollOnRefresh: false,
             enableTextSelection: true,
-            trackOver: false,
+            //trackOver: false,
             listeners: {
-                refresh: function () {
+                refresh: function (view) {
+                    //me.getView().scrollBy(0, 999999, true);
+                    //me.getView().focusRow(me.getStore().getCount()-1,1000);
                     var me = this;
                     Ext.defer(function () {
-                        if (me.getStore().getCount() > 0) me.bufferedRenderer.scrollTo(me.getStore().getCount() - 1);
+                        if (me.getStore().getCount() > 0) {
+                            me.bufferedRenderer.scrollTo(me.getStore().getCount() - 1,
+                            {
+                                animate:true,
+                                callback : function (item) {
+                                    view.focusRow(me.getStore().getCount()-1,1500)
+                                }
+                            });
+                        }
                     }, 500)
                 }
             }
