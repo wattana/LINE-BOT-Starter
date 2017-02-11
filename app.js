@@ -1320,7 +1320,8 @@ app.post('/upload', function (req, res) {
         if (messageType == 'audio') {
             messageEv.message.duration = parseInt(req.body.duration)
         } else if (messageType == 'video') {
-            thumbler.extract(dir+fileName, dir+thumbFileName, '00:00:22', '200x125', function(result){
+            console.log("create thumb",dir+fileName, dir+thumbFileName)
+            thumbler.extract(dir+fileName, dir+thumbFileName, '00:00:02', '200x125', function(result){
                 console.log('snapshot saved to snapshot.png (200x125) with a frame at 00:00:22',result);
             });
         }
