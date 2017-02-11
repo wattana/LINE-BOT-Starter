@@ -24,7 +24,7 @@ router.post('/appInfo', function(req, res, next) {
         // If no error, then good to go...
         var info = {}
         var request = new DbRequest(
-          "select * from contact_lines where line_id = @lineId", 
+          "select * from line_contacts where line_id = @lineId", 
           function(err, rowCount , row) {
             if (err) {
               console.log("select line_messages error ",err);
@@ -64,14 +64,14 @@ function agentDummy(db , res) {
         "invite_date":null
     }
     var request = new DbRequest(
-    "INSERT INTO contact_lines"+
+    "INSERT INTO line_contacts"+
     "([contact_id],[contact_person_id],[line_id],[line_name],[active_flag]"+
     ",[join_date],[invite_by],[invite_date],statusMessage, pictureUrl, sourceType) "+
     "VALUES (@contact_id, @contact_person_id, @line_id, @line_name, @active_flag"+
     ",@join_date, @invite_by ,@invite_date,@statusMessage, @pictureUrl, @sourceType);select @@identity",
     function(err, rowCount , row) {
         if (err) {
-            console.log("contact_lines error ",err);
+            console.log("line_contacts error ",err);
         }
         db.close();
         res.json(info);
