@@ -1275,11 +1275,11 @@ app.post('/upload', function (req, res) {
   var thumbFileName = time+"_thumb.png"
   var messageType = 'image';
   var originalContentUrl = WebHookBaseURL+"/content/upload/"+room.id+"/"+fileName;
-  var previewImageUrl = WebHookBaseURL+"content/upload/"+room.id+"/"+fileName;
+  var previewImageUrl = WebHookBaseURL+"/content/upload/"+room.id+"/"+fileName;
   var duration = 0;
   if (uploadFile.mimetype.indexOf("video") != -1 ) {
     messageType = 'video';
-    previewImageUrl = WebHookBaseURL+"content/upload/"+room.id+"/"+thumbFileName;  //"/resources/images/facetime.png";
+    previewImageUrl = WebHookBaseURL+"/content/upload/"+room.id+"/"+thumbFileName;  //"/resources/images/facetime.png";
   } else if (uploadFile.mimetype.indexOf("audio") != -1 ) { 
     messageType = 'audio';
   }
