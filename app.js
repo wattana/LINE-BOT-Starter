@@ -63,16 +63,16 @@ db.on('connect', function(err) {
                 }))
             },
             function (callback) {
-                db.execSql(new DbRequest("drop TABLE contact_lines",function(err, rowCount, rows) {
+                db.execSql(new DbRequest("drop TABLE line_contacts",function(err, rowCount, rows) {
                     if (err) console.log('drop table error 3:',err);
-                    else console.log('drop table contact_lines success 1');
+                    else console.log('drop table line_contacts success 1');
                     callback();
                 }))
             },
             function (callback) {
                 var request = new DbRequest(
-                    "if not exists (select * from sysobjects where name='contact_lines' and xtype='U')"+
-                        "CREATE TABLE contact_lines ("+
+                    "if not exists (select * from sysobjects where name='line_contacts' and xtype='U')"+
+                        "CREATE TABLE line_contacts ("+
                         "[id] [int] IDENTITY(1,1) NOT NULL,"+
                         "[contact_id] [uniqueidentifier], "+
                         "[contact_person_id] [uniqueidentifier], "+
@@ -87,9 +87,9 @@ db.on('connect', function(err) {
                         "invite_date bigint)",
                     function(err, rowCount) {
                         if (err) {
-                            console.log("create table contact_lines error : "+err);
+                            console.log("create table line_contacts error : "+err);
                         } else {
-                            console.log("create table contact_lines success :" +rowCount + ' rows');
+                            console.log("create table line_contacts success :" +rowCount + ' rows');
                         }
                         callback();
                     }); 
@@ -152,7 +152,7 @@ db.on('connect', function(err) {
                         if (err) {
                             console.log("create table error : "+err);
                         } else {
-                            console.log("create table contact_lines success :" +rowCount + ' rows');
+                            console.log("create table line_contacts success :" +rowCount + ' rows');
                         }
                         callback();
                     }); 
@@ -230,7 +230,7 @@ function onPushContactMessage (data) {
     async.series([
       function (callback) {
         var request = new DbRequest(
-          "select line_name as lineName, pictureUrl from contact_lines where line_id = @lineId", 
+          "select line_name as lineName, pictureUrl from line_contacts where line_id = @lineId", 
           function(err, rowCount , row) {
             if (err) {
               console.log("select line_messages error ",err);
@@ -250,7 +250,7 @@ function onPushContactMessage (data) {
       function (callback) {
         var request = new DbRequest(
           "SELECT line_id ,line_name as lineName, pictureUrl "+
-          " FROM contact_lines "+
+          " FROM line_contacts "+
           "Where active_flag='1' and contact_id = @contactId", 
           function(err, rowCount , row) {
             if (err) {
@@ -271,7 +271,7 @@ function onPushContactMessage (data) {
           db.execSql(request);
           /*
         db.all("SELECT line_id "+
-              " FROM contact_lines "+
+              " FROM line_contacts "+
               "Where active_flag=1 and contact_id = ?",[data.contactId],
         function(err, rows) {
             for (var i=0; i<rows.length; i++) {
@@ -931,25 +931,25 @@ app.get('/listMessage',function (req, res) {
   if (req.query.contactId) {
     sql = "SELECT top 100 messages.id AS id, roomId, replyToken, eventType, timestamp ,messages.sourceType, "+
          "messages.contact_id as contactId, sourceUserId , messageId, "+
-         "messages.messageType , messageText ,info as message, contact_lines.pictureUrl,"+
+         "messages.messageType , messageText ,info as message, line_contacts.pictureUrl,"+
          "stickerId, packageId ,title, address, latitude, longitude, "+
          "filePath, fileName , originalFileName, line_name as lineName "+
          "FROM line_messages messages "+
-         ",contact_lines "+
+         ",line_contacts "+
          "where messages.contact_id = @contactId "+
-         "and contact_lines.line_id = messages.sourceUserId "+
+         "and line_contacts.line_id = messages.sourceUserId "+
          "and eventType='message' "+
          "order by messages.timestamp desc"
   } else {
      sql = "SELECT top 100 messages.id AS id, roomId, replyToken, eventType, timestamp ,messages.sourceType, "+
          "messages.contact_id as contactId, sourceUserId , messageId,"+
-         "messages.messageType , messageText ,info as message ,contact_lines.pictureUrl, "+
+         "messages.messageType , messageText ,info as message ,line_contacts.pictureUrl, "+
          "stickerId, packageId ,title, address, latitude, longitude, "+
          "filePath, fileName , originalFileName ,line_name as lineName "+
          "FROM line_messages messages , line_chat_room chat_room "+
-         ",contact_lines "+
+         ",line_contacts "+
          "where messages.roomId = chat_room.id "+
-         "and contact_lines.line_id = messages.sourceUserId "+
+         "and line_contacts.line_id = messages.sourceUserId "+
          "and chat_room.id = @roomId and eventType='message' "+
          "order by messages.timestamp desc"
   }
@@ -1334,7 +1334,7 @@ app.post('/upload', function (req, res) {
           async.series([
             function (callback) {
               var request = new DbRequest(
-                "select line_name as lineName, pictureUrl from contact_lines where line_id = @lineId", 
+                "select line_name as lineName, pictureUrl from line_contacts where line_id = @lineId", 
                 function(err, rowCount , row) {
                   if (err) {
                     console.log("select line_messages error ",err);
@@ -1516,7 +1516,7 @@ app.post('/contactUpload', function (req, res) {
           async.series([
             function (callback) {
               var request = new DbRequest(
-                "select line_name as lineName, pictureUrl from contact_lines where line_id = @lineId", 
+                "select line_name as lineName, pictureUrl from line_contacts where line_id = @lineId", 
                 function(err, rowCount , row) {
                   if (err) {
                     console.log("select line_messages error ",err);
@@ -1536,7 +1536,7 @@ app.post('/contactUpload', function (req, res) {
             function (callback) {
                 var request = new DbRequest(
                   "SELECT line_id "+
-                    " FROM contact_lines "+
+                    " FROM line_contacts "+
                     "Where active_flag=1 and contact_id = @contactId", 
                   function(err, rowCount , row) {
                     if (err) {
@@ -1601,7 +1601,7 @@ app.post('/contactUpload', function (req, res) {
           async.series([
             function (callback) {
               db.all("SELECT line_id "+
-                    " FROM contact_lines "+
+                    " FROM line_contacts "+
                     "Where active_flag=1 and contact_id = ?",[messageEv.contactId],
               function(err, rows) {
                   for (var i=0; i<rows.length; i++) {
@@ -1665,14 +1665,14 @@ function followHandler(db ,data , cb) {
             console.log("select line_messages error ",err);
           }   
           var request = new DbRequest(
-            "INSERT INTO contact_lines"+
+            "INSERT INTO line_contacts"+
             "([contact_id],[contact_person_id],[line_id],[line_name],[active_flag]"+
             ",[join_date],[invite_by],[invite_date],statusMessage, pictureUrl, sourceType) "+
             "VALUES (@contact_id, @contact_person_id, @line_id, @line_name, @active_flag"+
             ",@join_date, @invite_by ,@invite_date,@statusMessage, @pictureUrl, @sourceType)",
             function(err, rowCount , row) {
               if (err) {
-                console.log("contact_lines error ",err);
+                console.log("line_contacts error ",err);
               }
               cb();
             });
@@ -1730,14 +1730,14 @@ function followHandler(db ,data , cb) {
           },
           function (callback) {
             var request = new DbRequest(
-            "INSERT INTO contact_lines"+
+            "INSERT INTO line_contacts"+
             "([contact_id],[contact_person_id],[line_id],[line_name],[active_flag]"+
             ",[join_date],[invite_by],[invite_date],statusMessage, pictureUrl, sourceType) "+
             "VALUES (@contact_id, @contact_person_id, @line_id, @line_name, @active_flag"+
             ",@join_date, @invite_by ,@invite_date,@statusMessage, @pictureUrl, @sourceType)",
             function(err, rowCount , row) {
               if (err) {
-                console.log("contact_lines error ",err);
+                console.log("line_contacts error ",err);
               }
               callback();
             });
@@ -1761,7 +1761,7 @@ function followHandler(db ,data , cb) {
                   "update contact_persons set line_id = @line_id where contact_person_id = @contact_person_id",
                   function(err, rowCount , row) {
                     if (err) {
-                      console.log("contact_lines error ",err);
+                      console.log("line_contacts error ",err);
                     }
                     callback();
                   });
@@ -1779,7 +1779,7 @@ function followHandler(db ,data , cb) {
                   "update line_chat_room set contact_id = @contact_id, contact_person_id = @contact_person_id where userId = @userId",
                   function(err, rowCount , row) {
                     if (err) {
-                      console.log("contact_lines error ",err);
+                      console.log("line_contacts error ",err);
                     }
                     callback();
                   });
@@ -1942,16 +1942,16 @@ function createRoom(db, room, messageEv, cb) {
       async.series([
         function (callback) {
             var request = new DbRequest(
-              "SELECT top 1 contact_lines.id AS id, "+
-                  "contact_lines.contact_id , "+
-                  "contact_lines.contact_person_id , "+
-                  "contact_lines.line_id ,"+
-                  "contact_lines.line_name, "+
+              "SELECT top 1 line_contacts.id AS id, "+
+                  "line_contacts.contact_id , "+
+                  "line_contacts.contact_person_id , "+
+                  "line_contacts.line_id ,"+
+                  "line_contacts.line_name, "+
                   "contacts.name as contactName "+
-                  "FROM contact_lines, contacts "+
-                  "where contact_lines.contact_id = contacts.contact_id "+
-                  "and contact_lines.line_id = @line_id "+
-                  "and contact_lines.active_flag=1",
+                  "FROM line_contacts, contacts "+
+                  "where line_contacts.contact_id = contacts.contact_id "+
+                  "and line_contacts.line_id = @line_id "+
+                  "and line_contacts.active_flag=1",
                 function(err, rowCount , row) {
                   if (err) {
                     console.log("function 1 error ",err);
@@ -1988,16 +1988,16 @@ function createRoom(db, room, messageEv, cb) {
             db.execSql(request);
 
                 /*
-          db.get("SELECT contact_lines.rowid AS id, "+
-                  "contact_lines.contact_id , "+
-                  "contact_lines.contact_person_id , "+
-                  "contact_lines.line_id ,"+
-                  "contact_lines.line_name, "+
+          db.get("SELECT line_contacts.rowid AS id, "+
+                  "line_contacts.contact_id , "+
+                  "line_contacts.contact_person_id , "+
+                  "line_contacts.line_id ,"+
+                  "line_contacts.line_name, "+
                   "contacts.name as contactName "+
-                  "FROM contact_lines, contacts "+
-                  "where contact_lines.contact_id = contacts.contact_id "+
-                  "and contact_lines.line_id = ? "+
-                  "and contact_lines.active_flag=1 LIMIT 1", [messageEv.source.userId],
+                  "FROM line_contacts, contacts "+
+                  "where line_contacts.contact_id = contacts.contact_id "+
+                  "and line_contacts.line_id = ? "+
+                  "and line_contacts.active_flag=1 LIMIT 1", [messageEv.source.userId],
             function(err, row){
               if(err) throw err;
               if(typeof row == "undefined") {
@@ -2181,7 +2181,7 @@ function updateRoom(db, room, messageEv, cb) {
           return;
         }
         var request = new DbRequest(
-          "select contact_id, contact_person_id, line_name as lineName, pictureUrl from contact_lines where line_id = @lineId", 
+          "select contact_id, contact_person_id, line_name as lineName, pictureUrl from line_contacts where line_id = @lineId", 
           function(err, rowCount , row) {
             if (err) {
               console.log("select line_messages error ",err);
