@@ -1,6 +1,7 @@
 var express = require('express')
 var fileUpload = require('express-fileupload');
 var app = express()
+var apiRoutes = express.Router();
 var path = require('path');
 var bodyParser = require('body-parser');
 var http = require('http').Server(app);
@@ -14,9 +15,6 @@ var async = require('async');
 
 var Client = require('node-rest-client').Client;
 var client = new Client();
-var token = 'Bearer {MVJYNb3LtA+efs7m5jbcxhIEeuMekIwto3kLBtF6qUwpykvpvSqqJSKFuHzDJf5tKklfG+BFSx0zuEAG0zFv8IU+tM8tOTUG0uU0Q3lJ/xWg3shdp/wUnph+j+tvIHRfE1zac0+dCe1tFNFbztgKqQdB04t89/1O/w1cDnyilFU=}'
-var WebServiceURL = "http://vm:46233/";
-var WebHookBaseURL = "https://limitless-crag-52851.herokuapp.com";
 var mime = require('mime');
 var Connection = require('tedious').Connection;
 var DbRequest = require('tedious').Request;
@@ -30,19 +28,16 @@ process.on('uncaughtException', function(e){
     console.log(e.stack);
 });
 
-var dbConfig = {
-    userName: '****',
-    password: '****',
-    server: '****',
+apiRoutes.use(function(req, res, next) {
+  console.log("router 55555")
+  next();
+})
 
-    // If you're on Windows Azure, you will need this:
-    options: {
-        encrypt: false,
-        database : 'imind_standard_2016',
-        port : 1433,
-        rowCollectionOnRequestCompletion : false
-    }
-};
+var pjson = require('./package.json');
+var token = pjson.token;
+var WebServiceURL =  pjson.webServiceURL;
+var WebHookBaseURL =  pjson.webHookBaseURL;
+var dbConfig = pjson.db;
 var db = new Connection(dbConfig);
 
 db.on('connect', function(err) {
@@ -363,16 +358,19 @@ function onMessageReaded (data) {
     });
 }
 
+app.use('/base', apiRoutes);
+
 app.use(fileUpload());
 
 app.use('/classic',express.static('classic'))
 app.use('/modern',express.static('modern'))
 app.use('/resources',express.static('resources'))
 app.use('/content',express.static('content'))
+app.use('/base',require('./base.js'))
 
 // allow CORS
 app.all('*', function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Origin", "http://localhost:1841");
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'X-Requested-With,Content-type,Accept,X-Access-Token,X-Key');
   if (req.method == 'OPTIONS') {

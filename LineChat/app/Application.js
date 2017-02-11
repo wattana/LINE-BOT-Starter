@@ -52,6 +52,41 @@ Ext.define('LineChat.Application', {
 
     },
     launch: function () {
+        var me = this;
+        var baseURL = LineChat.app.baseURL;
+    	LineChat.app.env = {
+            BASE_URL : baseURL
+    	}
+        LineChat.app.showMask();
+        Ext.Ajax.request({
+			headers: { 'Content-Type': 'application/json','Accept': 'application/json' },
+            withCredentials : true,
+            jsonData : {
+                1 : 1
+            },
+            url: LineChat.app.env.BASE_URL+"base/appInfo",
+            success: function (response, opts) {
+            	var result = Ext.decode(response.responseText);
+                /*
+            	DssWeb.app.env.TODAY = Ext.Date.parse(result.today,"d/m/Y");
+                DssWeb.app.BASE_REPORT_URL = result.serverReportUrl;
+                DssWeb.app.PAGE_SIZE = Ext.state.Manager.get("pageSize") || 10;
+                DssWeb.app.info = result;
+                DssWeb.app.userTypeId = result.user.masUser.userTypeId 
+                DssWeb.app.info.now = Ext.Date.parse(result.now,"d/m/Y H:i:s");
+                startup();
+                */
+            	LineChat.app.hideMask();
+            },
+            failure: LineChat.app.failureHandler
+        });
+    },
+
+    showMask : function (msg) {
+        Ext.getBody().mask(msg || "Please wait...");
+    },
+    hideMask: function () {
+        Ext.getBody().unmask();
     },
 
     onAppUpdate: function () {
