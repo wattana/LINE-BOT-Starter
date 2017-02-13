@@ -22,7 +22,9 @@ router.post('/appInfo', function(req, res, next) {
 
     db.on('connect', function(err) {
         // If no error, then good to go...
-        var info = {}
+        var info = {
+            today : Date.now()
+        }
         var request = new DbRequest(
           "select * from line_contacts where line_id = @lineId", 
           function(err, rowCount , row) {
@@ -30,7 +32,7 @@ router.post('/appInfo', function(req, res, next) {
               console.log("select line_messages error ",err);
             }  
             if (rowCount == 0){
-                agentDummy(db, res)
+                agentDummy(db, req, res)
             } else {
                 db.close();
                 res.json(info);
@@ -43,13 +45,14 @@ router.post('/appInfo', function(req, res, next) {
               info[column.metadata.colName] = column.value
             });
         });
-        request.addParameter('lineId', TYPES.VarChar, "AB30D036-5F28-44B4-9138-59A09DC49A5A");
+        console.log("appInfo",req.user.id)
+        request.addParameter('lineId', TYPES.VarChar, req.user.id);
         db.execSql(request);
     });
 
 });
 
-function agentDummy(db , res) {
+function agentDummy(db , req, res) {
     var info = {
         "contact_id":null,
         "contact_person_id":null,
@@ -59,10 +62,30 @@ function agentDummy(db , res) {
         "statusMessage":"",
         "pictureUrl":"",
         "active_flag":"1",
-        "join_date":"1462629479859",
+        "join_date":Date.now(),
         "invite_by":null,
         "invite_date":null
     }
+    var request = new DbRequest(
+        "select agent_id as line_id , agent_name as  line_name from agents where agent_id = @agentId", 
+     function(err, rowCount , row) {
+        if (err) {
+            console.log("select agents error ",err);
+        }  
+        createLineContact (db , info, req, res)
+    });
+    request.on('row', function(columns) {
+        //console.log('-------------------',columns[0])
+        columns.forEach(function(column) {
+            info[column.metadata.colName] = column.value
+        });
+    });
+    request.addParameter('agentId', TYPES.VarChar, req.user.id);
+    db.execSql(request);
+
+
+}
+function createLineContact (db , info, req, res) {
     var request = new DbRequest(
     "INSERT INTO line_contacts"+
     "([contact_id],[contact_person_id],[line_id],[line_name],[active_flag]"+

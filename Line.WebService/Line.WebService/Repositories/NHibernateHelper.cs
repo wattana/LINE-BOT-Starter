@@ -40,6 +40,7 @@ namespace Line.WebService.Repositories
         {
             using (ISession session = NHibernateHelper.OpenSession())
             {
+            /*
                 ICriteria criteria = session.CreateCriteria<Requests>();
                 IList<Requests> list = criteria.List<Requests>();
                 var i = 0;
@@ -47,6 +48,7 @@ namespace Line.WebService.Repositories
                 {
                     System.Diagnostics.Debug.WriteLine("Child ::: " + ++i + ". " + it.RequestId);
                 }
+                */
             }
         }
     }

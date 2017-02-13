@@ -28,9 +28,31 @@ process.on('uncaughtException', function(e){
     console.log(e.stack);
 });
 
+var session = require('express-session');
+var passport = require('passport')
+app.use(session({ 
+    secret: 'linechatsecret',
+    proxy: true,
+    resave: true,
+    saveUninitialized: true
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+
 apiRoutes.use(function(req, res, next) {
-  console.log("router 55555")
-  next();
+  //console.log("apiRoutes",req.originalUrl,req.isAuthenticated(),req.headers)
+  if (req.headers['access-control-request-method']) {
+    return next();
+  }
+  if (req.isAuthenticated()) {
+    return next();
+  } 
+  //next()
+  res.header("Access-Control-Allow-Origin", "http://localhost:1841");
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'X-Requested-With,Content-type,Accept,X-Access-Token,X-Key');
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.sendStatus(401)
 })
 
 var pjson = require('./package.json');
@@ -367,12 +389,14 @@ app.use('/modern',express.static('modern'))
 app.use('/resources',express.static('resources'))
 app.use('/content',express.static('content'))
 app.use('/base',require('./base.js'))
+app.use('/login',require('./login.js'))
 
 // allow CORS
 app.all('*', function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "http://localhost:1841");
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'X-Requested-With,Content-type,Accept,X-Access-Token,X-Key');
+  res.setHeader('Access-Control-Allow-Credentials', true);
   if (req.method == 'OPTIONS') {
     res.status(200).end();
   } else {
@@ -381,12 +405,25 @@ app.all('*', function(req, res, next) {
 });
 
 app.get("/", function (req, res) {
-  //res.send('Hello World!')
-  res.sendFile(path.join(__dirname + '/index.html'));
+  res.redirect('/index.html');
 })
-app.get("/index.html", function (req, res) {
+
+app.get("/index.html", 
+  function (req, res, next){
+    if (req.isAuthenticated()) {
+      return next();
+    } 
+    res.redirect('/login.html');
+  },
+  function (req, res) {
+    //res.send('Hello World!')
+    res.sendFile(path.join(__dirname + '/index.html'));
+})
+
+app.get("/login.html", function (req, res) {
   //res.send('Hello World!')
-  res.sendFile(path.join(__dirname + '/index.html'));
+  //console.log("login.html 55555",req.isAuthenticated(),req.user)
+  res.sendFile(path.join(__dirname + '/login.html'));
 })
 app.get('/cache.appcache', function (req, res) {
   res.sendFile(path.join(__dirname + '/cache.appcache'));
@@ -398,7 +435,10 @@ app.get('/classic.json', function (req, res) {
 http.listen(process.env.PORT || pjson.port, function(){
   console.log('listening on *:',process.env.PORT || pjson.port);
 });
-
+app.get('/loginInfo', function(req, res, next) {
+    console.log(req.isAuthenticated())
+    res.send('loginInfo'+req.isAuthenticated()+" "+JSON.stringify(req.user))   
+})
 
 app.get('/pushMessage', function (req, res) {
   var message = '{"to": "Uaa89e07dfe96f3b66fe7937cf9e2c591","messages":[{"type":"text","text":"Quatation แก้ไข incident จากเดิม 100 ข้อเป็น 150 ข้อ คิดราคา 50,000 บาทตามที่คุยกันไว้ครับ"}]}'
@@ -1100,6 +1140,78 @@ app.get('/listRoom',function (req, res) {
   */
 });
 
+app.get('/listLineContact',function (req, res) {
+  //console.log(req)
+  var messages = [];
+  var db = new Connection(dbConfig);
+  db.on('connect', function(err) {
+      if (err) {
+          console.log(err)
+          return;
+      }
+      var request = new DbRequest(
+        "SELECT *  FROM line_contacts where sourceType='user' and contact_id is null", 
+        function(err, rowCount , row) {
+          db.close();
+          if (err) {
+            console.log("select line_contacts error ",err);
+          }       
+          res.json(messages);
+        });
+
+        request.on('row', function(columns) {
+          //console.log('-------------------',columns[0])
+          var record = {};
+          columns.forEach(function(column) {
+            record[column.metadata.colName] = column.value
+          });
+          record.contactId = record.contact_id
+          record.contactPersonId = record.contact_person_id
+          record.displayName = record.line_name
+          messages.push(record)
+        });
+        db.execSql(request);
+  })
+  /*
+  var db = new sqlite3.Database(DATABASE_NAME);
+  var messages = [];
+  db.all("SELECT rowid AS id, sourceType,userId ,contact_id, contact_person_id, displayName, pictureUrl,"+ 
+         "statusMessage, messageType, message ,createtime, updatetime, active_flag FROM chat_room",
+  function(err, rows) {
+      
+      //console.log(row.id + ": " , row.replyToken, row.eventType, row.timestamp ,
+      //row.sourceType ,row.sourceUserId , row.messageId , row.messageType , 
+      //row.messageText,row.info);
+      for (var i=0; i<rows.length; i++) {
+        var row = rows[i]
+        messages.push({
+          id : row.id,
+          userId: row.userId,
+          contact_id : row.contact_id, 
+          contact_person_id : row.contact_person_id,
+          contactId : row.contact_id, 
+          contactPersonId : row.contact_person_id,
+          displayName : row.displayName,
+          pictureUrl : row.pictureUrl ,
+          statusMessage : row.statusMessage ,
+          message : row.message ,
+          messageType : row.messageType,
+          messageText : row.message ,
+          sourceType : row.sourceType,
+          createtime : row.createtime ,
+          updatetime : row.updatetime ,
+          active_flag : row.active_flag
+        })
+      }
+      //console.log(messages)
+      res.json(messages);
+
+  });
+  //console.log('WWWWW',messages)
+  db.close();
+  */
+});
+
 app.get('/listContactRoom',function (req, res) {
   //console.log(req)
   var messages = [];
@@ -1113,6 +1225,7 @@ app.get('/listContactRoom',function (req, res) {
         "SELECT chat_room.contact_id as contactId, contacts.name as displayName ,max(chat_room.updatetime) as updatetime"+ 
         " FROM line_chat_room chat_room , contacts "+
         "Where chat_room.contact_id = contacts.contact_id"+
+        ((req.query.query) ? " and contacts.name like @query ":"")+
         " group by  chat_room.contact_id, contacts.name", 
         function(err, rowCount , row) {
           db.close();
@@ -1130,6 +1243,7 @@ app.get('/listContactRoom',function (req, res) {
           });
           messages.push(record)
         });
+        if (req.query.query) request.addParameter('query', TYPES.NVarChar, '%'+req.query.query+'%');
         db.execSql(request);
   })
  /*
@@ -1184,6 +1298,7 @@ app.get('/listContactTree',function (req, res) {
         "SELECT chat_room.contact_id as contactId, contacts.name as displayName ,max(chat_room.updatetime) as updatetime"+ 
           " FROM line_chat_room chat_room, contacts "+
           "Where chat_room.contact_id = contacts.contact_id and chat_room.contact_id is not null"+
+            ((req.query.query) ? " and contacts.name like @query ":"") +
           " group by  chat_room.contact_id, contacts.name", 
         function(err, rowCount , row) {
           if (err) {
@@ -1202,6 +1317,7 @@ app.get('/listContactTree',function (req, res) {
           });
           messages.children.push(record)
         });
+        if (req.query.query) request.addParameter('query', TYPES.NVarChar, '%'+req.query.query+'%');
         db.execSql(request);
         /*
         db.all("SELECT chat_room.contact_id, contacts.name ,max(chat_room.updatetime) as updatetime"+ 

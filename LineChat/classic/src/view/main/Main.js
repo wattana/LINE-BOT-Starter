@@ -74,7 +74,7 @@ Ext.define('LineChat.view.main.Main', {
                     style : {
                         fontSizex:'20px',
                         padding : 0,
-                        marginLeft: '2px'
+                        marginLeft: '5px'
                     }
                 },
                 iconCls: 'fa-th-list'
@@ -152,24 +152,51 @@ Ext.define('LineChat.view.main.Main', {
                 iconCls: 'fa-weixin',//fa-home',
                 layout: 'fit',
                 items: [{
+                    glyph: 'xf0e6@FontAwesome',
                     xtype: 'roomlist'
                 }]
             }, {
-                title: 'Users',
+                title: 'Dummy',
                 iconCls: 'fa-user',
                 layout: 'fit',
                 items: [{
+                    glyph: 'xf007@FontAwesome',
+                    title: 'Dummy user',
                     xtype: 'userlist'
                 }]
             }, {
-                titles: 'Settings',
-                iconCls: 'fa-cog',
+                title: 'More',
+                iconCls: 'fa-ellipsis-h',//'fa-cog',
+                layout : 'fit',
                 items : {
-                    title : 'Settings',
-                    items : {
-                        padding : 150,
+                    title : 'More',
+                    glyph: 'xf141@FontAwesome',
+                    layout: {
+                        type: 'vbox',
+                        align : 'center',
+                        pack : 'center'
+                    },
+                    defaults : {
+                        scale:'medium',
+                        width : 130,
+                        margin: '0 0 10 0'
+                    },
+                    items : [{
+                        //padding : 150,
+                        xtype : 'component',
+                        //text : 'test'
+                        width : 130,
+                        height : 36,
+                        //icon : 'https://scdn.line-apps.com/n/line_add_friends/btn/en.png',
                         html: '<a href="https://line.me/R/ti/p/%40bmq9116z" target="_blank"><img height="36" border="0" alt="เพิ่มเพื่อน" src="https://scdn.line-apps.com/n/line_add_friends/btn/en.png"></a>'
-                    }
+                    },{
+                        xtype : 'button',
+                        text : 'logout',
+                        glyph: 'xf08b@FontAwesome',
+                        handler : function () {
+                            location = LineChat.app.baseURL+"login/logout"
+                        }
+                    }]
                 }
             }] 
         });

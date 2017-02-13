@@ -9,7 +9,7 @@ Ext.define('LineChat.view.main.UserList', {
 
     title: 'User',
     hideHeaders: true,
-    store: 'Room',
+    store: 'User',
     initComponent: function() {
         var me = this;
         var talkerWithTpl = Ext.create('Ext.XTemplate',
@@ -24,7 +24,7 @@ Ext.define('LineChat.view.main.UserList', {
                     '<div style="float:left;margin-right: 8px;color:gray">',
                         '<img src="{pictureUrl}/small" title="{displayName}">',
                     '</div>',
-                    '<span class="chat-by-name" style="margin-right: 2px">{displayName}</span>',
+                    '<span class="chat-by-name" style="margin-right: 2px">{line_name}</span>',
                     '<tpl if="unread &gt; 0">',
                         '<span class="chat-by-name" style="margin-right: 2px">({unread})</span>',
                     '</tpl>',

@@ -5,7 +5,8 @@ Ext.define('LineChat.view.main.ContactTree', {
         'Ext.data.*',
         'Ext.grid.*',
         'Ext.tree.*',
-        'Ext.ux.CheckColumn'
+        'Ext.ux.CheckColumn',
+        'LineChat.ux.SearchField'
     ],    
     xtype: 'contact-tree',
     
@@ -29,6 +30,15 @@ Ext.define('LineChat.view.main.ContactTree', {
                 console.log(rec)
                 me.getStore().getAt(0).set("user",'wat')
                 me.getStore().getAt(0).set("task",'task')
+            }
+        }]
+        me.dockedItems = [{
+            dock: 'top',
+            xtype: 'toolbar',
+            items: {
+                flex: 1,
+                xtype: 'searchfield',
+                store: 'ContactTree'
             }
         }]
         var data = {
