@@ -1427,6 +1427,16 @@ app.get('/listContactTree',function (req, res) {
           callback();
           return;
         }
+        var j = 0;
+        async.eachSeries(messages.children , function(children, cbx) {
+          if (j == messages.children.length-1) {
+            contactRoom (db , messages.children[j], callback ,cbx) 
+          } else {
+            contactRoom (db , messages.children[j], null ,cbx) 
+          }
+          j++;
+        })
+        /*
         for (var j=0; j<messages.children.length; j++) {
           if (j == messages.children.length-1) {
             contactRoom (db , messages.children[j], callback ) 
@@ -1434,6 +1444,7 @@ app.get('/listContactTree',function (req, res) {
             contactRoom (db , messages.children[j], null ) 
           }
         }
+        */
       }],function(err) { //This function gets called after the two tasks have called their "task callbacks"
           db.close();
           console.log(err)
@@ -1857,6 +1868,136 @@ app.post('/contactUpload', function (req, res) {
 
 })
 
+app.get('/listContactPerson',function (req, res) {
+  //console.log(req)
+  var messages = [];
+  var total = 0;
+  var db = new Connection(dbConfig);
+  db.on('connect', function(err) {
+      if (err) {
+          console.log(err)
+          return;
+      }
+      var request = new DbRequest("SELECT count(*) as total FROM contact_persons where active_flag='1'", 
+        function(err, rowCount , row) {
+          if (err) {
+              db.close();
+              console.log("select contact_persons error ",err);
+              res.json({
+                success : false,
+                msg : err
+              });
+          } else {   
+              var request = new DbRequest(
+                "SELECT contact_id, contact_person_id, person_code, person_name, email_addr "+
+                "FROM contact_persons where active_flag='1' order by person_name "+
+                "OFFSET @start ROWS FETCH FIRST @limit ROWS ONLY", 
+                function(err, rowCount , row) {
+                  db.close();
+                  if (err) {
+                    console.log("select contact_persons error ",err);
+                    res.json({
+                      success : false,
+                      msg : err
+                    });
+                  } else {   
+                    res.json({
+                      data : messages,
+                      total : total
+                    });
+                  }
+                });
+
+                request.on('row', function(columns) {
+                  //console.log('-------------------',columns[0])
+                  var record = {};
+                  columns.forEach(function(column) {
+                    record[column.metadata.colName] = column.value
+                  });
+                  messages.push(record)
+                });
+                request.addParameter('start', TYPES.Int, req.query.start);
+                request.addParameter('limit', TYPES.Int, req.query.limit);
+
+                db.execSql(request);
+          }
+      })
+      request.on('row', function(columns) {
+          columns.forEach(function(column) {
+            total = column.value
+          });
+      });
+      db.execSql(request);
+  })
+});
+
+app.post('/updateContactPerson',function (req, res) {
+  //console.log(req)
+  var messages = [];
+  var total = 0;
+  var db = new Connection(dbConfig);
+  db.on('connect', function(err) {
+      if (err) {
+          console.log(err)
+          return;
+      }
+      var request = new DbRequest(
+        "update line_chat_room set contact_id = @contact_id, contact_person_id = @contact_person_id where userId = @userId",
+        function(err, rowCount , row) {
+          if (err) {
+            db.close();
+            console.log("line_chat_room error ",err);
+            res.json({
+              success : false,
+              msg : err
+            });
+          } else {
+            var request = new DbRequest(
+              "update contact_persons set line_id = @line_id, line_name = @line_name where contact_person_id = @contact_person_id",
+              function(err, rowCount , row) {
+                if (err) {
+                  db.close();
+                  console.log("contact_persons error ",err);
+                  res.json({
+                    success : false,
+                    msg : err
+                  });
+                } else {
+                    var request = new DbRequest(
+                      "update line_contacts set contact_id = @contact_id, contact_person_id = @contact_person_id where line_id = @userId",
+                      function(err, rowCount , row) {
+                        db.close();
+                        if (err) {
+                          console.log("line_contacts error ",err);
+                          res.json({
+                            success : false,
+                            msg : err
+                          });
+                        } else {
+                          res.json({
+                            success : true
+                          });
+                        }
+                      });
+                      request.addParameter('contact_id', TYPES.VarChar, req.body.contactId);
+                      request.addParameter('contact_person_id', TYPES.VarChar, req.body.contactPersonId);
+                      request.addParameter('userId', TYPES.VarChar, req.body.line_id);
+                      db.execSql(request);
+                }
+              });
+              request.addParameter('contact_person_id', TYPES.VarChar, req.body.contactPersonId);
+              request.addParameter('line_name', TYPES.NVarChar, req.body.line_name);
+              request.addParameter('line_id', TYPES.VarChar, req.body.line_id);
+              db.execSql(request);
+          }
+      });
+      request.addParameter('contact_id', TYPES.VarChar, req.body.contactId);
+      request.addParameter('contact_person_id', TYPES.VarChar, req.body.contactPersonId);
+      request.addParameter('userId', TYPES.VarChar, req.body.line_id);
+      db.execSql(request);
+  })
+});
+
 function followHandler(db ,data , cb) {
   if (data.source.type == 'agent') {
       var result = {}
@@ -2004,16 +2145,17 @@ function followHandler(db ,data , cb) {
   })
 }
 
-function contactRoom (db , contact, callback ) {
+function contactRoom (db , contact, callback ,cbx) {
     var request = new DbRequest(
       "SELECT id AS id, sourceType,userId ,contact_id, contact_person_id, displayName, pictureUrl,"+ 
       "statusMessage, messageType, message ,createtime, updatetime, active_flag FROM line_chat_room "+
       "where contact_id = @contactId", 
       function(err, rowCount , row) {
         if (err) {
-          console.log("select line_messages error ",err);
+          console.log("select line_chat_room error ",err);
         }      
         if (callback) callback()
+        cbx()
     });
     request.on('row', function(columns) {
         //console.log('-------------------',columns[0])

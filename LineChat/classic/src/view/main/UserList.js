@@ -10,6 +10,8 @@ Ext.define('LineChat.view.main.UserList', {
     title: 'User',
     hideHeaders: true,
     store: 'User',
+    controller: 'userlist',
+
     initComponent: function() {
         var me = this;
         var talkerWithTpl = Ext.create('Ext.XTemplate',
@@ -105,7 +107,7 @@ Ext.define('LineChat.view.main.UserList', {
     },
 
     listeners: {
-        select: 'talkingWith'
+        rowclick: 'onItemSelected'
     }
     
 });

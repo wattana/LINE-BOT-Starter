@@ -17,7 +17,7 @@ Ext.define('LineChat.view.main.ContactTree', {
     useArrows: true,
     rootVisible: false,
     multiSelect: true,
-    singleExpand: true,
+    singleExpand: false,
     hideHeaders : true,
     
     initComponent: function() {
