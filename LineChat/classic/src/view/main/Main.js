@@ -246,8 +246,21 @@ Ext.define('LineChat.view.main.Main', {
                     glyph: 'xf24d@FontAwesome',
                     text : 'ออกใบงาน',
                     disabled : true,
+                    margin : '2 0 0 2',
                     reference : 'createRequestBtn',
                     handler : 'onCreateRequestClick'
+                } ,{
+                    xtype : 'button',
+                    glyph: 'xf133@FontAwesome',
+                    margin : '2 0 0 2',
+                    text : 'แสดงใบงาน',
+                    handler : 'onRequestListClick'
+                } ,{
+                    xtype : 'button',
+                    glyph: 'xf233@FontAwesome',
+                    margin : '2 0 0 2',
+                    text : 'ดูเพิ่มเติม',
+                    handler : 'onMoreMessageClick'
                 }, {
                     xtype: 'hiddenfield',
                     name: 'id'

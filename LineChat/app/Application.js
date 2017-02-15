@@ -15,6 +15,8 @@ Ext.define('LineChat.Application', {
 
     
     init : function ( app) {
+        Ext.state.Manager.setProvider(Ext.create('Ext.state.CookieProvider', {}));
+
         var roomStore = this.getStore('Room');
         var contactStore = this.getStore('Contact');
         var contactTreeStore = this.getStore('ContactTree');

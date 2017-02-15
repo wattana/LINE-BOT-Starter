@@ -141,6 +141,7 @@ db.on('connect', function(err) {
                         "filePath [nvarchar](200) NULL, "+
                         "fileName [nvarchar](200) NULL, "+
                         "originalFileName [nvarchar](200) NULL, "+
+                        "requestNumber [nvarchar](50) NULL, "+
                         "info [nvarchar](max) NOT NULL DEFAULT (''))",
                     function(err, rowCount) {
                         if (err) {
@@ -753,6 +754,7 @@ app.post('/createRequest', jsonParser,function (req, res) {
                         res.json(err);
                     } else {
                         res.json(result[2].saveResult);
+                        updateMessageRequestNumber(ids, result[2].saveResult)
                     }
                   });  
               })
@@ -776,32 +778,64 @@ app.post('/createRequest', jsonParser,function (req, res) {
 app.get('/listRequest',function (req, res) {
   //console.log(req)
   var messages = [];
+  var total = 0;
   var db = new Connection(dbConfig);
   db.on('connect', function(err) {
       if (err) {
           console.log(err)
           return;
       }
-      var request = new DbRequest(
-        "SELECT top 10 * FROM requests order by open_date desc ", 
+      var request = new DbRequest("SELECT count(*) as total FROM requests where contact_id = @contactId", 
         function(err, rowCount , row) {
-          db.close();
           if (err) {
-            console.log("select requests error ",err);
-          }       
-          res.json(messages);
-        });
+              db.close();
+              console.log("select line_messages error ",err);
+              res.json({
+                success : false,
+                msg : err
+              });
+          } else {   
+              var request = new DbRequest(
+                "SELECT * FROM requests where contact_id = @contactId order by open_date desc OFFSET @start ROWS FETCH FIRST @limit ROWS ONLY", 
+                function(err, rowCount , row) {
+                  db.close();
+                  if (err) {
+                    console.log("select requests error ",err);
+                    res.json({
+                      success : false,
+                      msg : err
+                    });
+                  } else {   
+                    res.json({
+                      data : messages,
+                      total : total
+                    });
+                  }
+                });
 
-        request.on('row', function(columns) {
-          //console.log('-------------------',columns[0])
-          var record = {};
+                request.on('row', function(columns) {
+                  //console.log('-------------------',columns[0])
+                  var record = {};
+                  columns.forEach(function(column) {
+                    record[column.metadata.colName] = column.value
+                  });
+                  record.request_detail= record.request_detail.replace(/\n/g,"<br/>")
+                  messages.push(record)
+                });
+                request.addParameter('contactId', TYPES.VarChar, req.query.contactId);
+                request.addParameter('start', TYPES.Int, req.query.start);
+                request.addParameter('limit', TYPES.Int, req.query.limit);
+
+                db.execSql(request);
+          }
+      })
+      request.on('row', function(columns) {
           columns.forEach(function(column) {
-            record[column.metadata.colName] = column.value
+            total = column.value
           });
-          record.request_detail= record.request_detail.replace(/\n/g,"<br/>")
-          messages.push(record)
-        });
-        db.execSql(request);
+      });
+      request.addParameter('contactId', TYPES.VarChar, req.query.contactId);
+      db.execSql(request);
   })
 });
 
@@ -968,61 +1002,103 @@ app.get('/listMessage',function (req, res) {
   //console.log(req)
   var messages = [];
   var sql;
+  var totalSql;
   if (req.query.contactId) {
-    sql = "SELECT top 100 messages.id AS id, roomId, replyToken, eventType, timestamp ,messages.sourceType, "+
+    sql = "SELECT messages.id AS id, roomId, replyToken, eventType, timestamp ,messages.sourceType, "+
          "messages.contact_id as contactId, sourceUserId , messageId, "+
          "messages.messageType , messageText ,info as message, line_contacts.pictureUrl,"+
          "stickerId, packageId ,title, address, latitude, longitude, "+
-         "filePath, fileName , originalFileName, line_name as lineName "+
+         "filePath, fileName , originalFileName, line_name as lineName , requestNumber "+
          "FROM line_messages messages "+
          ",line_contacts "+
          "where messages.contact_id = @contactId "+
          "and line_contacts.line_id = messages.sourceUserId "+
          "and eventType='message' "+
-         "order by messages.timestamp desc"
+         "order by messages.timestamp desc OFFSET @start ROWS FETCH FIRST @limit ROWS ONLY";
+    totalSql = "select count(*) as total from line_messages messages "+
+         ",line_contacts "+
+         "where messages.contact_id = @contactId "+
+         "and line_contacts.line_id = messages.sourceUserId "+
+         "and eventType='message'"      
   } else {
-     sql = "SELECT top 100 messages.id AS id, roomId, replyToken, eventType, timestamp ,messages.sourceType, "+
+     sql = "SELECT messages.id AS id, roomId, replyToken, eventType, timestamp ,messages.sourceType, "+
          "messages.contact_id as contactId, sourceUserId , messageId,"+
          "messages.messageType , messageText ,info as message ,line_contacts.pictureUrl, "+
          "stickerId, packageId ,title, address, latitude, longitude, "+
-         "filePath, fileName , originalFileName ,line_name as lineName "+
+         "filePath, fileName , originalFileName ,line_name as lineName, requestNumber "+
          "FROM line_messages messages , line_chat_room chat_room "+
          ",line_contacts "+
          "where messages.roomId = chat_room.id "+
          "and line_contacts.line_id = messages.sourceUserId "+
          "and chat_room.id = @roomId and eventType='message' "+
-         "order by messages.timestamp desc"
+         "order by messages.timestamp desc OFFSET @start ROWS FETCH FIRST @limit ROWS ONLY";
+      totalSql = "select count(*) as total from line_messages messages , line_chat_room chat_room "+
+         ",line_contacts "+
+         "where messages.roomId = chat_room.id "+
+         "and line_contacts.line_id = messages.sourceUserId "+
+         "and chat_room.id = @roomId and eventType='message' ";
+
   }
   //console.log("listMessage", sql)
   var messages = [];
+  var total = 0;
   var db = new Connection(dbConfig);
   db.on('connect', function(err) {
       if (err) {
           console.log(err)
           return;
       }
-      var request = new DbRequest(sql, 
+      var request = new DbRequest(totalSql, 
         function(err, rowCount , row) {
-          db.close();
           if (err) {
-            console.log("select line_messages error ",err);
-          }       
-          res.json(messages);
+              db.close();
+              console.log("select line_messages error ",err);
+              res.json({
+                success : false,
+                msg : err
+              });
+          } else {      
+              var request = new DbRequest(sql, 
+                function(err, rowCount , row) {
+                  db.close();
+                  if (err) {
+                    console.log("select line_messages error ",err);
+                  }       
+                  res.json({
+                    data : messages,
+                    total : total
+                  });
+                });
+
+                request.on('row', function(columns) {
+                  //console.log('-------------------',columns[0])
+                  var record = {};
+                  columns.forEach(function(column) {
+                    record[column.metadata.colName] = column.value
+                  });
+                  messages.push(record)
+              });
+              if (req.query.contactId)
+                request.addParameter('contactId', TYPES.VarChar, req.query.contactId);
+              else 
+                request.addParameter('roomId', TYPES.Int, req.query.roomId);
+              request.addParameter('start', TYPES.Int, req.query.start);
+              request.addParameter('limit', TYPES.Int, req.query.limit);
+              db.execSql(request); 
+          }
         });
 
-        request.on('row', function(columns) {
-          //console.log('-------------------',columns[0])
-          var record = {};
+      request.on('row', function(columns) {
           columns.forEach(function(column) {
-            record[column.metadata.colName] = column.value
+            total = column.value
           });
-          messages.push(record)
       });
       if (req.query.contactId)
         request.addParameter('contactId', TYPES.VarChar, req.query.contactId);
       else 
         request.addParameter('roomId', TYPES.Int, req.query.roomId);
       db.execSql(request);
+
   })
  /*  
   var db = new sqlite3.Database(DATABASE_NAME);
@@ -1150,7 +1226,9 @@ app.get('/listLineContact',function (req, res) {
           return;
       }
       var request = new DbRequest(
-        "SELECT *  FROM line_contacts where sourceType='user' and contact_id is null", 
+        "SELECT line_contacts.* , line_chat_room.id as roomId FROM line_contacts , line_chat_room "+
+        " where line_contacts.line_id = line_chat_room.userId "+
+        " and line_contacts.sourceType='user' and line_contacts.contact_id is null", 
         function(err, rowCount , row) {
           db.close();
           if (err) {
@@ -1165,6 +1243,8 @@ app.get('/listLineContact',function (req, res) {
           columns.forEach(function(column) {
             record[column.metadata.colName] = column.value
           });
+          record.lineContactId = record.id
+          record.id = record.roomId
           record.contactId = record.contact_id
           record.contactPersonId = record.contact_person_id
           record.displayName = record.line_name
@@ -1581,7 +1661,8 @@ app.post('/contactUpload', function (req, res) {
   var duration = 0;
   if (uploadFile.mimetype.indexOf("video") != -1 ) {
     messageType = 'video';
-    previewImageUrl = WebHookBaseURL+"/resources/images/facetime.png";
+    //previewImageUrl = WebHookBaseURL+"/resources/images/facetime.png";
+    previewImageUrl = WebHookBaseURL+"/content/upload/"+room.contact_id+"/"+thumbFileName;  //"/resources/images/facetime.png";
   } else if (uploadFile.mimetype.indexOf("audio") != -1 ) { 
     messageType = 'audio';
   }
@@ -1621,6 +1702,11 @@ app.post('/contactUpload', function (req, res) {
     else {
         if (messageType == 'audio') {
             messageEv.message.duration = parseInt(req.body.duration)
+        } else if (messageType == 'video') {
+            console.log("create thumb",dir+fileName, dir+thumbFileName)
+            thumbler.extract(dir+fileName, dir+thumbFileName, '00:00:02', '200x125', function(result){
+                console.log('snapshot saved to snapshot.png (200x125) with a frame at 00:00:22',result);
+            });
         }
         var db = new Connection(dbConfig);
         var lineIds = []
@@ -2695,4 +2781,21 @@ function replyMessage(data) {
     //console.log(response);
     //updateRoom({id : data.roomId},data)
   });
+}
+
+function updateMessageRequestNumber(ids, result) {
+    var db = new Connection(dbConfig);
+    db.on('connect', function(err) {
+        var request = new DbRequest(
+          "update line_messages set requestNumber = @requestNumber where id in ("+ids.join(",")+")", 
+          function(err, rowCount , row) {
+            db.close();
+            if (err) {
+              console.log("update line_messages error ",err);
+            }   
+        });   
+        request.addParameter('requestNumber', TYPES.VarChar, result.msg);
+        db.execSql(request);
+    });
+
 }

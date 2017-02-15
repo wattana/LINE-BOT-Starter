@@ -31,11 +31,13 @@ Ext.define('LineChat.store.Message', {
          direction: 'ASC'
      }],
     autoLoad : false,
+    pageSize : 100,
     proxy: {
          type: 'ajax',
          url: '/listMessage',
          reader: {
-             type: 'json'
+             type: 'json',
+             rootProperty: 'data'
          }
     }
 });

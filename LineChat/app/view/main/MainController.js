@@ -502,61 +502,149 @@ Ext.define('LineChat.view.main.MainController', {
     onCreateRequestClick : function(btn) {
         var me = this;
         var form = this.getView().getReferences().roomInfoForm;
+        var roomInfo = this.getView().getReferences().roomInfoForm;
+        var userId = roomInfo.down("hidden[name=userId]").getValue();
+        var agentId = roomInfo.down("hidden[name=agentId]").getValue();
+        var contactId = roomInfo.down("hidden[name=contactId]").getValue();
+        var roomId = roomInfo.down("hidden[name=id]").getValue();
+
         if (form.isValid()) {
+            var win=
             Ext.create('Ext.window.Window', {
             title: 'สร้างใบงาน',
-            xheight: 200,
-            xwidth: 400,
-            items: { 
+            height: 500,
+            width: 800,
+            layout : {
+                type : 'vbox',
+                align : 'stretch',
+                pack: 'start'
+            },
+            items: [{ 
                 xtype : 'fieldset',
                 title : 'อ้างถึงเลขที่ใบงาน',
+                layout : {
+                    type : 'hbox'
+                },
                 items :[{
                     xtype : 'textfield',
                     width : 300,
                     name : 'requestNumber'
-                }]
-            },
-            buttons : [{
-                text : 'Ok',
-                handler : function (btn) {
-                    var grid = me.getView().down('messagechat')
-                    var selected = grid.getSelection()
-                    var ids = [];
-                    for (var i=0; i<selected.length; i++) {
-                        ids.push(selected[i].get("id"));
-                    }
-                    form.submit({
-                        url: LineChat.app.baseURL+"createRequest", 
-                        waitMsg: 'Saving ...',
-                        params : {
-                            //payments : Ext.encode(payments)
-                            ids : Ext.util.JSON.encode(ids),
-                            requestNumber : btn.up("window").down('textfield[name=requestNumber]').getValue()
-                        },
-                        success: function (form, action) {
-                            var result = action.result;
-                            if (!result.success) {
-                                Ext.Msg.alert('Error', result.msg);
-                            } else {
-                                Ext.Msg.alert('Success', "บันทึกข้อมูลสำเร็จ เลขที่เอกสาร "+action.result.msg, function () {
-                                    //view.fireEvent("saved", form , action);
-                                    grid.getSelectionModel().deselectAll();
-                                    btn.up("window").close();
-                                });
-                            }   
-                        },
-                        failure: function (form, action) {
-                            Ext.Msg.alert('Failed', action.result.msg, function () {                                                    
-                            });
+                },{
+                    xtype : 'button',
+                    text : 'Ok',
+                    margin : '0 0 0 10',
+                    handler : function (btn) {
+                        var grid = me.getView().down('messagechat')
+                        var selected = grid.getSelection()
+                        var ids = [];
+                        for (var i=0; i<selected.length; i++) {
+                            ids.push(selected[i].get("id"));
                         }
-                    });
+                        form.submit({
+                            url: LineChat.app.baseURL+"createRequest", 
+                            waitMsg: 'Saving ...',
+                            params : {
+                                //payments : Ext.encode(payments)
+                                ids : Ext.util.JSON.encode(ids),
+                                requestNumber : btn.up("window").down('textfield[name=requestNumber]').getValue()
+                            },
+                            success: function (form, action) {
+                                var result = action.result;
+                                if (!result.success) {
+                                    Ext.Msg.alert('Error', result.msg);
+                                } else {
+                                    Ext.Msg.alert('Success', "บันทึกข้อมูลสำเร็จ เลขที่เอกสาร "+action.result.msg, function () {
+                                        //view.fireEvent("saved", form , action);
+                                        grid.getSelectionModel().deselectAll();
+                                        btn.up("window").close();
+                                    });
+                                }   
+                            },
+                            failure: function (form, action) {
+                                Ext.Msg.alert('Failed', action.result.msg, function () {                                                    
+                                });
+                            }
+                        });
+                    }
+                },{
+                    xtype : 'button',
+                    margin : '0 0 0 10',
+                    text : 'Cancel',
+                    handler : function () {
+                        this.up("window").close();
+                    }
+                },{
+                    xtype : 'label',
+                    text : " (สร้างใบงานใหม่ ไม่ต้องระบุใบงาน)",
+                    margin : '2 0 0 10'
+                }]
+            },{ 
+                xtype : 'grid',
+                selModel :  {
+                    type : 'checkboxmodel',
+                    mode : 'SINGLE',
+                    allowDeselect : true
+                },
+                store : {
+                    type :'buffered',
+                    fields: [
+                        'request_id',
+                        'request_number',
+                        'contact_id',
+                        {
+                            name: 'request_detail',
+                            convertxx: function (value, record) {
+                                console.log(value)
+                                return value.replace("\n","<br/>")
+                            }
+                        },
+                        {
+                            name: 'open_date',
+                            type: 'date',
+                            dateFormat:"YmdHis"
+                        }
+                    ],
+                    autoLoad : false,
+                    pageSize : 25,
+                    proxy: {
+                        type: 'ajax',
+                        url: LineChat.app.baseURL+'listRequest',
+                        reader: {
+                            type: 'json',
+                            rootProperty: 'data'
+                        }
+                    }
+                },
+                columns: [
+                    { text: 'เลขที่ใบงาน',  dataIndex: 'request_number', width:120 },
+                    { text: 'วันที่ใบงาน', dataIndex: 'open_date' ,
+                      width:150, 
+                      xtype: 'datecolumn',
+                      format:'d/m/Y H:i'
+                    },
+                    { text: 'รายละเอียด', dataIndex: 'request_detail', flex: 1 }
+                ],
+                flex : 1,
+                scrollToBottom : false,
+                listeners : {
+                    viewready : function (grid) {
+                        grid.getStore().getProxy().setExtraParam("contactId", contactId)                            
+                        grid.getStore().load({
+                            callback: function (records, operation, success) {
+                            }
+                        })
+                    },
+                    selectionchange :  function( sm , selected , eOpts ) {
+                        console.log(selected)
+                        var fld = win.down("textfield[name=requestNumber]")
+                        if (selected.length)
+                            fld.setValue(selected[0].get("request_number"))
+                        else
+                            fld.reset()
+                    }
                 }
-            },{
-                text : 'Cancel',
-                handler : function () {
-                    this.up("window").close();
-                }
-            }]
+            }],
+            buttons : []
 
         }).show();
             
@@ -564,6 +652,208 @@ Ext.define('LineChat.view.main.MainController', {
             Ext.Msg.alert('Failed', "กรุณาป้อนข้อมูลให้ครบ", function () {                                                    
                     });
         }
+    },
+
+    onMoreMessageClick: function () {
+        var me = this;
+        var roomInfo = this.getView().getReferences().roomInfoForm;
+        var userId = roomInfo.down("hidden[name=userId]").getValue();
+        var agentId = roomInfo.down("hidden[name=agentId]").getValue();
+        var contactId = roomInfo.down("hidden[name=contactId]").getValue();
+        var roomId = roomInfo.down("hidden[name=id]").getValue();
+        
+
+        var win = 
+        Ext.create('Ext.window.Window', {
+            title: 'More..',
+            layout : {
+                type : 'vbox',
+                align : 'stretch',
+                pack: 'start'
+            },
+            width : 800,
+            height : 500,
+            constrain : true,
+            stateId : 'windowMoreMessage',
+            stateful : true,
+            tbarxx : [{
+                xtype : 'button',
+                glyph: 'xf24d@FontAwesome',
+                text : 'ออกใบงาน',
+                disabled : true,
+                margin : '2 0 0 2',
+                reference : 'createRequestBtn',
+                handler : 'onCreateRequestClick'
+            }],
+            items: [{ 
+                xtype : 'messagechat',
+                selType : 'rowmodel',
+                store : {
+                    type :'buffered',
+                    fields: [
+                        'replyToken',
+                        'eventType',
+                        {
+                            name : 'timestamp',
+                            type : 'int'
+                        },
+                        'sourceType',
+                        'sourceUserId', 
+                        'messageId', 
+                        'messageType', 
+                        'messageText',
+                        {
+                            name : 'message'
+                        },
+                        {
+                            name : 'date',
+                            convert: function (value, record) {
+                                return new Date(record.get("timestamp"));
+                            }
+                        },
+                        'info'
+                    ],
+                    sorters: [{
+                        property: 'timestamp',
+                        direction: 'DESC'
+                    }],
+                    autoLoad : false,
+                    pageSize : 25,
+                    proxy: {
+                        type: 'ajax',
+                        url: LineChat.app.baseURL+'listMessage',
+                        reader: {
+                            type: 'json',
+                            rootProperty: 'data'
+                        }
+                    }
+                },
+                flex : 1,
+                scrollToBottom : false,
+                listeners : {
+                    viewready : function (grid) {
+                        if (userId) {
+                            grid.getStore().getProxy().setExtraParam("roomId", roomId)
+                            grid.getStore().getProxy().setExtraParam("contactId", null)
+                        } else {
+                            grid.getStore().getProxy().setExtraParam("roomId", null)
+                            grid.getStore().getProxy().setExtraParam("contactId", contactId)                            
+                        }
+                        grid.getStore().load({
+                            callback: function (records, operation, success) {
+                            }
+                        })
+                    },
+                    selectionchangexx :  function( sm , selected , eOpts ) {
+                        var btn = win.down("button[reference=createRequestBtn]")
+                        var selection = sm.getSelection()
+                        if (selected.length)
+                            btn.setText("ออกใบงาน ("+sm.getSelection().length+")")
+                        else
+                            btn.setText("ออกใบงาน")
+                        btn.setDisabled(selection == 0) 
+                    }
+                }
+            }]
+        }).show();
+        
+    },
+
+    onRequestListClick: function () {
+        var me = this;
+        var roomInfo = this.getView().getReferences().roomInfoForm;
+        var userId = roomInfo.down("hidden[name=userId]").getValue();
+        var agentId = roomInfo.down("hidden[name=agentId]").getValue();
+        var contactId = roomInfo.down("hidden[name=contactId]").getValue();
+        var roomId = roomInfo.down("hidden[name=id]").getValue();
+
+        var win = 
+        Ext.create('Ext.window.Window', {
+            title: 'รายการใบงาน',
+            layout : {
+                type : 'vbox',
+                align : 'stretch',
+                pack: 'start'
+            },
+            width : 800,
+            height : 500,
+            constrain : true,
+            stateId : 'windowRequestList',
+            stateful : true,
+            tbarxx : [{
+                xtype : 'button',
+                glyph: 'xf24d@FontAwesome',
+                text : 'ออกใบงาน',
+                disabled : true,
+                margin : '2 0 0 2',
+                reference : 'createRequestBtn',
+                handler : 'onCreateRequestClick'
+            }],
+            items: [{ 
+                xtype : 'grid',
+                selType : 'rowmodel',
+                store : {
+                    type :'buffered',
+                    fields: [
+                        'request_id',
+                        'request_number',
+                        'contact_id',
+                        {
+                            name: 'request_detail',
+                            convertxx: function (value, record) {
+                                console.log(value)
+                                return value.replace("\n","<br/>")
+                            }
+                        },
+                        {
+                            name: 'open_date',
+                            type: 'date',
+                            dateFormat:"YmdHis"
+                        }
+                    ],
+                    autoLoad : false,
+                    pageSize : 25,
+                    proxy: {
+                        type: 'ajax',
+                        url: LineChat.app.baseURL+'listRequest',
+                        reader: {
+                            type: 'json',
+                            rootProperty: 'data'
+                        }
+                    }
+                },
+                columns: [
+                    { text: 'เลขที่ใบงาน',  dataIndex: 'request_number', width:120 },
+                    { text: 'วันที่ใบงาน', dataIndex: 'open_date' ,
+                      width:150, 
+                      xtype: 'datecolumn',
+                      format:'d/m/Y H:i'
+                    },
+                    { text: 'รายละเอียด', dataIndex: 'request_detail', flex: 1 }
+                ],
+                flex : 1,
+                scrollToBottom : false,
+                listeners : {
+                    viewready : function (grid) {
+                        grid.getStore().getProxy().setExtraParam("contactId", contactId)                            
+                        grid.getStore().load({
+                            callback: function (records, operation, success) {
+                            }
+                        })
+                    },
+                    selectionchangexx :  function( sm , selected , eOpts ) {
+                        var btn = win.down("button[reference=createRequestBtn]")
+                        var selection = sm.getSelection()
+                        if (selected.length)
+                            btn.setText("ออกใบงาน ("+sm.getSelection().length+")")
+                        else
+                            btn.setText("ออกใบงาน")
+                        btn.setDisabled(selection == 0) 
+                    }
+                }
+            }]
+        }).show();
+        
     }
 
 });

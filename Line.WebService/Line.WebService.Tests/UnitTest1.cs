@@ -4,6 +4,7 @@ using Line.WebService.Repositories;
 using NHibernate;
 using Line.WebService.Models;
 using System.Collections.Generic;
+using NHibernate.Criterion;
 
 namespace Line.WebService.Tests
 {
@@ -15,7 +16,9 @@ namespace Line.WebService.Tests
         {
             using (ISession session = NHibernateHelper.OpenSession())
             {
-                ICriteria criteria = session.CreateCriteria<Requests>();
+                ICriteria criteria = session.CreateCriteria<Requests>().SetFirstResult(10).SetMaxResults(25);
+                var rowcount = CriteriaTransformer.Clone(criteria).SetProjection(Projections.RowCount());
+                System.Diagnostics.Debug.WriteLine("rowcount ::: " + rowcount.FutureValue<int>().Value);
                 IList<Requests> list = criteria.List<Requests>();
                 var i = 0;
                 foreach (var it in list)

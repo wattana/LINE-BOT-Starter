@@ -206,6 +206,7 @@ namespace Line.WebService
 
                     trans.Commit();
                     jd.msg = requests.RequestNumber;
+                    jd.refId = requests.RequestId.ToString();
                 }
                 catch (Exception ex)
                 {
@@ -311,6 +312,7 @@ namespace Line.WebService
 
                     trans.Commit();
                     jd.msg = requests.RequestNumber;
+                    jd.refId = requests.RequestId.ToString();
                 }
                 catch (Exception ex)
                 {

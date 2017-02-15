@@ -14,12 +14,13 @@ Ext.define('LineChat.view.main.MessageChat', {
     selType: 'checkboxmodel',
     syncRowHeight: true,
     numFromEdgexx : 10000,
+    scrollToBottom : true,
 
     initComponent: function() {
         var me = this;
         var meMessageTpl = Ext.create('Ext.XTemplate',
             '<div class="chat-item" style="float:right">',
-                '<div class="chat-datetime">{date:this.formatDate}</div>',
+                '<div class="chat-datetime">{date:this.formatDate} <br/> {requestNumber}</div>',
                 '<div class="bubble bubble--alt">',
                     '<div class="chat-message">',
                         '<span>{messageText:this.getContent}</span>',
@@ -56,7 +57,7 @@ Ext.define('LineChat.view.main.MessageChat', {
                 '<div class="bubble">',
                     '<span>{messageText:this.getContent}</span>',
                 '</div>',
-                '<div class="chat-datetime">{date:this.formatDate}</div>',
+                '<div class="chat-datetime">{date:this.formatDate}<br/>{requestNumber}</div>',
             '</div>',
         {
             getBaseUrl : me.getBaseUrl,
@@ -98,7 +99,7 @@ Ext.define('LineChat.view.main.MessageChat', {
                 '<div style="float:left;margin-left:55px;">',
                     '<img src="http://dl.stickershop.line.naver.jp/products/0/0/100/{packageId}/PC/stickers/{stickerId}.png">',
                 '</div>',
-                '<div class="chat-datetime">{date:this.formatDate}</div>',
+                '<div class="chat-datetime">{date:this.formatDate}<br/>{requestNumber}</div>',
             '</div>',
         {
             getBaseUrl : me.getBaseUrl,
@@ -120,7 +121,7 @@ Ext.define('LineChat.view.main.MessageChat', {
                     '<div><img src="{.:this.getBaseUrl}content/images/{roomId}/{messageId}.png" width="200px"></div>',
                     '<a href="{.:this.getBaseUrl}content/images/{roomId}/{messageId}.png" target="_blank">Open</a>',
                 '</div>',
-                '<div class="chat-datetime">{date:this.formatDate}</div>',
+                '<div class="chat-datetime">{date:this.formatDate}<br/>{requestNumber}</div>',
             '</div>',
             {
             getBaseUrl : me.getBaseUrl,
@@ -130,7 +131,7 @@ Ext.define('LineChat.view.main.MessageChat', {
 
         var meImageTpl = Ext.create('Ext.XTemplate',
             '<div class="chat-item" style="float:right;position:relative">',
-                '<div class="chat-datetime">{date:this.formatDate}</div>',
+                '<div class="chat-datetime">{date:this.formatDate}<br/>{requestNumber}</div>',
                 '<div style="margin-right: 55px;">',
                     '<img id="{timestamp}" src="{.:this.getBaseUrl}{filePath}{fileName}" width="200px">',
                     '<div style="width:100px;height:100px;position:absolute;top:30%;left:30%" class="file-picker__progress" id="file-picker__progress_{timestamp}"></div>',
@@ -152,7 +153,7 @@ Ext.define('LineChat.view.main.MessageChat', {
         });
 
         var audioTpl = Ext.create('Ext.XTemplate',
-        '<div class="chat-item">',
+         '<div class="chat-item">',
             '<div style="position:absolute;bottom:5px;color:gray">',
                 '<tpl if="pictureUrl == \'\' || pictureUrl==null">',
                     '<i class="fa fa-user fa-2x"></i>',
@@ -167,7 +168,7 @@ Ext.define('LineChat.view.main.MessageChat', {
                     'Your browser does not support the audio element.',
                 '</audio>',
             '</div>',
-            '<div class="chat-datetime">{date:this.formatDate}</div>',
+            '<div class="chat-datetime">{date:this.formatDate}<br/>{requestNumber}</div>',
         '</div>',
         {
             getBaseUrl : me.getBaseUrl,
@@ -175,8 +176,8 @@ Ext.define('LineChat.view.main.MessageChat', {
             formatDate: me.formatDate
         });
         var meAudioTpl = Ext.create('Ext.XTemplate',
-        '<div class="chat-item" style="float:right;position:relative">',
-            '<div class="chat-datetime">{date:this.formatDate}</div>',
+         '<div class="chat-item" style="float:right;position:relative">',
+            '<div class="chat-datetime">{date:this.formatDate}<br/>{requestNumber}</div>',
             '<div class="bubble  bubble--alt">',
                 '<audio id="audio_{timestamp}" controls>',
                     '<source id="{timestamp}" src="{.:this.getBaseUrl}{filePath}{fileName}" type="audio/mpeg">',
@@ -200,7 +201,7 @@ Ext.define('LineChat.view.main.MessageChat', {
         });
 
         var videoTpl = Ext.create('Ext.XTemplate',
-        '<div class="chat-item">',
+         '<div class="chat-item">',
             '<div style="position:absolute;bottom:5px;color:gray">',
                 '<tpl if="pictureUrl == \'\' || pictureUrl==null">',
                     '<i class="fa fa-user fa-2x"></i>',
@@ -215,7 +216,7 @@ Ext.define('LineChat.view.main.MessageChat', {
                     'Your browser does not support the <code>video</code> element.',
                 '</video>',
             '</div>',
-            '<div class="chat-datetime">{date:this.formatDate}</div>',            
+            '<div class="chat-datetime">{date:this.formatDate}<br/>{requestNumber}</div>',            
         '</div>',
         {
             getBaseUrl : me.getBaseUrl,
@@ -224,8 +225,8 @@ Ext.define('LineChat.view.main.MessageChat', {
         });
 
         var meVideoTpl = Ext.create('Ext.XTemplate',
-        '<div class="chat-item"  style="float:right;position:relative">',
-            '<div class="chat-datetime">{date:this.formatDate}</div>',
+         '<div class="chat-item"  style="float:right;position:relative">',
+            '<div class="chat-datetime">{date:this.formatDate}<br/>{requestNumber}</div>',
             '<div style="margin-right: 55px;">',
                 '<video id="video_{timestamp}" controls width="250px" height="250px">',
                     '<source id="{timestamp}" src="{.:this.getBaseUrl}{filePath}{fileName}" type="video/mp4">',
@@ -249,7 +250,7 @@ Ext.define('LineChat.view.main.MessageChat', {
         });
 
         var locationTpl = Ext.create('Ext.XTemplate',
-        '<div class="chat-item">',
+         '<div class="chat-item">',
             '<div style="position:absolute;bottom:5px;color:gray">',
                 '<tpl if="pictureUrl == \'\' || pictureUrl==null">',
                     '<i class="fa fa-user fa-2x"></i>',
@@ -264,7 +265,7 @@ Ext.define('LineChat.view.main.MessageChat', {
                     '<a style ="text-decoration:none" href="http://maps.google.com/maps?q=loc:{latitude},{longitude}" target="_blank">&nbsp; {title} <br/> {address}</a>',
                 '</div>',
             '</div>',
-            '<div class="chat-datetime">{date:this.formatDate}</div>',            
+            '<div class="chat-datetime">{date:this.formatDate}<br/>{requestNumber}</div>',            
         '</div>',
         {
             getBaseUrl : me.getBaseUrl,
@@ -285,7 +286,7 @@ Ext.define('LineChat.view.main.MessageChat', {
                     '<i class="fa fa-file-archive-o" aria-hidden="true" style="float:left;font-size: 18px;font-weight: bold;color: brown;"></i>',
                     '<a style ="text-decoration:none" href="{.:this.getBaseUrl}{filePath}{fileName}" target="_blank">&nbsp; {fileName}</a>',
                 '</div>',
-            '<div class="chat-datetime">{date:this.formatDate}</div>',
+            '<div class="chat-datetime">{date:this.formatDate}<br/>{requestNumber}</div>',
             '</div>',
             {
             getBaseUrl : me.getBaseUrl,
@@ -299,20 +300,22 @@ Ext.define('LineChat.view.main.MessageChat', {
             //trackOver: false,
             listeners: {
                 refresh: function (view) {
-                    //me.getView().scrollBy(0, 999999, true);
-                    //me.getView().focusRow(me.getStore().getCount()-1,1000);
-                    var me = this;
-                    Ext.defer(function () {
-                        if (me.getStore().getCount() > 0) {
-                            me.bufferedRenderer.scrollTo(me.getStore().getCount() - 1,
-                            {
-                                animate:true,
-                                callback : function (item) {
-                                    view.focusRow(me.getStore().getCount()-1,1500)
-                                }
-                            });
-                        }
-                    }, 500)
+                    if (me.scrollToBottom) {
+                        //me.getView().scrollBy(0, 999999, true);
+                        //me.getView().focusRow(me.getStore().getCount()-1,1000);
+                        //var me = this;
+                        Ext.defer(function () {
+                            if (view.getStore().getCount() > 0) {
+                                view.bufferedRenderer.scrollTo(view.getStore().getCount() - 1,
+                                {
+                                    animate:true,
+                                    callback : function (item) {
+                                        view.focusRow(view.getStore().getCount()-1,1500)
+                                    }
+                                });
+                            }
+                        }, 500)
+                    }
                 }
             }
         },
