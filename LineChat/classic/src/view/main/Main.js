@@ -282,6 +282,7 @@ Ext.define('LineChat.view.main.Main', {
                 }]
             }, {
                 xtype : 'messagechat',
+                bufferedRenderer : false,
                 flex: 1,
                 listeners : {
                     selectionchange :  function( sm , selected , eOpts ) {

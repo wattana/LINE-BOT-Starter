@@ -131,7 +131,7 @@ db.on('connect', function(err) {
                         "sourceUserId [nvarchar](40) NOT NULL DEFAULT (''), "+
                         "messageId [nvarchar](50) NOT NULL DEFAULT (''), "+
                         "messageType [nvarchar](20) NOT NULL DEFAULT (''), "+
-                        "messageText [nvarchar](500) NULL, "+
+                        "messageText [nvarchar](max) NULL, "+
                         "stickerId int, "+
                         "packageId int,"+
                         "title [nvarchar](200) NULL , "+
@@ -166,7 +166,7 @@ db.on('connect', function(err) {
                         "statusMessage [nvarchar](250) DEFAULT (''),"+
                         "sourceType [nvarchar](20) DEFAULT (''),"+
                         "messageType [nvarchar](20) DEFAULT (''),"+
-                        "message [nvarchar](500) DEFAULT (''),"+
+                        "message [nvarchar](max) DEFAULT (''),"+
                         "unread [int] NOT NULL DEFAULT(0),"+
                         "createtime bigint,"+
                         "updatetime bigint,"+
@@ -211,9 +211,7 @@ function onPushMessage (data) {
   client.post("https://api.line.me/v2/bot/message/push", args, 
   function (result, response) {
     // parsed response body as js object 
-    console.log('result',result);
-    // raw response 
-    //console.log(response);
+    //console.log('result',result);
     var room = {
       id : data.roomId,
       contact_id : data.contactId
@@ -1003,24 +1001,7 @@ app.get('/listMessage',function (req, res) {
   var messages = [];
   var sql;
   var totalSql;
-  if (req.query.contactId) {
-    sql = "SELECT messages.id AS id, roomId, replyToken, eventType, timestamp ,messages.sourceType, "+
-         "messages.contact_id as contactId, sourceUserId , messageId, "+
-         "messages.messageType , messageText ,info as message, line_contacts.pictureUrl,"+
-         "stickerId, packageId ,title, address, latitude, longitude, "+
-         "filePath, fileName , originalFileName, line_name as lineName , requestNumber "+
-         "FROM line_messages messages "+
-         ",line_contacts "+
-         "where messages.contact_id = @contactId "+
-         "and line_contacts.line_id = messages.sourceUserId "+
-         "and eventType='message' "+
-         "order by messages.timestamp desc OFFSET @start ROWS FETCH FIRST @limit ROWS ONLY";
-    totalSql = "select count(*) as total from line_messages messages "+
-         ",line_contacts "+
-         "where messages.contact_id = @contactId "+
-         "and line_contacts.line_id = messages.sourceUserId "+
-         "and eventType='message'"      
-  } else {
+  if (req.query.roomId) {
      sql = "SELECT messages.id AS id, roomId, replyToken, eventType, timestamp ,messages.sourceType, "+
          "messages.contact_id as contactId, sourceUserId , messageId,"+
          "messages.messageType , messageText ,info as message ,line_contacts.pictureUrl, "+
@@ -1037,7 +1018,23 @@ app.get('/listMessage',function (req, res) {
          "where messages.roomId = chat_room.id "+
          "and line_contacts.line_id = messages.sourceUserId "+
          "and chat_room.id = @roomId and eventType='message' ";
-
+  } else {
+    sql = "SELECT messages.id AS id, roomId, replyToken, eventType, timestamp ,messages.sourceType, "+
+         "messages.contact_id as contactId, sourceUserId , messageId, "+
+         "messages.messageType , messageText ,info as message, line_contacts.pictureUrl,"+
+         "stickerId, packageId ,title, address, latitude, longitude, "+
+         "filePath, fileName , originalFileName, line_name as lineName , requestNumber "+
+         "FROM line_messages messages "+
+         ",line_contacts "+
+         "where messages.contact_id = @contactId "+
+         "and line_contacts.line_id = messages.sourceUserId "+
+         "and eventType='message' "+
+         "order by messages.timestamp desc OFFSET @start ROWS FETCH FIRST @limit ROWS ONLY";
+    totalSql = "select count(*) as total from line_messages messages "+
+         ",line_contacts "+
+         "where messages.contact_id = @contactId "+
+         "and line_contacts.line_id = messages.sourceUserId "+
+         "and eventType='message'"      
   }
   //console.log("listMessage", sql)
   var messages = [];
@@ -1078,10 +1075,10 @@ app.get('/listMessage',function (req, res) {
                   });
                   messages.push(record)
               });
-              if (req.query.contactId)
-                request.addParameter('contactId', TYPES.VarChar, req.query.contactId);
-              else 
+              if (req.query.roomId)
                 request.addParameter('roomId', TYPES.Int, req.query.roomId);
+              else 
+                request.addParameter('contactId', TYPES.VarChar, req.query.contactId);
               request.addParameter('start', TYPES.Int, req.query.start);
               request.addParameter('limit', TYPES.Int, req.query.limit);
               db.execSql(request); 
@@ -1093,10 +1090,10 @@ app.get('/listMessage',function (req, res) {
             total = column.value
           });
       });
-      if (req.query.contactId)
-        request.addParameter('contactId', TYPES.VarChar, req.query.contactId);
-      else 
+      if (req.query.roomId)
         request.addParameter('roomId', TYPES.Int, req.query.roomId);
+      else 
+        request.addParameter('contactId', TYPES.VarChar, req.query.contactId);
       db.execSql(request);
 
   })
@@ -2536,7 +2533,7 @@ function updateRoom(db, room, messageEv, cb) {
         request.on('row', function(columns) {
             //console.log('-------------------',columns[0])
             columns.forEach(function(column) {
-              room[column.metadata.colName] = column.value
+              if (column.value) room[column.metadata.colName] = column.value
             });
         });
         request.addParameter('lineId', TYPES.VarChar, messageEv.source.userId);
@@ -2585,7 +2582,7 @@ function updateRoom(db, room, messageEv, cb) {
                   address : messageEv.message.address,
                   latitude : messageEv.message.latitude,
                   longitude : messageEv.message.longitude,
-                  pictureUrl : room.pictureUrl,
+                  pictureUrl : room.pictureUrl || "",
                   filePath : messageEv.message.filePath,
                   fileName : messageEv.message.fileName,
                   lineName : room.lineName
@@ -2741,7 +2738,7 @@ function saveMessage(db , room, messageEv, callback) {
     request.addParameter('eventType', TYPES.VarChar, messageEv.type);
     request.addParameter('timestamp', TYPES.BigInt, messageEv.timestamp);
     request.addParameter('sourceType', TYPES.VarChar, messageEv.source.type);
-    request.addParameter('contact_id', TYPES.VarChar, room.contact_id || null);
+    request.addParameter('contact_id', TYPES.VarChar, room.contact_id ? room.contact_id:null);
     request.addParameter('sourceUserId', TYPES.VarChar, messageEv.source.userId);
     request.addParameter('messageId', TYPES.VarChar, messageEv.message.id);
     request.addParameter('messageType', TYPES.VarChar, messageEv.message.type);

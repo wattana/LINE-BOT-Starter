@@ -304,17 +304,21 @@ Ext.define('LineChat.view.main.MessageChat', {
                         //me.getView().scrollBy(0, 999999, true);
                         //me.getView().focusRow(me.getStore().getCount()-1,1000);
                         //var me = this;
-                        Ext.defer(function () {
-                            if (view.getStore().getCount() > 0) {
-                                view.bufferedRenderer.scrollTo(view.getStore().getCount() - 1,
-                                {
-                                    animate:true,
-                                    callback : function (item) {
-                                        view.focusRow(view.getStore().getCount()-1,1500)
-                                    }
-                                });
-                            }
-                        }, 500)
+                        if (me.bufferedRenderer) {
+                            Ext.defer(function () {
+                                if (view.getStore().getCount() > 0) {
+                                    view.bufferedRenderer.scrollTo(view.getStore().getCount() - 1,
+                                    {
+                                        animate:true,
+                                        callback : function (item) {
+                                            view.focusRow(view.getStore().getCount()-1,1500)
+                                        }
+                                    });
+                                }
+                            }, 500)
+                        } else {
+                            view.focusRow(view.getStore().getCount()-1,1500)
+                        }
                     }
                 }
             }

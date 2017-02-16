@@ -63,7 +63,7 @@ Ext.define('LineChat.view.main.MainController', {
         sendMessageForm.down("button[action=sendContactMessage]").hide()
         
         var grid = this.getView().down('messagechat')
-        grid.getStore().getProxy().setExtraParam("contactId", null)
+        //grid.getStore().getProxy().setExtraParam("contactId", null)
         grid.getStore().getProxy().setExtraParam("roomId", record.get('id'))
         grid.getStore().load({
             callback: function (records, operation, success) {

@@ -15,6 +15,7 @@ Ext.define('LineChat.store.Message', {
         'messageId', 
         'messageType', 
         'messageText',
+        'pictureUrl',
         {
             name : 'message'
         },
