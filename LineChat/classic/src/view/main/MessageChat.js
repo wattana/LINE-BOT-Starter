@@ -20,7 +20,7 @@ Ext.define('LineChat.view.main.MessageChat', {
         var me = this;
         var meMessageTpl = Ext.create('Ext.XTemplate',
             '<div class="chat-item" style="float:right">',
-                '<div class="chat-datetime">{date:this.formatDate} <br/> {requestNumber}</div>',
+                '<div class="chat-datetime--alt">{date:this.formatDate} <br/> {requestNumber}</div>',
                 '<div class="bubble bubble--alt">',
                     '<div class="chat-message">',
                         '<span>{messageText:this.getContent}</span>',
@@ -67,8 +67,8 @@ Ext.define('LineChat.view.main.MessageChat', {
 
         var meStickerTpl = Ext.create('Ext.XTemplate',
             '<div class="chat-item" style="float:right">',
-                '<div class="chat-datetime">{date:this.formatDate}</div>',
-                '<div style="margin-right: 55px;">',
+                '<div class="chat-datetime--alt">{date:this.formatDate}</div>',
+                '<div style="padding:0px 60px;">',
                     '<img src="http://dl.stickershop.line.naver.jp/products/0/0/100/{packageId}/PC/stickers/{stickerId}.png">',
                 '</div>',
                 '<div style="position:absolute;bottom:5px;right: 2px;color:gray">',
@@ -131,7 +131,7 @@ Ext.define('LineChat.view.main.MessageChat', {
 
         var meImageTpl = Ext.create('Ext.XTemplate',
             '<div class="chat-item" style="float:right;position:relative">',
-                '<div class="chat-datetime">{date:this.formatDate}<br/>{requestNumber}</div>',
+                '<div class="chat-datetime--alt">{date:this.formatDate}<br/>{requestNumber}</div>',
                 '<div style="margin-right: 55px;">',
                     '<img id="{timestamp}" src="{.:this.getBaseUrl}{filePath}{fileName}" width="200px">',
                     '<div style="width:100px;height:100px;position:absolute;top:30%;left:30%" class="file-picker__progress" id="file-picker__progress_{timestamp}"></div>',
@@ -177,7 +177,7 @@ Ext.define('LineChat.view.main.MessageChat', {
         });
         var meAudioTpl = Ext.create('Ext.XTemplate',
          '<div class="chat-item" style="float:right;position:relative">',
-            '<div class="chat-datetime">{date:this.formatDate}<br/>{requestNumber}</div>',
+            '<div class="chat-datetime--alt">{date:this.formatDate}<br/>{requestNumber}</div>',
             '<div class="bubble  bubble--alt">',
                 '<audio id="audio_{timestamp}" controls>',
                     '<source id="{timestamp}" src="{.:this.getBaseUrl}{filePath}{fileName}" type="audio/mpeg">',
@@ -226,8 +226,8 @@ Ext.define('LineChat.view.main.MessageChat', {
 
         var meVideoTpl = Ext.create('Ext.XTemplate',
          '<div class="chat-item"  style="float:right;position:relative">',
-            '<div class="chat-datetime">{date:this.formatDate}<br/>{requestNumber}</div>',
-            '<div style="margin-right: 55px;">',
+            '<div class="chat-datetime--alt">{date:this.formatDate}<br/>{requestNumber}</div>',
+            '<div style="padding:0px 60px;">',
                 '<video id="video_{timestamp}" controls width="250px" height="250px">',
                     '<source id="{timestamp}" src="{.:this.getBaseUrl}{filePath}{fileName}" type="video/mp4">',
                     'Your browser does not support the <code>video</code> element.',
@@ -317,7 +317,7 @@ Ext.define('LineChat.view.main.MessageChat', {
                                 }
                             }, 500)
                         } else {
-                            view.focusRow(view.getStore().getCount()-1,1500)
+                            view.focusRow(view.getStore().getCount()-1,500)
                         }
                     }
                 }

@@ -365,17 +365,32 @@ function onMessageReaded (data) {
             console.log(err)
             return;
         }
-        var request = new DbRequest(
-           "update line_chat_room set unread=0 where id=@roomId",
-          function(err, rowCount , row) {
-            db.close();
-            if (err) {
-              console.log("UpdateRoom error ",err);
-              throw err;
-            }
-        });
-        request.addParameter('roomId', TYPES.Int, data.roomId);
-        db.execSql(request);
+        console.log('update room',data)
+        if (data.roomId) {
+            var request = new DbRequest(
+              "update line_chat_room set unread=0 where id=@roomId",
+              function(err, rowCount , row) {
+                db.close();
+                if (err) {
+                  console.log("UpdateRoom error ",err);
+                  throw err;
+                }
+            });
+            request.addParameter('roomId', TYPES.Int, data.roomId);
+            db.execSql(request);
+       } else {
+          var request = new DbRequest(
+              "update line_chat_room set unread=0 where contact_id=@contactId",
+              function(err, rowCount , row) {
+                db.close();
+                if (err) {
+                  console.log("UpdateRoom error ",err);
+                  throw err;
+                }
+            });
+            request.addParameter('contactId', TYPES.VarChar, data.contactId);
+            db.execSql(request);
+       }
     });
 }
 

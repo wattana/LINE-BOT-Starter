@@ -15,6 +15,7 @@ Ext.define('LineChat.Application', {
 
     
     init : function ( app) {
+        var me = this;
         Ext.state.Manager.setProvider(Ext.create('Ext.state.CookieProvider', {}));
 
         var roomStore = this.getStore('Room');
@@ -33,7 +34,17 @@ Ext.define('LineChat.Application', {
             this.getStore('Message').getProxy().setUrl("http://localhost:3000/listMessage")
             app.baseURL = "http://localhost:3000/";
         }
-        roomStore.load();
+        roomStore.load({
+            callback : function (records) {
+                var unread = 0;
+                for (var i=0; i<records.length;i++) {
+                    unread += records[i].get("unread")
+                }
+                var tabBar =  me.getMainView().down("tabpanel[region=west]").getTabBar()
+                tabBar.down("tab[text=Chat]").setBadgeText(unread)
+            }
+            
+        });
         contactStore.load();
         contactTreeStore.load();
         userStore.load();
@@ -82,7 +93,7 @@ Ext.define('LineChat.Application', {
                 */
                 //console.log(LineChat.app.info)
                 var messagePanel = me.getMainView().down("form[reference=roomInfoForm]")
-                console.log(messagePanel)
+                //console.log(messagePanel)
                 messagePanel.getHeader().add([{
                     xtype : 'label',
                     style : {

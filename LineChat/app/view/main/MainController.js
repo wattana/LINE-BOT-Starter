@@ -83,6 +83,7 @@ Ext.define('LineChat.view.main.MainController', {
                     {
                         roomId : record.get('id')
                     });
+                    me.setChatUnreadCnt()
                 }
             }
         })
@@ -95,6 +96,7 @@ Ext.define('LineChat.view.main.MainController', {
             return
         }
         if (e && e.getTarget('div.x-delete-btn')) return;
+        var me = this;
         this.getView().getReferences().center.enable()
         var roomInfo = this.getView().getReferences().roomInfoForm;
         roomInfo.reset();
@@ -123,6 +125,17 @@ Ext.define('LineChat.view.main.MainController', {
                 grid.getStore().resumeAutoSync();
                 */
                 //grid.getView().focusRow(grid.getStore().getCount()-1,1000);
+                var unread = 0;
+                Ext.getStore("Room").each (function (room) {
+                    if (record.get("contactId") == room.get("contactId")) {
+                        room.set("unread",0)
+                    }
+                });
+                me.socket.emit('messageReaded',
+                {
+                    contactId : record.get('contactId')
+                });
+                me.setChatUnreadCnt()
 
             }
         })
@@ -149,6 +162,7 @@ Ext.define('LineChat.view.main.MainController', {
         var me = this;
         var sendMessageForm = this.getReferences().sendMessageForm;
         var field = sendMessageForm.down("textarea[name=message]");
+        if (!field.getValue()) return;
         var roomInfo = this.getView().getReferences().roomInfoForm;
 
         this.sendMessage(roomInfo.down("hidden[name=id]").getValue(),
@@ -157,7 +171,10 @@ Ext.define('LineChat.view.main.MainController', {
                     roomInfo.down("hidden[name=contactId]").getValue(),
                     field.getValue(),null,
                     function () {
-                        field.reset()
+                        field.reset();
+                        setTimeout(function(){
+                            field.focus();
+                        },1000);
                     });
     },
 
@@ -189,6 +206,7 @@ Ext.define('LineChat.view.main.MainController', {
         var me = this;
         var sendMessageForm = this.getReferences().sendMessageForm;
         var field = sendMessageForm.down("textarea[name=message]");
+        if (!field.getValue()) return;
         var roomInfo = this.getView().getReferences().roomInfoForm;
 
         this.sendContactMessage(
@@ -196,7 +214,10 @@ Ext.define('LineChat.view.main.MainController', {
                     roomInfo.down("hidden[name=contactId]").getValue(),
                     field.getValue(),null,
                     function () {
-                        field.reset()
+                        field.reset();
+                        setTimeout(function(){
+                            field.focus();
+                        },1000);
                     });
     },
 
@@ -247,7 +268,8 @@ Ext.define('LineChat.view.main.MainController', {
                     roomId : chatMessage.roomId
                 });
             } else {
-                roomRecord.set("unread", roomRecord.get("unread")+1);        
+                roomRecord.set("unread", roomRecord.get("unread")+1);     
+                me.setChatUnreadCnt()
             }
         }
         if (chatMessage.contactId) {
@@ -531,9 +553,15 @@ Ext.define('LineChat.view.main.MainController', {
                     name : 'requestNumber'
                 },{
                     xtype : 'button',
-                    text : 'Ok',
+                    text : 'แก้ไขใบงาน',
+                    formBind : true,
                     margin : '0 0 0 10',
                     handler : function (btn) {
+                        if (!btn.up("window").down('textfield[name=requestNumber]').getValue()) {
+                             Ext.Msg.alert('Failed', "กรุณาระบุเลขใบงาน", function () {                                                    
+                                });
+                            return;
+                        }
                         var grid = me.getView().down('messagechat')
                         var selected = grid.getSelection()
                         var ids = [];
@@ -569,13 +597,50 @@ Ext.define('LineChat.view.main.MainController', {
                 },{
                     xtype : 'button',
                     margin : '0 0 0 10',
+                    text : 'สร้างใบงานใหม่',
+                    handler : function (btn) {
+                        var grid = me.getView().down('messagechat')
+                        var selected = grid.getSelection()
+                        var ids = [];
+                        for (var i=0; i<selected.length; i++) {
+                            ids.push(selected[i].get("id"));
+                        }
+                        form.submit({
+                            url: LineChat.app.baseURL+"createRequest", 
+                            waitMsg: 'Saving ...',
+                            params : {
+                                //payments : Ext.encode(payments)
+                                ids : Ext.util.JSON.encode(ids)
+                            },
+                            success: function (form, action) {
+                                var result = action.result;
+                                if (!result.success) {
+                                    Ext.Msg.alert('Error', result.msg);
+                                } else {
+                                    Ext.Msg.alert('Success', "บันทึกข้อมูลสำเร็จ เลขที่เอกสาร "+action.result.msg, function () {
+                                        //view.fireEvent("saved", form , action);
+                                        grid.getSelectionModel().deselectAll();
+                                        btn.up("window").close();
+                                    });
+                                }   
+                            },
+                            failure: function (form, action) {
+                                Ext.Msg.alert('Failed', action.result.msg, function () {                                                    
+                                });
+                            }
+                        }); 
+                    }
+                },{
+                    xtype : 'button',
+                    margin : '0 0 0 10',
                     text : 'Cancel',
                     handler : function () {
                         this.up("window").close();
                     }
                 },{
                     xtype : 'label',
-                    text : " (สร้างใบงานใหม่ ไม่ต้องระบุใบงาน)",
+                    flex : 1,
+                    textx : " (สร้างใบงานใหม่ ไม่ต้องระบุใบงาน)",
                     margin : '2 0 0 10'
                 }]
             },{ 
@@ -854,6 +919,15 @@ Ext.define('LineChat.view.main.MainController', {
             }]
         }).show();
         
+    },
+
+    setChatUnreadCnt : function() {
+        var unread = 0;
+        Ext.getStore("Room").each (function (record) {
+            unread += record.get("unread")
+        });
+        var tabBar =  this.getView().down("tabpanel[region=west]").getTabBar()
+        tabBar.down("tab[text=Chat]").setBadgeText(unread)
     }
 
 });

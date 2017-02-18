@@ -259,7 +259,7 @@ Ext.define('LineChat.view.main.Main', {
                     xtype : 'button',
                     glyph: 'xf233@FontAwesome',
                     margin : '2 0 0 2',
-                    text : 'ดูเพิ่มเติม',
+                    text : 'ดูข้อความทั้งหมด',
                     handler : 'onMoreMessageClick'
                 }, {
                     xtype: 'hiddenfield',
@@ -459,7 +459,33 @@ Ext.define('LineChat.view.main.Main', {
                         growMax: 200,
                         growAppend: '-',
                         name: 'message',
-                        colspan: 2
+                        colspan: 2,
+                        enableKeyEvents : true,
+                        listeners : {
+                            keypress : function ( field , e , eOpts ) {
+                                if (e.getKey() === e.ENTER ) {
+                                    //console.log("enter")
+                                    if (e.altKey) {
+                                        var content = field.getValue();
+                                        var el = field.inputEl.dom;
+                                        var caret = el.selectionStart;
+                                        field.setValue(content.substring(0, caret) + "\n" + content.substring(caret, content.length));
+                                        el.setSelectionRange(caret+1, caret+1);
+                                        e.stopPropagation();
+                                    } else {
+                                        var ctrl = me.getController()
+                                        var btn = me.down("button[action=sendMessage]");
+                                        if (btn.isVisible()) {
+                                            ctrl.onSendBtnClick.call(ctrl, btn);
+                                        } else {
+                                            ctrl.onSendContactBtnClick.call(ctrl, me.down("button[action=sendContactMessage]"));
+                                        }
+                                        e.stopPropagation();
+                                        e.preventDefault();
+                                    }
+                                }
+                            }
+                        }
                     }, {
                         xtype: 'button',
                         text: 'ส่งข้อความ',
@@ -475,7 +501,7 @@ Ext.define('LineChat.view.main.Main', {
                     }, {
                         xtype: 'button',
                         scale : 'medium',
-                        text: 'Send',
+                        text: 'ส่งข้อความ',
                         action : 'sendContactMessage',
                         style: {
                             marginLeft: '5px',

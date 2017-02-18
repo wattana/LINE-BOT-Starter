@@ -273,6 +273,9 @@ Ext.define('LineChat.view.main.ContactTree', {
     },
 
     listeners: {
-        rowclick: 'contactTalkingWith'
+        rowclick: 'contactTalkingWith',
+        itemclick: function (v, r) {
+            r.isExpanded() ? r.collapse() : r.expand();
+        }
     }
 });
