@@ -404,6 +404,7 @@ app.use('/resources',express.static('resources'))
 app.use('/content',express.static('content'))
 app.use('/base',require('./base.js'))
 app.use('/login',require('./login.js'))
+app.use('/test',require('./test.js'))
 
 // allow CORS
 app.all('*', function(req, res, next) {
@@ -475,6 +476,30 @@ app.get('/pushMessage', function (req, res) {
     //console.log(response);
     res.send(result)
   });
+})
+
+app.post('/contactPushMessage', jsonParser, function (req, res) {
+  onPushContactMessage({
+        roomId : 0,
+        replyToken: "",
+        type : "message",
+        timestamp : Date.now(),//messageEv.timestamp ,
+        sourceType : "agent" ,
+        sourceUserId : req.body.agentId ,
+        contactId : req.body.contactId ,
+        "source": {
+            "type": "agent",
+            "userId": req.body.agentId
+        },
+        message : {
+            id : 0 ,
+            type: "text" , 
+            text: req.body.text
+        }
+  })
+  res.json({
+    success : true
+  })
 })
 
 app.get('/getImage', function (req, res) {
@@ -1695,7 +1720,7 @@ app.post('/contactUpload', function (req, res) {
       type : "message",
       timestamp : time,//messageEv.timestamp ,
       sourceType : "agent" ,
-      sourceUserId : req.body.userId ,
+      sourceUserId : req.body.agentId ,
       contactId : req.body.contactId ,
       "source": {
           "type": "agent",

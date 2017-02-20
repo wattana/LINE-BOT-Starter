@@ -196,6 +196,57 @@ Ext.define('LineChat.view.main.Main', {
                         handler : function () {
                             location = LineChat.app.baseURL+"login/logout"
                         }
+                    },{
+                        xtype : 'form',
+                        itemId : 'form2',
+                        hidden : true,
+                        width : 400,
+                        frame : false,
+                        margin : '10 0 0 0',
+                        padding : 2,
+                        defaults: {
+                            labelWidth: 180
+                        },
+                        title : 'เอกสารประกอบ/Document',
+                        items : [{
+                            xtype: 'textfield',
+                            name: 'description',
+                            rows : 5,
+                            colspanx : 2
+                        },{
+                            xtype: 'filefield',
+                            name: 'recFile',
+                            msgTarget: 'side',
+                            buttonText: 'เลือกไฟล์/Select',
+                            allowBlank: false,
+                            buttonOnly : false,
+                            margin : '0px 0 0 0px',
+                            fieldLabel: 'ชื่อไฟล์/File'
+                        },{
+                            xtype : 'button',
+                            action : 'upload',
+                            margin : '0px 0 0 140px',
+                            text: 'นำเข้า / Upload',
+                            rowspanx : 2,
+                            scalex : "medium",
+                            formBind : true,
+                            handler : function(btn) {
+                                var main = this.up('form');
+                                var form = main.getForm();
+                                if (form.isValid()) {
+                                    form.submit({
+                                        url: 'http://vm:46233/lineservice.asmx/sendImage', 
+                                        waitMsg: 'Uploading ...',
+                                        success: function (form, action) {
+                                        },
+                                        failure: function (form, action) {
+                                            Ext.Msg.alert('Failed', action.result.msg, function () {                                                    
+                                            });
+                                        }
+                                    });
+                                }
+                            }
+                        }]
                     }]
                 }
             }] 
