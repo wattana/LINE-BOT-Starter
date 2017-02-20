@@ -86,7 +86,7 @@ namespace Line.WebService
                     // Access variables from the returned JSON object
                     //var appHref = content.links.applications.href;
                 } else {
-                    result = response.ToString();
+                    result = "{sucess:false , msg : \""+response.Content.ReadAsStringAsync().Result+"\"}";
                 }
             }
             return result;
@@ -95,6 +95,8 @@ namespace Line.WebService
         [WebMethod]
         public void sendImage()
         {
+            string result = "";
+
             var Request = HttpContext.Current.Request;
             System.Collections.Specialized.NameValueCollection parameters = HttpContext.Current.Request.Params;
             HttpPostedFile file = HttpContext.Current.Request.Files["imageFile"];
@@ -123,15 +125,19 @@ namespace Line.WebService
 
                 if (response.IsSuccessStatusCode)
                 {
-                    dynamic content = response.Content.ReadAsStringAsync().Result;
-                    Console.WriteLine(content);
+                    result = response.Content.ReadAsStringAsync().Result;
+                    //Console.WriteLine(content);
                     // Access variables from the returned JSON object
                     //var appHref = content.links.applications.href;
+                }
+                else
+                {
+                    result = "{sucess:false , msg : \"" + response.Content.ReadAsStringAsync().Result + "\"}";
                 }
             }
             Context.Response.Clear();
             Context.Response.ContentType = "text/html";
-            Context.Response.Write("ok");
+            Context.Response.Write(result);
             Context.Response.End();
         }
     }

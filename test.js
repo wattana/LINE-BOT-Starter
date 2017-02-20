@@ -12,13 +12,8 @@ router.get('/sendText', function(req, res, next) {
         "Content-Type": "application/json" 
       }, // request headers 
       data :   {
-        "to": "Uaa89e07dfe96f3b66fe7937cf9e2c591",
-        "messages":[{
-            "type":"text",
-            "text":"Quatation แก้ไข incident จากเดิม 100 ข้อเป็น 150 ข้อ คิดราคา 50,000 บาทตามที่คุยกันไว้ครับ"
-        }],
-        contactPersonId : 'contactPersonId',
-        agentId : 'agentId',
+        agentId: 'FF50CE0C-4119-490A-B1E8-B109571374C8',
+        contactId : '489057F9-1F48-49B6-9464-BD2247C23642',
         text : 'test'
     }
   };

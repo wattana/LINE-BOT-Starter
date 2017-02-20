@@ -479,7 +479,7 @@ app.get('/pushMessage', function (req, res) {
 })
 
 app.post('/contactPushMessage', jsonParser, function (req, res) {
-  onPushContactMessage({
+  var data = {
         roomId : 0,
         replyToken: "",
         type : "message",
@@ -496,9 +496,11 @@ app.post('/contactPushMessage', jsonParser, function (req, res) {
             type: "text" , 
             text: req.body.text
         }
-  })
+  }
+  onPushContactMessage(data)
   res.json({
-    success : true
+    success : true,
+    message : data
   })
 })
 
