@@ -132,7 +132,7 @@ Ext.define('LineChat.view.main.MessageChat', {
         var meImageTpl = Ext.create('Ext.XTemplate',
             '<div class="chat-item" style="float:right;position:relative">',
                 '<div class="chat-datetime--alt">{date:this.formatDate}<br/>{requestNumber}</div>',
-                '<div style="margin-right: 55px;">',
+                '<div style="padding:0px 60px;">',
                     '<img id="{timestamp}" src="{.:this.getBaseUrl}{filePath}{fileName}" width="200px">',
                     '<div style="width:100px;height:100px;position:absolute;top:30%;left:30%" class="file-picker__progress" id="file-picker__progress_{timestamp}"></div>',
                 '</div>',

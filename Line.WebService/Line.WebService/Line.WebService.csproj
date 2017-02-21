@@ -120,6 +120,7 @@
     <EmbeddedResource Include="Models\Attachments.hbm.xml" />
     <Content Include="LineService.asmx" />
     <Content Include="LoginService.asmx" />
+    <Content Include="no_pictures.jpg" />
     <Content Include="packages.config" />
     <Content Include="ApplicationInsights.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -143,6 +144,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commons\AttachmentData.cs" />
     <Compile Include="Commons\JsonData.cs" />
     <Compile Include="Commons\ObjectToDictionaryHelper.cs" />
     <Compile Include="Commons\SerializableDictionary.cs" />

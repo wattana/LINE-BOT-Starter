@@ -405,6 +405,7 @@ app.use('/content',express.static('content'))
 app.use('/base',require('./base.js'))
 app.use('/login',require('./login.js'))
 app.use('/test',require('./test.js'))
+app.use('/kbdocument',require('./kbdocument.js'))
 
 // allow CORS
 app.all('*', function(req, res, next) {
@@ -722,7 +723,7 @@ app.post('/createRequest', jsonParser,function (req, res) {
                             //console.log('messages data',data );
                              var isContent = data.messageType == 'image' || data.messageType == 'audio' ||
                                              data.messageType == 'video' || data.messageType == 'file'
-                            if (isContent) {
+                            if (isContent && data.filePath.indexOf("kbdocument")==-1) {
                                 //console.log(client.describe().RequestsService.RequestsServiceSoap.saveAttach)
                                 var filePath = __dirname+'/'+data.filePath+data.fileName;
                                 var minetype = mime.lookup(filePath);
@@ -1715,28 +1716,71 @@ app.post('/contactUpload', function (req, res) {
     previewImageUrl = WebHookBaseURL+"/content/upload/"+room.contact_id+"/"+thumbFileName;  //"/resources/images/facetime.png";
   } else if (uploadFile.mimetype.indexOf("audio") != -1 ) { 
     messageType = 'audio';
+  } else {
+    messageType = 'file';
   }
-  var messageEv = {
-      roomId : 0,
-      replyToken: "",
-      type : "message",
-      timestamp : time,//messageEv.timestamp ,
-      sourceType : "agent" ,
-      sourceUserId : req.body.agentId ,
-      contactId : req.body.contactId ,
-      "source": {
-          "type": "agent",
-          "userId": req.body.agentId
-      },
-      message : {
-          id : time ,
-          type: messageType,
-          filePath : 'content/upload/'+room.contact_id+"/",
-          fileName : fileName,
-          originalFileName : uploadFile.name,
-          originalContentUrl : originalContentUrl,
-          previewImageUrl : previewImageUrl,
-      }
+
+  var messageEv;
+  if (messageType == "file") {
+    messageEv = {
+        roomId : 0,
+        replyToken: "",
+        type : "message",
+        timestamp : time,//messageEv.timestamp ,
+        sourceType : "agent" ,
+        sourceUserId : req.body.agentId ,
+        contactId : req.body.contactId ,
+        "source": {
+            "type": "agent",
+            "userId": req.body.agentId
+        },
+        message : {
+            id : time ,
+            filePath : 'content/upload/'+room.contact_id+"/",
+            fileName : fileName,
+            originalFileName : uploadFile.name,
+            originalContentUrl : originalContentUrl,
+            previewImageUrl : previewImageUrl,
+            "type": "template",
+            "altText": "File received",
+            "template": {
+                "type": "buttons",
+                "thumbnailImageUrlxx": WebHookBaseURL+"/resources/images/news.png",
+                "title": "File",
+                "text": "File name : "+fileName,
+                "actions": [
+                    {
+                      "type": "uri",
+                      "label": "Open",
+                      "uri": originalContentUrl
+                    }
+                ]
+            }
+        }
+    }
+  } else {
+    messageEv = {
+        roomId : 0,
+        replyToken: "",
+        type : "message",
+        timestamp : time,//messageEv.timestamp ,
+        sourceType : "agent" ,
+        sourceUserId : req.body.agentId ,
+        contactId : req.body.contactId ,
+        "source": {
+            "type": "agent",
+            "userId": req.body.agentId
+        },
+        message : {
+            id : time ,
+            type: messageType,
+            filePath : 'content/upload/'+room.contact_id+"/",
+            fileName : fileName,
+            originalFileName : uploadFile.name,
+            originalContentUrl : originalContentUrl,
+            previewImageUrl : previewImageUrl,
+        }
+    }
   }
   var dir = __dirname+'/content/upload/'+room.contact_id+"/";
   if (!fs.existsSync(dir)){
@@ -1814,23 +1858,23 @@ app.post('/contactUpload', function (req, res) {
             function (callback) {
               console.log('line ids',lineIds)
               for (var i=0; i<lineIds.length; i++) {
-                var args = {
-                  headers: { 
-                    "Authorization": token,
-                    "Content-Type": "application/json" 
-                  }, // request headers 
-                  data : {
-                    "to": lineIds[i],
-                    "messages":[messageEv.message]
-                  }
-                };
-                client.post("https://api.line.me/v2/bot/message/push", args, 
-                  function (result, response) {
-                    // parsed response body as js object 
-                    console.log('result',result);
-                    // raw response 
-                    //console.log(response);
-                });
+                  var args = {
+                    headers: { 
+                      "Authorization": token,
+                      "Content-Type": "application/json" 
+                    }, // request headers 
+                    data : {
+                      "to": lineIds[i],
+                      "messages":[messageEv.message]
+                    }
+                  };
+                  client.post("https://api.line.me/v2/bot/message/push", args, 
+                    function (result, response) {
+                      // parsed response body as js object 
+                      console.log('result',result);
+                      // raw response 
+                      //console.log(response);
+                  });
               }
               callback();
             }
@@ -2036,6 +2080,327 @@ app.post('/updateContactPerson',function (req, res) {
       db.execSql(request);
   })
 });
+
+app.get('/listKbDocument',function (req, res) {
+  //console.log(req)
+  var messages = [];
+  var total = 0;
+  var db = new Connection(dbConfig);
+  db.on('connect', function(err) {
+      if (err) {
+          console.log(err)
+          return;
+      }
+      var request = new DbRequest("SELECT count (distinct kb_id) as total FROM kb_documents  , attachments"+
+                                  " where kb_documents.kb_id = attachments.relate_id and relate_type='K'"
+                                  +((req.query.query) ? " and title like @query ":""), 
+        function(err, rowCount , row) {
+          if (err) {
+              db.close();
+              console.log("select kb_documents error ",err);
+              res.json({
+                success : false,
+                msg : err
+              });
+          } else {   
+              var request = new DbRequest(
+                "SELECT distinct kb_id, title FROM kb_documents , attachments where kb_documents.kb_id = attachments.relate_id and relate_type='K'"
+                +((req.query.query) ? " and title like @query ":"")
+                +" order by title desc OFFSET @start ROWS FETCH FIRST @limit ROWS ONLY", 
+                function(err, rowCount , row) {
+                  db.close();
+                  if (err) {
+                    console.log("select kb_documents error ",err);
+                    res.json({
+                      success : false,
+                      msg : err
+                    });
+                  } else {   
+                    res.json({
+                      data : messages,
+                      total : total
+                    });
+                  }
+                });
+
+                request.on('row', function(columns) {
+                  //console.log('-------------------',columns[0])
+                  var record = {};
+                  columns.forEach(function(column) {
+                    record[column.metadata.colName] = column.value
+                  });
+                  messages.push(record)
+                });
+                if (req.query.query) request.addParameter('query', TYPES.NVarChar, '%'+req.query.query+'%');
+                request.addParameter('start', TYPES.Int, req.query.start);
+                request.addParameter('limit', TYPES.Int, req.query.limit);
+
+                db.execSql(request);
+          }
+      })
+      request.on('row', function(columns) {
+          columns.forEach(function(column) {
+            total = column.value
+          });
+      });
+      if (req.query.query) request.addParameter('query', TYPES.NVarChar, '%'+req.query.query+'%');
+      db.execSql(request);
+  })
+});
+
+app.get('/listCommonText',function (req, res) {
+  //console.log(req)
+  var messages = [];
+  var total = 0;
+  var db = new Connection(dbConfig);
+  db.on('connect', function(err) {
+      if (err) {
+          console.log(err)
+          return;
+      }
+      var request = new DbRequest("SELECT count(*) as total FROM common_text"+((req.query.query) ? " where ctext_detail like @query ":""), 
+        function(err, rowCount , row) {
+          if (err) {
+              db.close();
+              console.log("select common_text error ",err);
+              res.json({
+                success : false,
+                msg : err
+              });
+          } else {   
+              var request = new DbRequest(
+                "SELECT * FROM common_text"+
+                ((req.query.query) ? " where ctext_detail like @query ":"")+
+                " order by ctext_id desc OFFSET @start ROWS FETCH FIRST @limit ROWS ONLY", 
+                function(err, rowCount , row) {
+                  db.close();
+                  if (err) {
+                    console.log("select common_text error ",err);
+                    res.json({
+                      success : false,
+                      msg : err
+                    });
+                  } else {   
+                    res.json({
+                      data : messages,
+                      total : total
+                    });
+                  }
+                });
+
+                request.on('row', function(columns) {
+                  //console.log('-------------------',columns[0])
+                  var record = {};
+                  columns.forEach(function(column) {
+                    record[column.metadata.colName] = column.value
+                  });
+                  messages.push(record)
+                });
+                if (req.query.query) request.addParameter('query', TYPES.NVarChar, '%'+req.query.query+'%');
+                request.addParameter('start', TYPES.Int, req.query.start);
+                request.addParameter('limit', TYPES.Int, req.query.limit);
+
+                db.execSql(request);
+          }
+      })
+      request.on('row', function(columns) {
+          columns.forEach(function(column) {
+            total = column.value
+          });
+      });
+      if (req.query.query) request.addParameter('query', TYPES.NVarChar, '%'+req.query.query+'%');
+      db.execSql(request);
+  })
+});
+
+app.post('/sendKbDocument', function (req, res) {
+  //console.log(req.files);
+  //console.log(req.query);
+  //console.log(req.body);
+  var room = {
+    id : req.body.userId ? req.body.id : 0,
+    contact_id : req.body.contactId 
+  }
+  
+ 
+  var db = new Connection(dbConfig);
+  var lineIds = []
+  db.on('connect', function(err) {
+    if (err) {
+        console.log(err)
+        return;
+    }
+    var attachments = [];
+    var messages = [];
+    async.series([
+      function (callback) {
+        var request = new DbRequest(
+          "select attachment_id as attachmentId from attachments where relate_id = @kbId and relate_type='K'", 
+          function(err, rowCount , row) {
+            if (err) {
+              console.log("select line_messages error ",err);
+            }  
+            callback()     
+          });
+
+          request.on('row', function(columns) {
+            //console.log('-------------------',columns[0])
+            columns.forEach(function(column) {
+              attachments.push(column.value)
+            });
+        });
+        request.addParameter('kbId', TYPES.VarChar, req.body.kbId);
+        db.execSql(request);
+      },
+      function (callback) {
+        var request = new DbRequest(
+          "select line_name as lineName, pictureUrl from line_contacts where line_id = @lineId", 
+          function(err, rowCount , row) {
+            if (err) {
+              console.log("select line_messages error ",err);
+            }  
+            callback()     
+          });
+
+          request.on('row', function(columns) {
+            //console.log('-------------------',columns[0])
+            columns.forEach(function(column) {
+              room[column.metadata.colName] = column.value
+            });
+        });
+        request.addParameter('lineId', TYPES.VarChar, req.body.agentId);
+        db.execSql(request);
+      },
+      function (callback) {
+          if (req.body.userId) {
+              lineIds.push(req.body.userId)
+              callback() 
+              return
+          }
+          var request = new DbRequest(
+            "SELECT line_id "+
+              " FROM line_contacts "+
+              "Where active_flag=1 and contact_id = @contactId", 
+            function(err, rowCount , row) {
+              if (err) {
+                console.log("select line_messages error ",err);
+              }  
+              callback()     
+            });
+
+            request.on('row', function(columns) {
+              //console.log('-------------------',columns[0])
+              var record = {}
+              columns.forEach(function(column) {
+                record[column.metadata.colName] = column.value
+              });
+              lineIds.push(record.line_id)
+          });
+          request.addParameter('contactId', TYPES.VarChar, req.body.contactId);
+          db.execSql(request);
+      },
+      function (callback) {
+        var i =0;
+        //req.body.events.forEach(function(data) {
+        async.eachSeries(attachments , function(attachmentId, cbx) {
+            console.log('attachments id',attachmentId );
+            var time = String(Date.now());
+            var messageType = 'image';
+            var originalContentUrl = WebHookBaseURL+"/kbdocument/attachment?id="+attachmentId ;
+            var previewImageUrl = originalContentUrl;
+            var messageEv = {
+                roomId : 0,
+                replyToken: "",
+                type : "message",
+                timestamp : time,//messageEv.timestamp ,
+                sourceType : "agent" ,
+                sourceUserId : req.body.userId || req.body.agentId ,
+                contactId : req.body.contactId ,
+                "source": {
+                    "type": "agent",
+                    "userId": req.body.agentId
+                },
+                message : {
+                    id : time ,
+                    type: messageType,
+                    filePath : 'kbdocument/attachment?id=',
+                    fileName : attachmentId,
+                    originalFileName : attachmentId,
+                    originalContentUrl : originalContentUrl,
+                    previewImageUrl : previewImageUrl,
+                }
+            }
+            messages.push(messageEv);
+            if (i==attachments.length-1)
+                saveMessage(db , room, messageEv, callback) 
+            else 
+                saveMessage(db , room, messageEv) 
+            i++;
+            cbx()
+        })
+      },
+      function (callback) {
+        console.log('line ids',lineIds)
+        async.eachSeries(messages , function(messageEv, cbx) {
+          var messageText = getMessageText(messageEv);
+          for (var i=0; i<lineIds.length; i++) {
+            var args = {
+              headers: { 
+                "Authorization": token,
+                "Content-Type": "application/json" 
+              }, // request headers 
+              data : {
+                "to": lineIds[i],
+                "messages":[messageEv.message]
+              }
+            };
+            client.post("https://api.line.me/v2/bot/message/push", args, 
+              function (result, response) {
+                // parsed response body as js object 
+                console.log('result',result);
+                // raw response 
+                //console.log(response);
+            });
+            io.emit('message', {
+              roomId : room.id,
+              userId: messageEv.source.userId,
+              contactId : room.contact_id, 
+              contactPersonId : room.contact_person_id,
+              replyToken: messageEv.replyToken,
+              eventType : messageEv.type,
+              timestamp : messageEv.timestamp ,
+              sourceType : messageEv.source.type ,
+              sourceUserId : messageEv.source.userId ,
+              message : messageEv.message ,
+              messageId : messageEv.message.id ,
+              messageType: messageEv.message.type , 
+              messageText: messageText,
+              stickerId : messageEv.message.stickerId, 
+              packageId : messageEv.message.packageId,
+              title : messageEv.message.title,
+              address : messageEv.message.address,
+              latitude : messageEv.message.latitude,
+              longitude : messageEv.message.longitude,
+              pictureUrl : room.pictureUrl,
+              lineName : room.lineName,
+              filePath : messageEv.message.filePath,
+              fileName : messageEv.message.fileName
+            });
+          }
+        })
+        callback();
+      }
+    ],function(err) { 
+      db.close();
+      if (err) return next(err);
+      res.json({
+        success : true,
+        room : room
+      });
+    });
+  });
+
+})
 
 function followHandler(db ,data , cb) {
   if (data.source.type == 'agent') {
@@ -2727,7 +3092,7 @@ function saveMessage(db , room, messageEv, callback) {
         }
 
         if (messageEv.source.type == 'agent') {
-          callback();
+          if (callback) callback();
           return;
         }
         var isContent = messageEv.message.type == 'image' || messageEv.message.type == 'audio' ||
@@ -2746,11 +3111,11 @@ function saveMessage(db , room, messageEv, callback) {
               function(err){
                   if (err) throw err
                   console.log('File saved.')
-                  callback();
+                  if (callback) callback();
               })
           });
         } else {
-          callback();
+          if (callback) callback();
         }
      });
     request.on('row', function(columns) {

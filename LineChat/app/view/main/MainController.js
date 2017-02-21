@@ -382,6 +382,8 @@ Ext.define('LineChat.view.main.MainController', {
                             messageType = 'video';
                         } else if (data.files[0].type.indexOf("audio") != -1 ) { 
                             messageType = 'audio';
+                        } else {
+                            messageType = 'file';
                         }
                         if (!messageType) {
                             Ext.Msg.alert('Error', 'Not support file type.');
@@ -928,6 +930,206 @@ Ext.define('LineChat.view.main.MainController', {
         });
         var tabBar =  this.getView().down("tabpanel[region=west]").getTabBar()
         tabBar.down("tab[text=Chat]").setBadgeText(unread)
+    },
+
+    onSendKBDocBtnClick : function(btn , state) {
+        var me = this;
+        var roomInfo = this.getView().getReferences().roomInfoForm;
+        var userId = roomInfo.down("hidden[name=userId]").getValue();
+        var agentId = roomInfo.down("hidden[name=agentId]").getValue();
+        var contactId = roomInfo.down("hidden[name=contactId]").getValue();
+        var roomId = roomInfo.down("hidden[name=id]").getValue();
+        if (!this.kbDocument) {
+
+            var store = Ext.create("Ext.data.BufferedStore",{
+                fields: [
+                    'kb_id',
+                    'title'
+                ],
+                autoLoad : false,
+                pageSize : 25,
+                proxy: {
+                    type: 'ajax',
+                    url: LineChat.app.baseURL+'listKbDocument',
+                    reader: {
+                        type: 'json',
+                        rootProperty: 'data'
+                    }
+                }
+            });
+    
+            var win = 
+            Ext.create('Ext.window.Window', {
+                title: 'Kb Document',
+                layout : {
+                    type : 'vbox',
+                    align : 'stretch',
+                    pack: 'start'
+                },
+                width : 500,
+                height : 500,
+                constrain : true,
+                stateId : 'windowKbDocumentList',
+                stateful : true,
+                closeAction : 'hide',
+                items: [{ 
+                    xtype : 'grid',
+                    selType : 'rowmodel',
+                    store : store,
+                    hideHeaders : true,
+                    dockedItems : [{
+                        dock: 'top',
+                        xtype: 'toolbar',
+                        items: {
+                            xtype: 'searchfield',
+                            flex : 1,
+                            store: store
+                        }
+                    }],
+                    columns: [
+                        { text: 'Title', dataIndex: 'title', flex: 1 }
+                    ],
+                    flex : 1,
+                    scrollToBottom : false,
+                    listeners : {
+                        viewready : function (grid) {
+                            grid.getStore().load({
+                                callback: function (records, operation, success) {
+                                }
+                            })
+                        },
+                        selectionchange :  function( sm , selected , eOpts ) {
+                            var btn = win.down("button[reference=select]")
+                            var selection = sm.getSelection()
+                            btn.setDisabled(selection == 0) 
+                        }
+                    }
+                }],
+                buttons : [{
+                    text : 'ส่งข้อความ',
+                    reference : 'select',
+                    disabled : true,
+                    handler : function (btn) {
+                        var grid =me.kbDocument.down('grid')
+                        var selected = grid.getSelection()[0]
+                        roomInfo.submit({
+                            url: LineChat.app.baseURL+"sendKbDocument", 
+                            waitMsg: 'Sending ...',
+                            params : {
+                                kbId : selected.get("kb_id"),
+                            },
+                            success: function (form, action) {
+                                var result = action.result;
+                                if (!result.success) {
+                                    Ext.Msg.alert('Error', result.msg);
+                                } else {
+                                    me.kbDocument.close();
+                                }   
+                            },
+                            failure: function (form, action) {
+                                Ext.Msg.alert('Failed', action.result.msg, function () {                                                    
+                                });
+                            }
+                        });
+                    }
+                }]
+            }).show();
+            this.kbDocument = win;
+        } else {
+            this.kbDocument.show()
+        }
+    },
+
+    onSendCommonTextBtnClick : function(btn , state) {
+        var me = this;
+        var roomInfo = this.getView().getReferences().roomInfoForm;
+        var userId = roomInfo.down("hidden[name=userId]").getValue();
+        var agentId = roomInfo.down("hidden[name=agentId]").getValue();
+        var contactId = roomInfo.down("hidden[name=contactId]").getValue();
+        var roomId = roomInfo.down("hidden[name=id]").getValue();
+        if (!this.commonText) {
+            var itemSelect = function (){
+                var grid =me.commonText.down('grid')
+                var selected = grid.getSelection()[0]
+                var sendMessageForm = me.getReferences().sendMessageForm;
+                sendMessageForm.down("textarea[name=message]").setValue(selected.get("ctext_detail"));
+                me.commonText.close();
+            };
+            var store = Ext.create("Ext.data.BufferedStore",{
+                fields: [
+                    'ctext_id',
+                    'ctext_detail'
+                ],
+                autoLoad : false,
+                pageSize : 25,
+                proxy: {
+                    type: 'ajax',
+                    url: LineChat.app.baseURL+'listCommonText',
+                    reader: {
+                        type: 'json',
+                        rootProperty: 'data'
+                    }
+                }
+            })
+            var win = 
+            Ext.create('Ext.window.Window', {
+                title: 'Common Text',
+                layout : {
+                    type : 'vbox',
+                    align : 'stretch',
+                    pack: 'start'
+                },
+                width : 500,
+                height : 500,
+                constrain : true,
+                stateId : 'windowCommonTextList',
+                stateful : true,
+                closeAction : 'hide',
+                items: [{ 
+                    xtype : 'grid',
+                    selType : 'rowmodel',
+                    hideHeaders : true,
+                    store : store,
+                    dockedItems : [{
+                        dock: 'top',
+                        xtype: 'toolbar',
+                        items: {
+                            xtype: 'searchfield',
+                            flex : 1,
+                            store: store
+                        }
+                    }],
+                    columns: [
+                        { text: 'Title', dataIndex: 'ctext_detail', flex: 1 }
+                    ],
+                    flex : 1,
+                    scrollToBottom : false,
+                    listeners : {
+                        viewready : function (grid) {
+                            grid.getStore().load({
+                                callback: function (records, operation, success) {
+                                }
+                            })
+                        },
+                        selectionchange :  function( sm , selected , eOpts ) {
+                            var btn = win.down("button[reference=select]")
+                            var selection = sm.getSelection()
+                            btn.setDisabled(selection == 0) 
+                        },
+                        rowdblclick :itemSelect
+                    }
+                }],
+                buttons : [{
+                    text : 'เลือก',
+                    reference : 'select',
+                    disabled : true,
+                    handler : itemSelect
+                }]
+            }).show();   
+            this.commonText = win;
+        } else {
+            this.commonText.show()
+        } 
     }
 
 });

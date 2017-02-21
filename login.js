@@ -10,12 +10,12 @@ var WebHookBaseURL =  pjson.webHookBaseURL;
 
 
 passport.serializeUser(function(user, done) {
-    console.log("serializeUser user",user)
+    //console.log("serializeUser user",user)
     done(null, user);
 });
 
 passport.deserializeUser(function(user, done) {
-    console.log("deserializeUser user",user)
+    //console.log("deserializeUser user",user)
     done(null, user);
 });
 passport.use(new LocalStrategy(

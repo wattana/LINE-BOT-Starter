@@ -196,6 +196,7 @@ Ext.define('LineChat.view.main.Main', {
                         handler : function () {
                             location = LineChat.app.baseURL+"login/logout"
                         }
+                        /*
                     },{
                         xtype : 'form',
                         itemId : 'form2',
@@ -247,6 +248,7 @@ Ext.define('LineChat.view.main.Main', {
                                 }
                             }
                         }]
+                        */
                     }]
                 }
             }] 
@@ -537,7 +539,8 @@ Ext.define('LineChat.view.main.Main', {
                                 }
                             }
                         }
-                    }, {
+                    },
+                    {
                         xtype: 'button',
                         text: 'ส่งข้อความ',
                         scale : 'medium',
@@ -562,33 +565,83 @@ Ext.define('LineChat.view.main.Main', {
                         hidden : true,
                         handler : 'onSendContactBtnClick'
                     }, {
-                        xtype: 'button',
-                        scale : 'medium',
-                        reference : 'stickerBtn',
-                        action : 'sticker',
-                        style: {
-                            marginLeft: '2px',
-                            marginBottom: '5px',
-                            backgroundColor : 'white'
+                        xtype : 'panel',
+                        width : 120,
+                        heightxx : 95,
+                        layout: {
+                            type: 'table',
+                            // The total column count must be specified here
+                            columns: 2
                         },
-                        frame: false,
-                        border: false,
-                        iconCls : 'icon-sticker',
-                        enableToggle : true,
-                        toggleHandler : 'onStickerBtnClick' 
-                    }, {
-                        xtype : 'component',
-                        width : 40,
-                        height: 40,
-                        html : ['<span style="padding:10px;font-size: 20px;" class="btn btn-success fileinput-button">',
-                                    '<i class="fa fa-upload"></i>',
-                                    '<span> </span>',
-                                    '<input id="fileupload" type="file" name="uploadFile" multiple>',
-                                '</span>'
-                            ].join(""),
-                        listeners : {
-                            afterrender : "uploadHandler"
-                        }    
+                        items : [{
+                            xtype: 'button',
+                            scale : 'medium',
+                            reference : 'stickerBtn',
+                            action : 'sticker',
+                            tooltip : 'Sticker',
+                            style: {
+                                marginLeft: '2px',
+                                marginBottom: '5px',
+                                backgroundColor : 'white'
+                            },
+                            frame: false,
+                            border: false,
+                            iconCls : 'icon-sticker',
+                            enableToggle : true,
+                            toggleHandler : 'onStickerBtnClick' 
+                        }, {
+                            xtype : 'component',
+                            width : 40,
+                            height: 40,
+                            style : {
+                                display : 'inline-block'
+                            },
+                            html : ['<span style="padding:10px;font-size: 20px;" class="btn btn-success fileinput-button">',
+                                        '<i class="fa fa-upload"></i>',
+                                        '<span> </span>',
+                                        '<input stylex="width:40px; height:40px"id="fileupload" type="file" name="uploadFile" multiple>',
+                                    '</span>'
+                                ].join(""),
+                            listeners : {
+                                afterrender : "uploadHandler"
+                            }  
+                        }, {
+                            xtype: 'button',
+                            scale : 'medium',
+                            textx: 'KB Document',
+                            glyphx: 'xf249@FontAwesome',
+                            tooltip : 'KB Document',
+                            html : '<i style="font-size:20px;color:black" class="fa fa-newspaper-o" aria-hidden="true"></i>',
+                            action : 'sendKBMessage',
+                            frame: false,
+                            bodyPadding :0,
+                            border: false,
+                            style: {
+                                padding:0,
+                                marginLeft: '2px',
+                                marginBottom: '5px',
+                                backgroundColor : 'white'                                
+                            },
+                            handler : 'onSendKBDocBtnClick'                        
+                        }, {
+                            xtype: 'button',
+                            scale : 'medium',
+                            textx: 'Common',
+                            action : 'sendCommonMessage',
+                            tooltip : 'ข้อความใช้บ่อย',
+                            glyphx: 'xf02d@FontAwesome',
+                            html : '<i style="font-size:20px;color:black" class="fa fa-book" aria-hidden="true"></i>',
+                            frame: false,
+                            border: false,
+                            bodyPadding :0,
+                            style: {                                
+                                padding:0,
+                                marginLeft: '2px',
+                                marginBottom: '5px',
+                                backgroundColor : 'white'
+                            },
+                            handler : 'onSendCommonTextBtnClick'                        
+                        }]  
                     }]
 
                 }]

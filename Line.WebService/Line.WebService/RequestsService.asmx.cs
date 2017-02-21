@@ -436,6 +436,40 @@ namespace Line.WebService
             jd.rows = list;
             return jd;
         }
+
+        [WebMethod]
+        public AttachmentData download(int attachmentId)
+        {
+            AttachmentData jd = new AttachmentData();
+            Attachments attachment = null;
+            using (ISession session = NHibernateHelper.OpenSession())
+            {
+                try
+                {
+                    attachment = session.Get<Attachments>(attachmentId);
+                }
+                catch (Exception e)
+                {
+                }
+
+            }
+            string filePath = "";
+            if (attachment.FolderName == "../uploads/requests/aero/")
+                filePath = Path.Combine(System.Configuration.ConfigurationManager.AppSettings["UPLOADPATH"], attachment.FileName);
+            else
+                filePath = Path.Combine(System.Configuration.ConfigurationManager.AppSettings["IMIND_UPLOADPATH"], attachment.FileName);
+            if (!File.Exists(filePath))
+            {
+                filePath = Server.MapPath("no_pictures.jpg");
+            }
+            var fs = File.Open(filePath, FileMode.Open, FileAccess.Read);
+            jd.bytes = new byte[fs.Length];
+            fs.Read(jd.bytes, 0, (int)fs.Length);
+            fs.Close();
+            jd.fileName = attachment.OriginalFilename;
+            jd.fileType = attachment.FileType;
+            return jd;
+        }
     }
 
     public class RequestData
