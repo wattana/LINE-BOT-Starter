@@ -18,14 +18,14 @@ Ext.define('LineChat.store.Room', {
             name: 'joinDatetime',
             convert: function (value, record) {
                 //console.log(record.get('createtime'),new Date(record.get('createtime')))
-                return new Date(record.get('createtime'));
+                return record.get('createtime') ? new Date(record.get('createtime')):null;
             },
             depends: [ 'createtime' ]
         },
         {
             name: 'talkDatetime',
             convert: function (value, record) {
-                return new Date(record.get('updatetime'));
+                return record.get('updatetime') ? new Date(record.get('updatetime')):null;
         },
             depends: [ 'updatetime' ]
         }
