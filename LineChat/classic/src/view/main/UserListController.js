@@ -146,7 +146,7 @@ Ext.define('LineChat.view.main.UserListController', {
                                             btn.up("window").close();
                                             Ext.getStore("User").load()
                                             Ext.getStore("ContactTree").load()
-                                            
+                                            Ext.getStore("Room").load()                                            
                                         });
                                     }   
                                 },

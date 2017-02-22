@@ -31,6 +31,14 @@ Ext.define('LineChat.view.main.MainController', {
             console.log('contact message', data);
             me.addContactMessage(data)
         });
+        socket.on('follow', function (data) {
+            //me.addContactMessage(data)
+            Ext.getStore("User").load() 
+        });
+        socket.on('unfollow', function (data) {
+            //me.addContactMessage(data)
+            Ext.getStore("User").load() 
+        });
     },
 
     onItemSelected: function (sender, record) {
@@ -259,7 +267,7 @@ Ext.define('LineChat.view.main.MainController', {
             roomRecord.set("talkDatetime", updatetime)
             roomRecord.set("message", chatMessage.messageText)
             //console.log('roomRecord',roomRecord)
-
+            
             if (roomRecord.get("id") == roomInfo.down("hidden[name=id]").getValue()) {
                 chatRecord = grid.getStore().add(chatMessage)
                 grid.getView().focusRow(grid.getStore().getCount()-1,500);
@@ -1015,9 +1023,10 @@ Ext.define('LineChat.view.main.MainController', {
                     handler : function (btn) {
                         var grid =me.kbDocument.down('grid')
                         var selected = grid.getSelection()[0]
+                        me.kbDocument.close();
                         roomInfo.submit({
                             url: LineChat.app.baseURL+"sendKbDocument", 
-                            waitMsg: 'Sending ...',
+                            //waitMsg: 'Sending ...',
                             params : {
                                 kbId : selected.get("kb_id")
                             },
@@ -1026,7 +1035,6 @@ Ext.define('LineChat.view.main.MainController', {
                                 if (!result.success) {
                                     Ext.Msg.alert('Error', result.msg);
                                 } else {
-                                    me.kbDocument.close();
                                 }   
                             },
                             failure: function (form, action) {

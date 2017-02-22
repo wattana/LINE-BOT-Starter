@@ -1195,7 +1195,8 @@ app.get('/listRoom',function (req, res) {
       }
       var request = new DbRequest(
         "SELECT id, sourceType,userId ,contact_id, contact_person_id, displayName, pictureUrl,"+ 
-        "statusMessage, messageType, message ,createtime, updatetime, unread, active_flag FROM line_chat_room", 
+        "statusMessage, messageType, message ,createtime, updatetime, unread, active_flag FROM line_chat_room "+
+        "where contact_id is not null", 
         function(err, rowCount , row) {
           db.close();
           if (err) {
@@ -2374,12 +2375,13 @@ app.post('/sendKbDocument', function (req, res) {
                 }
             }
             messages.push(messageEv);
-            if (i==attachments.length-1)
+            if (i==attachments.length-1) {
                 saveMessage(db , room, messageEv, callback) 
-            else 
-                saveMessage(db , room, messageEv) 
+                cbx()
+            } else {
+                saveMessage(db , room, messageEv, cbx) 
+            }
             i++;
-            cbx()
         })
       },
       function (callback) {
@@ -2586,6 +2588,7 @@ function followHandler(db ,data , cb) {
             saveNotMessageType(db , data, callback)
           }
       ], function () {
+          io.emit('follow', result);
           cb();
       });
 
