@@ -1529,8 +1529,48 @@ app.post('/upload', function (req, res) {
     previewImageUrl = WebHookBaseURL+"/content/upload/"+room.id+"/"+thumbFileName;  //"/resources/images/facetime.png";
   } else if (uploadFile.mimetype.indexOf("audio") != -1 ) { 
     messageType = 'audio';
+  } else if (uploadFile.mimetype.indexOf("application/pdf") != -1 )  {
+    messageType = 'template';
   }
-  var messageEv = {
+  if (messageType == "template") {
+    messageEv = {
+      roomId : req.body.id,
+      replyToken: "",
+      type : "message",
+      timestamp : time,//messageEv.timestamp ,
+      sourceType : "agent" ,
+      sourceUserId : req.body.userId ,
+      contactId : req.body.contactId ,
+      "source": {
+          "type": "agent",
+          "userId": req.body.agentId
+      },
+      message : {
+          id : time ,
+          type: messageType,
+          filePath : 'content/upload/'+room.id+"/",
+          fileName : fileName,
+          originalFileName : uploadFile.name,
+          originalContentUrl : originalContentUrl,
+          previewImageUrl : previewImageUrl,
+          "altText": "File received",
+          "template": {
+              "type": "buttons",
+              //"thumbnailImageUrl": WebHookBaseURL+"/resources/images/news.png",
+              "title": "File name : "+fileName,
+              "text": "Date : "+new Date(),
+              "actions": [
+                  {
+                    "type": "uri",
+                    "label": "Open",
+                    "uri": originalContentUrl
+                  }
+              ]
+          }
+      }
+    }
+  } else {
+    messageEv = {
       roomId : req.body.id,
       replyToken: "",
       type : "message",
@@ -1551,6 +1591,7 @@ app.post('/upload', function (req, res) {
           originalContentUrl : originalContentUrl,
           previewImageUrl : previewImageUrl,
       }
+    }
   }
   var dir = __dirname+'/content/upload/'+room.id+"/";
   if (!fs.existsSync(dir)){
@@ -1716,12 +1757,12 @@ app.post('/contactUpload', function (req, res) {
     previewImageUrl = WebHookBaseURL+"/content/upload/"+room.contact_id+"/"+thumbFileName;  //"/resources/images/facetime.png";
   } else if (uploadFile.mimetype.indexOf("audio") != -1 ) { 
     messageType = 'audio';
-  } else {
-    messageType = 'file';
+  } else if (uploadFile.mimetype.indexOf("application/pdf") != -1 )  {
+    messageType = 'template';
   }
 
   var messageEv;
-  if (messageType == "file") {
+  if (messageType == "template") {
     messageEv = {
         roomId : 0,
         replyToken: "",
@@ -1736,18 +1777,18 @@ app.post('/contactUpload', function (req, res) {
         },
         message : {
             id : time ,
+            type: messageType,
             filePath : 'content/upload/'+room.contact_id+"/",
             fileName : fileName,
             originalFileName : uploadFile.name,
             originalContentUrl : originalContentUrl,
             previewImageUrl : previewImageUrl,
-            "type": "template",
             "altText": "File received",
             "template": {
                 "type": "buttons",
-                "thumbnailImageUrlxx": WebHookBaseURL+"/resources/images/news.png",
-                "title": "File",
-                "text": "File name : "+fileName,
+                //"thumbnailImageUrl": WebHookBaseURL+"/resources/images/news.png",
+                "title": "File name : "+fileName,
+                "text": "Date : "+new Date(),
                 "actions": [
                     {
                       "type": "uri",
@@ -1758,6 +1799,7 @@ app.post('/contactUpload', function (req, res) {
             }
         }
     }
+    //console.log(messageEv)
   } else {
     messageEv = {
         roomId : 0,

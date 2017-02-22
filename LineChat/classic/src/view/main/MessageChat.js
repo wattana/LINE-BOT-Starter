@@ -293,6 +293,30 @@ Ext.define('LineChat.view.main.MessageChat', {
             getContent: me.getContent,
             formatDate: me.formatDate
         });
+
+        var meTemplateTpl = Ext.create('Ext.XTemplate',
+            '<div class="chat-item" style="float:right;position:relative">',
+                '<div class="chat-datetime--alt">{date:this.formatDate}<br/>{requestNumber}</div>',
+                '<div class="bubble bubble--alt">',
+                    '<div style="width:100px;height:100px;position:absolute;top:40%;left:30%" class="file-picker__progress" id="file-picker__progress_{timestamp}"></div>',
+                    '<i class="fa fa-file-archive-o" aria-hidden="true" style="float:left;font-size: 18px;font-weight: bold;color: brown;"></i>',
+                    '<a style ="text-decoration:none" href="{.:this.getBaseUrl}{filePath}{fileName}" target="_blank">&nbsp; {fileName}</a><br/><br/>',
+                '</div>',
+                '<div style="position:absolute;bottom:5px;right: 2px;color:gray">',
+                    '<tpl if="pictureUrl == \'\' || pictureUrl==null">',
+                        '<i class="fa fa-user fa-2x"></i>',
+                    '<tpl else>',
+                        '<img src="{pictureUrl}/small" height=32 width=32 title="{lineName}">',
+                    '</tpl>',
+                    '<div class="chat-by-name" style>{lineName}</div>',
+                '</div>',
+            '</div>',
+            {
+            getBaseUrl : me.getBaseUrl,
+            getContent: me.getContent,
+            formatDate: me.formatDate
+        });
+
         me.viewConfig = {
             stripeRows: false,
             preserveScrollOnRefresh: false,
@@ -337,6 +361,8 @@ Ext.define('LineChat.view.main.MessageChat', {
                         return meAudioTpl.apply(record.data)
                     } else if (record.get("messageType") == 'video') {
                         return meVideoTpl.apply(record.data)
+                    } else if (record.get("messageType") == 'template') {
+                        return meTemplateTpl.apply(record.data)
                     }
                     return meMessageTpl.apply(record.data)
                 }

@@ -382,8 +382,11 @@ Ext.define('LineChat.view.main.MainController', {
                             messageType = 'video';
                         } else if (data.files[0].type.indexOf("audio") != -1 ) { 
                             messageType = 'audio';
+                        } else if (data.files[0].type.indexOf("application/pdf") != -1 ) { 
+                            messageType = 'template';
                         } else {
-                            messageType = 'file';
+                            //console.log(data.files[0].type) 
+                            //messageType = 'file';
                         }
                         if (!messageType) {
                             Ext.Msg.alert('Error', 'Not support file type.');

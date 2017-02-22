@@ -3,7 +3,7 @@ curl -X POST -H 'Content-Type:application/json' -H 'Authorization: Bearer {MVJYN
     "messages":[
         {
             "type":"text",
-            "text":"Hello, world1 <a href='test'> Test </a>"
+            "text":"Hello, world1 <a href='test'> Test </a> https://imind.ibss.co.th/"
         },
         {
             "type":"text",
