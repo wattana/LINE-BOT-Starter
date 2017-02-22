@@ -462,10 +462,9 @@ namespace Line.WebService
             {
                 filePath = Server.MapPath("no_pictures.jpg");
             }
-            var fs = File.Open(filePath, FileMode.Open, FileAccess.Read);
-            jd.bytes = new byte[fs.Length];
-            fs.Read(jd.bytes, 0, (int)fs.Length);
-            fs.Close();
+            jd.bytes = File.ReadAllBytes(filePath);
+//                jd.bytes = new byte[fs.Length];
+  //              fs.Read(jd.bytes, 0, (int)fs.Length);
             jd.fileName = attachment.OriginalFilename;
             jd.fileType = attachment.FileType;
             return jd;

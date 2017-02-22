@@ -1019,7 +1019,7 @@ Ext.define('LineChat.view.main.MainController', {
                             url: LineChat.app.baseURL+"sendKbDocument", 
                             waitMsg: 'Sending ...',
                             params : {
-                                kbId : selected.get("kb_id"),
+                                kbId : selected.get("kb_id")
                             },
                             success: function (form, action) {
                                 var result = action.result;

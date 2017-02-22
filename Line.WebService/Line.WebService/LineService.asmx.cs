@@ -93,7 +93,7 @@ namespace Line.WebService
         }
 
         [WebMethod]
-        public void sendImage()
+        public void SendImage()
         {
             string result = "";
 
