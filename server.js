@@ -27,7 +27,8 @@ app.use(function(req, res, next) {
 var session = require('express-session');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
-
+var dateFormat = require('dateformat');
+console.log(dateFormat(new Date(), "dd,mmm yyyy h:MM"))
 
 passport.serializeUser(function(user, done) {
   done(null, user);

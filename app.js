@@ -23,6 +23,7 @@ var TYPES = require('tedious').TYPES;
 var soap = require('soap');
 
 var thumbler = require('video-thumb');
+var dateFormat = require('dateformat');
 
 process.on('uncaughtException', function(e){
     console.log(e.stack);
@@ -1558,7 +1559,7 @@ app.post('/upload', function (req, res) {
               "type": "buttons",
               //"thumbnailImageUrl": WebHookBaseURL+"/resources/images/news.png",
               "title": "File name : "+fileName,
-              "text": "Date : "+new Date(),
+              "text": "Date : "+dateFormat(new Date(), "dd,mmm yyyy h:MM"),
               "actions": [
                   {
                     "type": "uri",
@@ -1788,7 +1789,7 @@ app.post('/contactUpload', function (req, res) {
                 "type": "buttons",
                 //"thumbnailImageUrl": WebHookBaseURL+"/resources/images/news.png",
                 "title": "File name : "+fileName,
-                "text": "Date : "+new Date(),
+                "text": "Date : "+dateFormat(new Date(), "dd,mmm yyyy h:MM"),
                 "actions": [
                     {
                       "type": "uri",
