@@ -106,6 +106,7 @@ db.on('connect', function(err) {
                         "pictureUrl [nvarchar](250) DEFAULT (''), "+
                         "active_flag [char](1) NOT NULL, "+
                         "join_date bigint, "+
+                        "leave_date bigint, "+
                         "invite_by [uniqueidentifier] NULL, "+
                         "invite_date bigint)",
                     function(err, rowCount) {
@@ -252,7 +253,7 @@ function onPushContactMessage (data) {
     async.series([
       function (callback) {
         var request = new DbRequest(
-          "select line_name as lineName, pictureUrl from line_contacts where line_id = @lineId", 
+          "select line_name as lineName, pictureUrl from line_contacts where line_id = @lineId and line_contacts.active_flag='1'", 
           function(err, rowCount , row) {
             if (err) {
               console.log("select line_messages error ",err);
@@ -646,6 +647,8 @@ app.post('/message', jsonParser,function (req, res) {
                         messageHandler(db, data , callback);
                     } else if (data.type == 'follow') {
                         followHandler(db, data , callback);
+                    } else if (data.type == 'unfollow') {
+                        unFollowHandler(db, data , callback);
                     } else {
                         saveNotMessageType(db , data, callback)
                     }
@@ -681,7 +684,7 @@ app.post('/createRequest', jsonParser,function (req, res) {
         var request = new DbRequest(
           "select messages.*, line_name as lineName "+
           "from line_contacts ,line_messages messages "+
-          "where line_contacts.line_id = messages.sourceUserId "+
+          "where line_contacts.line_id = messages.sourceUserId and line_contacts.active_flag='1' "+
           "and messages.id in ("+ids.join(",")+") order by messages.timestamp", 
           function(err, rowCount , row) {
               db.close();
@@ -1074,13 +1077,13 @@ app.get('/listMessage',function (req, res) {
          "FROM line_messages messages , line_chat_room chat_room "+
          ",line_contacts "+
          "where messages.roomId = chat_room.id "+
-         "and line_contacts.line_id = messages.sourceUserId "+
+         "and line_contacts.line_id = messages.sourceUserId and line_contacts.active_flag='1' "+
          "and chat_room.id = @roomId and eventType='message' "+
          "order by messages.timestamp desc OFFSET @start ROWS FETCH FIRST @limit ROWS ONLY";
       totalSql = "select count(*) as total from line_messages messages , line_chat_room chat_room "+
          ",line_contacts "+
          "where messages.roomId = chat_room.id "+
-         "and line_contacts.line_id = messages.sourceUserId "+
+         "and line_contacts.line_id = messages.sourceUserId and  line_contacts.active_flag='1' "+
          "and chat_room.id = @roomId and eventType='message' ";
   } else {
     sql = "SELECT messages.id AS id, roomId, replyToken, eventType, timestamp ,messages.sourceType, "+
@@ -1091,13 +1094,13 @@ app.get('/listMessage',function (req, res) {
          "FROM line_messages messages "+
          ",line_contacts "+
          "where messages.contact_id = @contactId "+
-         "and line_contacts.line_id = messages.sourceUserId "+
+         "and line_contacts.line_id = messages.sourceUserId and line_contacts.active_flag='1' "+
          "and eventType='message' "+
          "order by messages.timestamp desc OFFSET @start ROWS FETCH FIRST @limit ROWS ONLY";
     totalSql = "select count(*) as total from line_messages messages "+
          ",line_contacts "+
          "where messages.contact_id = @contactId "+
-         "and line_contacts.line_id = messages.sourceUserId "+
+         "and line_contacts.line_id = messages.sourceUserId and line_contacts.active_flag='1' "+
          "and eventType='message'"      
   }
   //console.log("listMessage", sql)
@@ -1289,7 +1292,7 @@ app.get('/listLineContact',function (req, res) {
       }
       var request = new DbRequest(
         "SELECT line_contacts.* , line_chat_room.id as roomId FROM line_contacts , line_chat_room "+
-        " where line_contacts.line_id = line_chat_room.userId "+
+        " where line_contacts.line_id = line_chat_room.userId and line_contacts.active_flag='1'"+
         " and line_contacts.sourceType='user' and line_contacts.contact_id is null", 
         function(err, rowCount , row) {
           db.close();
@@ -1644,7 +1647,7 @@ app.post('/upload', function (req, res) {
           async.series([
             function (callback) {
               var request = new DbRequest(
-                "select line_name as lineName, pictureUrl from line_contacts where line_id = @lineId", 
+                "select line_name as lineName, pictureUrl from line_contacts where line_id = @lineId and line_contacts.active_flag='1'", 
                 function(err, rowCount , row) {
                   if (err) {
                     console.log("select line_messages error ",err);
@@ -1876,7 +1879,7 @@ app.post('/contactUpload', function (req, res) {
           async.series([
             function (callback) {
               var request = new DbRequest(
-                "select line_name as lineName, pictureUrl from line_contacts where line_id = @lineId", 
+                "select line_name as lineName, pictureUrl from line_contacts where line_id = @lineId and line_contacts.active_flag='1'", 
                 function(err, rowCount , row) {
                   if (err) {
                     console.log("select line_messages error ",err);
@@ -1897,7 +1900,7 @@ app.post('/contactUpload', function (req, res) {
                 var request = new DbRequest(
                   "SELECT line_id "+
                     " FROM line_contacts "+
-                    "Where active_flag=1 and contact_id = @contactId", 
+                    "Where active_flag='1' and contact_id = @contactId", 
                   function(err, rowCount , row) {
                     if (err) {
                       console.log("select line_messages error ",err);
@@ -2111,7 +2114,7 @@ app.post('/updateContactPerson',function (req, res) {
                   });
                 } else {
                     var request = new DbRequest(
-                      "update line_contacts set contact_id = @contact_id, contact_person_id = @contact_person_id where line_id = @userId",
+                      "update line_contacts set contact_id = @contact_id, contact_person_id = @contact_person_id where line_id = @userId and line_contacts.active_flag='1'",
                       function(err, rowCount , row) {
                         db.close();
                         if (err) {
@@ -2320,7 +2323,7 @@ app.post('/sendKbDocument', function (req, res) {
       },
       function (callback) {
         var request = new DbRequest(
-          "select line_name as lineName, pictureUrl from line_contacts where line_id = @lineId", 
+          "select line_name as lineName, pictureUrl from line_contacts where line_id = @lineId and line_contacts.active_flag='1'", 
           function(err, rowCount , row) {
             if (err) {
               console.log("select line_messages error ",err);
@@ -2346,7 +2349,7 @@ app.post('/sendKbDocument', function (req, res) {
           var request = new DbRequest(
             "SELECT line_id "+
               " FROM line_contacts "+
-              "Where active_flag=1 and contact_id = @contactId", 
+              "Where active_flag='1' and contact_id = @contactId", 
             function(err, rowCount , row) {
               if (err) {
                 console.log("select line_messages error ",err);
@@ -2616,7 +2619,7 @@ function followHandler(db ,data , cb) {
                   "update contact_persons set line_id = @line_id where contact_person_id = @contact_person_id",
                   function(err, rowCount , row) {
                     if (err) {
-                      console.log("line_contacts error ",err);
+                      console.log("contact_persons error ",err);
                     }
                     callback();
                   });
@@ -2634,7 +2637,7 @@ function followHandler(db ,data , cb) {
                   "update line_chat_room set contact_id = @contact_id, contact_person_id = @contact_person_id where userId = @userId",
                   function(err, rowCount , row) {
                     if (err) {
-                      console.log("line_contacts error ",err);
+                      console.log("line_chat_room error ",err);
                     }
                     callback();
                   });
@@ -2656,6 +2659,21 @@ function followHandler(db ,data , cb) {
       });
 
   })
+}
+
+function unFollowHandler(db ,data , cb) {
+      var request = new DbRequest(
+      "update line_contacts set active_flag = '0' ,leave_date = @leave_date where line_id=@line_id and active_flag='1'" ,
+      function(err, rowCount , row) {
+        if (err) {
+          console.log("line_contacts error ",err);
+        }
+        io.emit('unfollow', result);
+        cb();
+      });
+      request.addParameter('line_id', TYPES.VarChar, data.source.userId);
+      request.addParameter('leave_date', TYPES.BigInt,  Date.now());
+      db.execSql(request);
 }
 
 function contactRoom (db , contact, callback ,cbx) {
@@ -2808,7 +2826,7 @@ function createRoom(db, room, messageEv, cb) {
                   "FROM line_contacts, contacts "+
                   "where line_contacts.contact_id = contacts.contact_id "+
                   "and line_contacts.line_id = @line_id "+
-                  "and line_contacts.active_flag=1",
+                  "and line_contacts.active_flag='1'",
                 function(err, rowCount , row) {
                   if (err) {
                     console.log("function 1 error ",err);
@@ -3038,7 +3056,7 @@ function updateRoom(db, room, messageEv, cb) {
           return;
         }
         var request = new DbRequest(
-          "select contact_id, contact_person_id, line_name as lineName, pictureUrl from line_contacts where line_id = @lineId", 
+          "select contact_id, contact_person_id, line_name as lineName, pictureUrl from line_contacts where line_id = @lineId and line_contacts.active_flag='1'", 
           function(err, rowCount , row) {
             if (err) {
               console.log("select line_messages error ",err);

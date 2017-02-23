@@ -454,10 +454,12 @@ namespace Line.WebService
 
             }
             string filePath = "";
-            if (attachment.FolderName == "../uploads/requests/aero/")
-                filePath = Path.Combine(System.Configuration.ConfigurationManager.AppSettings["UPLOADPATH"], attachment.FileName);
+            if (attachment.RelateType == "K")
+                filePath = Path.Combine(ConfigurationManager.AppSettings["IMIND_UPLOADPATH"] + "knowledges/", attachment.FileName);
+            else if (attachment.FolderName == "../uploads/requests/aero/")
+                filePath = Path.Combine(ConfigurationManager.AppSettings["IMIND_UPLOADPATH"]+ "requests/aero/", attachment.FileName);
             else
-                filePath = Path.Combine(System.Configuration.ConfigurationManager.AppSettings["IMIND_UPLOADPATH"], attachment.FileName);
+                filePath = Path.Combine(ConfigurationManager.AppSettings["IMIND_UPLOADPATH"] + "requests/", attachment.FileName);
             if (!File.Exists(filePath))
             {
                 filePath = Server.MapPath("no_pictures.jpg");
