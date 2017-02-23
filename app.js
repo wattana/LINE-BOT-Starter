@@ -1582,9 +1582,9 @@ app.post('/upload', function (req, res) {
           "template": {
               "type": "buttons",
               //"thumbnailImageUrl": WebHookBaseURL+"/resources/images/news.png",
-              "title": "File name : "+(fileName.length > 28)? 
+              "title": "File name : "+((fileName.length > 28)? 
                                        fileName.substring(0,25)+'...' : 
-                                       fileName,
+                                       fileName),
               "text": "Date : "+dateFormat(new Date(), "dd,mmm yyyy h:MM"),
               "actions": [
                   {
@@ -1814,9 +1814,9 @@ app.post('/contactUpload', function (req, res) {
             "template": {
                 "type": "buttons",
                 //"thumbnailImageUrl": WebHookBaseURL+"/resources/images/news.png",
-                "title": "File name : "+(fileName.length > 28)? 
+                "title": "File name : "+((fileName.length > 28)? 
                                          fileName.substring(0,25)+'...' : 
-                                         fileName,
+                                         fileName),
                 "text": "Date : "+dateFormat(new Date(), "dd,mmm yyyy h:MM"),
                 "actions": [
                     {
@@ -2409,9 +2409,9 @@ app.post('/sendKbDocument', function (req, res) {
                       "template": {
                           "type": "buttons",
                           //"thumbnailImageUrl": WebHookBaseURL+"/resources/images/news.png",
-                          "title": "File name : "+(attachment.originalFilename.length > 28)? 
+                          "title": "File name : "+((attachment.originalFilename.length > 28)? 
                                           attachment.originalFilename.substring(0,25)+'...' : 
-                                          attachment.originalFilename,
+                                          attachment.originalFilename),
                           "text": "Date : "+dateFormat(new Date(), "dd,mmm yyyy h:MM"),
                           "actions": [
                               {
