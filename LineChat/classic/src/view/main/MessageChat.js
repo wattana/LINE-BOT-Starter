@@ -300,7 +300,7 @@ Ext.define('LineChat.view.main.MessageChat', {
                 '<div class="bubble bubble--alt">',
                     '<div style="width:100px;height:100px;position:absolute;top:40%;left:30%" class="file-picker__progress" id="file-picker__progress_{timestamp}"></div>',
                     '<i class="fa fa-file-archive-o" aria-hidden="true" style="float:left;font-size: 18px;font-weight: bold;color: brown;"></i>',
-                    '<a style ="text-decoration:none" href="{.:this.getBaseUrl}{filePath}{fileName}" target="_blank">&nbsp; {fileName}</a><br/><br/>',
+                    '<a style ="text-decoration:none" href="{.:this.getBaseUrl}{filePath}{fileName}" target="_blank">&nbsp; {originalFileName}</a><br/><br/>',
                 '</div>',
                 '<div style="position:absolute;bottom:5px;right: 2px;color:gray">',
                     '<tpl if="pictureUrl == \'\' || pictureUrl==null">',

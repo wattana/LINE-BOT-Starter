@@ -2503,7 +2503,8 @@ app.post('/sendKbDocument', function (req, res) {
               pictureUrl : room.pictureUrl,
               lineName : room.lineName,
               filePath : messageEv.message.filePath,
-              fileName : messageEv.message.fileName
+              fileName : messageEv.message.fileName,
+              originalFileName : messageEv.message.originalFileName
             });
           }
         })
