@@ -1582,7 +1582,9 @@ app.post('/upload', function (req, res) {
           "template": {
               "type": "buttons",
               //"thumbnailImageUrl": WebHookBaseURL+"/resources/images/news.png",
-              "title": "File name : "+fileName,
+              "title": "File name : "+(fileName.length > 28)? 
+                                       fileName.substring(0,25)+'...' : 
+                                       fileName,
               "text": "Date : "+dateFormat(new Date(), "dd,mmm yyyy h:MM"),
               "actions": [
                   {
@@ -1812,7 +1814,9 @@ app.post('/contactUpload', function (req, res) {
             "template": {
                 "type": "buttons",
                 //"thumbnailImageUrl": WebHookBaseURL+"/resources/images/news.png",
-                "title": "File name : "+fileName,
+                "title": "File name : "+(fileName.length > 28)? 
+                                         fileName.substring(0,25)+'...' : 
+                                         fileName,
                 "text": "Date : "+dateFormat(new Date(), "dd,mmm yyyy h:MM"),
                 "actions": [
                     {
@@ -2302,7 +2306,8 @@ app.post('/sendKbDocument', function (req, res) {
     async.series([
       function (callback) {
         var request = new DbRequest(
-          "select attachment_id as attachmentId ,file_name as fileName, file_type as fileType from attachments where relate_id = @kbId and relate_type='K'", 
+          "select attachment_id as attachmentId ,file_name as fileName, file_type as fileType, original_filename as originalFilename "+
+          "from attachments where relate_id = @kbId and relate_type='K'", 
           function(err, rowCount , row) {
             if (err) {
               console.log("select line_messages error ",err);
@@ -2397,14 +2402,16 @@ app.post('/sendKbDocument', function (req, res) {
                       type: messageType,
                       filePath : 'kbdocument/attachment?id=',
                       fileName : attachment.attachmentId,
-                      originalFileName : attachment.fileName,
+                      originalFileName : attachment.originalFilename,
                       originalContentUrl : originalContentUrl,
                       previewImageUrl : previewImageUrl,
                       "altText": "File received",
                       "template": {
                           "type": "buttons",
                           //"thumbnailImageUrl": WebHookBaseURL+"/resources/images/news.png",
-                          "title": "File name : "+attachment.fileName,
+                          "title": "File name : "+(attachment.originalFilename.length > 28)? 
+                                          attachment.originalFilename.substring(0,25)+'...' : 
+                                          attachment.originalFilename,
                           "text": "Date : "+dateFormat(new Date(), "dd,mmm yyyy h:MM"),
                           "actions": [
                               {
@@ -2434,7 +2441,7 @@ app.post('/sendKbDocument', function (req, res) {
                       type: messageType,
                       filePath : 'kbdocument/attachment?id=',
                       fileName : attachment.attachmentId,
-                      originalFileName : attachment.fileName,
+                      originalFileName : attachment.originalFilename,
                       originalContentUrl : originalContentUrl,
                       previewImageUrl : previewImageUrl,
                   }
