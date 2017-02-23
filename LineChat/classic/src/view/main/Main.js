@@ -283,6 +283,7 @@ Ext.define('LineChat.view.main.Main', {
                     xtype: 'displayfield',
                     flex : 1,
                     name : 'displayName',
+                    submitValue : true,
                     margin: '0 0 0 6',
                     value: ''
                 },{
@@ -628,7 +629,7 @@ Ext.define('LineChat.view.main.Main', {
                             scale : 'medium',
                             textx: 'Common',
                             action : 'sendCommonMessage',
-                            tooltip : 'ข้อความใช้บ่อย',
+                            tooltipx : 'ข้อความใช้บ่อย',
                             glyphx: 'xf02d@FontAwesome',
                             html : '<i style="font-size:20px;color:black" class="fa fa-book" aria-hidden="true"></i>',
                             frame: false,

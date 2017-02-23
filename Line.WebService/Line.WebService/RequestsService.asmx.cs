@@ -90,7 +90,7 @@ namespace Line.WebService
                     {
                         RequestNumber = ReqPrefix,
                         ContactId = contactId,
-                        PersonName = "",
+                        PersonName = data.PersonName,
                         CategoryId = requestCategory.ReqCategoryId,
                         RequestStatus = "N",
                         RequestPriority = "N",

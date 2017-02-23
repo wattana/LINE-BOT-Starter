@@ -396,7 +396,7 @@ Ext.define('LineChat.view.main.MessageChat', {
             return Ext.Date.format(v, "d/m/Y H:i")
         } else if(LineChat.app.info.currentMonth != v.getMonth()){
             return Ext.Date.format(v, "d,M H:i")
-        } else if(LineChat.app.info.currentDay == v.getDay()){
+        } else if(LineChat.app.info.currentDay == v.getDate()){
             return Ext.Date.format(v, "H:i")
         } else {
             return Ext.Date.format(v, "d,M H:i")

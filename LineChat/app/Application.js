@@ -78,7 +78,7 @@ Ext.define('LineChat.Application', {
                     today : today,
                     currentYear : today.getFullYear(),
                     currentMonth : today.getMonth(),
-                    currentDay : today.getDay(),
+                    currentDay : today.getDate(),
                     agentId : result.line_id,
                     agentName : result.line_name
                 };

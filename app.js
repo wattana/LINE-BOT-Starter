@@ -679,7 +679,10 @@ app.post('/createRequest', jsonParser,function (req, res) {
             return;
         }
         var request = new DbRequest(
-          "select * from line_messages where id in ("+ids.join(",")+")", 
+          "select messages.*, line_name as lineName "+
+          "from line_contacts ,line_messages messages "+
+          "where line_contacts.line_id = messages.sourceUserId "+
+          "and messages.id in ("+ids.join(",")+") order by messages.timestamp", 
           function(err, rowCount , row) {
               db.close();
               if (err) {
@@ -723,50 +726,58 @@ app.post('/createRequest', jsonParser,function (req, res) {
                         async.eachSeries(messages , function(data, cbx) {
                             //console.log('messages data',data );
                              var isContent = data.messageType == 'image' || data.messageType == 'audio' ||
-                                             data.messageType == 'video' || data.messageType == 'file'
+                                             data.messageType == 'video' || data.messageType == 'file' || 
+                                             data.messageType == 'template'
                             if (isContent && data.filePath.indexOf("kbdocument")==-1) {
                                 //console.log(client.describe().RequestsService.RequestsServiceSoap.saveAttach)
                                 var filePath = __dirname+'/'+data.filePath+data.fileName;
-                                var minetype = mime.lookup(filePath);
-                                //console.log("minetype",minetype)
-                                var file_payload;
-                                // Load the file into a buffer
-                                fs.readFile(filePath, function(err, the_data) {
-                                  if (err) console.error(err);
-                                  
-                                  // Encode the buffer to base64
-                                  file_payload = new Buffer(the_data, 'binary').toString('base64');
-                                  
-                                  // Set the parameters before we call the Web Service
-                                  var parameters = {
-                                    data: { 
-                                        FileName: data.fileName,
-                                        FileType: minetype,
-                                        FileSize: the_data.length,
-                                        OriginalFilename: data.originalFileName,
-                                        Description: '',
-                                        ActiveFlag: '1'
-                                    },
-                                    fileName : data.originalFileName,
-                                    buffer : file_payload,
-                                    Offset : 0
-                                  };
-                                  
-                                  //console.log('      sending...')
-                                  // Make the Web Service call, remember node likes callbacks
-                                  client.saveAttach(parameters, function(err, result) {
-                                      if (err) console.error(err);
-                                      //console.log("upload result",result)
-                                      attachList.push({
-                                        id : result.saveAttachResult.refId,
-                                        description : ""
-                                      })
-                                      if (i==messages.length-1)
-                                          callback();
-                                      i++;
-                                      cbx()
+                                if (!fs.existsSync(filePath)){
+                                    if (i==messages.length-1)
+                                      callback();
+                                    i++;
+                                    cbx()
+                                } else {
+                                  var minetype = mime.lookup(filePath);
+                                  //console.log("minetype",minetype)
+                                  var file_payload;
+                                  // Load the file into a buffer
+                                  fs.readFile(filePath, function(err, the_data) {
+                                    if (err) console.error(err);
+                                    
+                                    // Encode the buffer to base64
+                                    file_payload = new Buffer(the_data, 'binary').toString('base64');
+                                    
+                                    // Set the parameters before we call the Web Service
+                                    var parameters = {
+                                      data: { 
+                                          FileName: data.fileName,
+                                          FileType: minetype,
+                                          FileSize: the_data.length,
+                                          OriginalFilename: data.originalFileName,
+                                          Description: '',
+                                          ActiveFlag: '1'
+                                      },
+                                      fileName : data.originalFileName,
+                                      buffer : file_payload,
+                                      Offset : 0
+                                    };
+                                    
+                                    //console.log('      sending...')
+                                    // Make the Web Service call, remember node likes callbacks
+                                    client.saveAttach(parameters, function(err, result) {
+                                        if (err) console.error(err);
+                                        //console.log("upload result",result)
+                                        attachList.push({
+                                          id : result.saveAttachResult.refId,
+                                          description : ""
+                                        })
+                                        if (i==messages.length-1)
+                                            callback();
+                                        i++;
+                                        cbx()
+                                    });
                                   });
-                                });
+                                }
                             } else {
                               if (i==messages.length-1)
                                   callback();
@@ -780,7 +791,9 @@ app.post('/createRequest', jsonParser,function (req, res) {
                         client.save({
                           data : {
                             RequestNumber : req.body.requestNumber,
-                            RequestDetail : messageTexts.join("\n"),
+                            RequestDetail : messageTexts.join("\n")+
+                                            (attachList.length ? (messageTexts.length?"\n":"")+attachList.length + " attachments" :""),
+                            PersonName : req.body.displayName,
                             ContactId : req.body.contactId,
                             LogBy : req.body.agentId,
                             AttachmentList : JSON.stringify(attachList)
@@ -810,7 +823,9 @@ app.post('/createRequest', jsonParser,function (req, res) {
             });
             messages.push(record)
             if (record.messageType == 'text') {
-                messageTexts.push(record.messageText)
+              console.log(record.timestamp,parseInt(record.timestamp),new Date(parseInt(record.timestamp)))
+                messageTexts.push(dateFormat(new Date(parseInt(record.timestamp)), "dd,mmm yyyy H:MM")+" "+
+                                  record.lineName+": "+record.messageText)
             }
         });
         db.execSql(request);
@@ -827,7 +842,9 @@ app.get('/listRequest',function (req, res) {
           console.log(err)
           return;
       }
-      var request = new DbRequest("SELECT count(*) as total FROM requests where contact_id = @contactId", 
+      var request = new DbRequest("SELECT count(requests.request_id) as total FROM requests, request_categories "+
+                                  "where requests.category_id = request_categories.req_category_id "+
+                                  "and contact_id = @contactId", 
         function(err, rowCount , row) {
           if (err) {
               db.close();
@@ -838,7 +855,9 @@ app.get('/listRequest',function (req, res) {
               });
           } else {   
               var request = new DbRequest(
-                "SELECT * FROM requests where contact_id = @contactId order by open_date desc OFFSET @start ROWS FETCH FIRST @limit ROWS ONLY", 
+                "SELECT requests.* , request_categories.req_category_name FROM requests, request_categories "+
+                "where requests.category_id = request_categories.req_category_id "+
+                "and contact_id = @contactId order by open_date desc OFFSET @start ROWS FETCH FIRST @limit ROWS ONLY", 
                 function(err, rowCount , row) {
                   db.close();
                   if (err) {
@@ -861,7 +880,8 @@ app.get('/listRequest',function (req, res) {
                   columns.forEach(function(column) {
                     record[column.metadata.colName] = column.value
                   });
-                  record.request_detail= record.request_detail.replace(/\n/g,"<br/>")
+                  record.request_detail= "<span style='color:blue'>"+record.req_category_name+"</span><br/>"+
+                                        record.request_detail.replace(/\n/g,"<br/>")
                   messages.push(record)
                 });
                 request.addParameter('contactId', TYPES.VarChar, req.query.contactId);
@@ -913,7 +933,7 @@ app.get('/listAllMessage',function (req, res) {
           db.execSql(request);
     })
 
-/*
+ /*
   var db = new sqlite3.Database(DATABASE_NAME);
   var messages = [];
   db.all("SELECT messages.rowid AS id, replyToken, eventType, timestamp ,sourceType, "+
@@ -2279,7 +2299,7 @@ app.post('/sendKbDocument', function (req, res) {
     async.series([
       function (callback) {
         var request = new DbRequest(
-          "select attachment_id as attachmentId from attachments where relate_id = @kbId and relate_type='K'", 
+          "select attachment_id as attachmentId ,file_type as fileType from attachments where relate_id = @kbId and relate_type='K'", 
           function(err, rowCount , row) {
             if (err) {
               console.log("select line_messages error ",err);
@@ -2289,9 +2309,11 @@ app.post('/sendKbDocument', function (req, res) {
 
           request.on('row', function(columns) {
             //console.log('-------------------',columns[0])
-            columns.forEach(function(column) {
-              attachments.push(column.value)
-            });
+              var record = {};
+              columns.forEach(function(column) {
+                record[column.metadata.colName] = column.value
+              });
+              attachments.push(record)
         });
         request.addParameter('kbId', TYPES.VarChar, req.body.kbId);
         db.execSql(request);
@@ -2346,32 +2368,73 @@ app.post('/sendKbDocument', function (req, res) {
       function (callback) {
         var i =0;
         //req.body.events.forEach(function(data) {
-        async.eachSeries(attachments , function(attachmentId, cbx) {
-            console.log('attachments id',attachmentId );
+        async.eachSeries(attachments , function(attachment, cbx) {
+            console.log('attachments id',attachment.attachmentId );
             var time = String(Date.now());
             var messageType = 'image';
-            var originalContentUrl = WebHookBaseURL+"/kbdocument/attachment?id="+attachmentId ;
+            var originalContentUrl = WebHookBaseURL+"/kbdocument/attachment?id="+attachment.attachmentId ;
             var previewImageUrl = originalContentUrl;
-            var messageEv = {
-                roomId : 0,
-                replyToken: "",
-                type : "message",
-                timestamp : time,//messageEv.timestamp ,
-                sourceType : "agent" ,
-                sourceUserId : req.body.userId || req.body.agentId ,
-                contactId : req.body.contactId ,
-                "source": {
-                    "type": "agent",
-                    "userId": req.body.agentId
-                },
-                message : {
-                    id : time ,
-                    type: messageType,
-                    filePath : 'kbdocument/attachment?id=',
-                    fileName : attachmentId,
-                    originalFileName : attachmentId,
-                    originalContentUrl : originalContentUrl,
-                    previewImageUrl : previewImageUrl,
+            var messageEv;
+            if (attachment.fileType.indexOf("pdf") != -1) {
+                messageType = 'template';
+                messageEv = {
+                  roomId : room.id,
+                  replyToken: "",
+                  type : "message",
+                  timestamp : time,//messageEv.timestamp ,
+                  sourceType : "agent" ,
+                  sourceUserId : req.body.userId || req.body.agentId ,
+                  contactId : req.body.contactId ,
+                  "source": {
+                      "type": "agent",
+                      "userId": req.body.agentId
+                  },
+                  message : {
+                      id : time ,
+                      type: messageType,
+                      filePath : 'kbdocument/attachment?id=',
+                      fileName : attachment.attachmentId,
+                      originalFileName : attachment.attachmentId,
+                      originalContentUrl : originalContentUrl,
+                      previewImageUrl : previewImageUrl,
+                      "altText": "File received",
+                      "template": {
+                          "type": "buttons",
+                          //"thumbnailImageUrl": WebHookBaseURL+"/resources/images/news.png",
+                          "title": "File name : "+fileName,
+                          "text": "Date : "+dateFormat(new Date(), "dd,mmm yyyy h:MM"),
+                          "actions": [
+                              {
+                                "type": "uri",
+                                "label": "Open",
+                                "uri": originalContentUrl
+                              }
+                          ]
+                      }
+                  }
+                }
+            } else {
+                messageEv = {
+                  roomId : room.id,
+                  replyToken: "",
+                  type : "message",
+                  timestamp : time,//messageEv.timestamp ,
+                  sourceType : "agent" ,
+                  sourceUserId : req.body.userId || req.body.agentId ,
+                  contactId : req.body.contactId ,
+                  "source": {
+                      "type": "agent",
+                      "userId": req.body.agentId
+                  },
+                  message : {
+                      id : time ,
+                      type: messageType,
+                      filePath : 'kbdocument/attachment?id=',
+                      fileName : attachment.attachmentId,
+                      originalFileName : attachment.attachmentId,
+                      originalContentUrl : originalContentUrl,
+                      previewImageUrl : previewImageUrl,
+                  }
                 }
             }
             messages.push(messageEv);

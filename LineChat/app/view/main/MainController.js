@@ -276,8 +276,11 @@ Ext.define('LineChat.view.main.MainController', {
                     roomId : chatMessage.roomId
                 });
             } else {
-                roomRecord.set("unread", roomRecord.get("unread")+1);     
-                me.setChatUnreadCnt()
+                console.log('check is current room ',roomRecord.get("contactId") , chatMessage.contactId)
+                if (roomRecord.get("contactId") != roomInfo.down("hidden[name=contactId]").getValue()) {
+                    roomRecord.set("unread", roomRecord.get("unread")+1);     
+                    me.setChatUnreadCnt()
+                }
             }
         }
         if (chatMessage.contactId) {
