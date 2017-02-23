@@ -2668,7 +2668,7 @@ function unFollowHandler(db ,data , cb) {
         if (err) {
           console.log("line_contacts error ",err);
         }
-        io.emit('unfollow', result);
+        io.emit('unfollow', data);
         cb();
       });
       request.addParameter('line_id', TYPES.VarChar, data.source.userId);
