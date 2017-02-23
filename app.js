@@ -2471,6 +2471,7 @@ app.post('/sendKbDocument', function (req, res) {
                 console.log('result',result);
                 // raw response 
                 //console.log(response);
+                cbx()
             });
             io.emit('message', {
               roomId : room.id,
