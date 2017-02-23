@@ -1582,9 +1582,9 @@ app.post('/upload', function (req, res) {
           "template": {
               "type": "buttons",
               //"thumbnailImageUrl": WebHookBaseURL+"/resources/images/news.png",
-              "title": "File name : "+((fileName.length > 28)? 
-                                       fileName.substring(0,25)+'...' : 
-                                       fileName),
+              "title": "File name : "+((uploadFile.name.length > 28)? 
+                                       uploadFile.name.substring(0,25)+'...' : 
+                                       uploadFile.name),
               "text": "Date : "+dateFormat(new Date(), "dd,mmm yyyy h:MM"),
               "actions": [
                   {
@@ -1814,9 +1814,9 @@ app.post('/contactUpload', function (req, res) {
             "template": {
                 "type": "buttons",
                 //"thumbnailImageUrl": WebHookBaseURL+"/resources/images/news.png",
-                "title": "File name : "+((fileName.length > 28)? 
-                                         fileName.substring(0,25)+'...' : 
-                                         fileName),
+                "title": "File name : "+((uploadFile.name.length > 28)? 
+                                         uploadFile.name.substring(0,25)+'...' : 
+                                         uploadFile.name),
                 "text": "Date : "+dateFormat(new Date(), "dd,mmm yyyy h:MM"),
                 "actions": [
                     {
