@@ -505,6 +505,7 @@ Ext.define('LineChat.view.main.MainController', {
                             $('#video_'+me.uploadMessage.timestamp).load();
                         }
                         me.currentRecord.set({
+                            id : message.id,
                             upload : false,
                             "fileName" : message.message.fileName,
                             "filePath" : message.message.filePath,
