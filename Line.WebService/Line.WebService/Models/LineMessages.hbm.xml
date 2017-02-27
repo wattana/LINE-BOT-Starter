@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<hibernate-mapping assembly="Line.WebService" namespace="Line.WebService.Models" xmlns="urn:nhibernate-mapping-2.2">
+  <class name="LineMessages" table="line_messages" lazy="true" >
+	<id name="Id" column="id">
+		<generator class="identity" />
+	</id>
+    <property name="RoomId">
+      <column name="roomId" sql-type="int" not-null="false" />
+    </property>
+    <property name="ReplyToken">
+      <column name="replyToken" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="EventType">
+      <column name="eventType" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="Timestamp">
+      <column name="timestamp" sql-type="bigint" not-null="false" />
+    </property>
+    <property name="ContactId">
+      <column name="contact_id" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="SourceType">
+      <column name="sourceType" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="SourceUserId">
+      <column name="sourceUserId" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="MessageId">
+      <column name="messageId" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="MessageType">
+      <column name="messageType" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="MessageText">
+      <column name="messageText" sql-type="nvarchar" not-null="false" />
+    </property>
+    <property name="StickerId">
+      <column name="stickerId" sql-type="int" not-null="false" />
+    </property>
+    <property name="PackageId">
+      <column name="packageId" sql-type="int" not-null="false" />
+    </property>
+    <property name="Title">
+      <column name="title" sql-type="nvarchar" not-null="false" />
+    </property>
+    <property name="Address">
+      <column name="address" sql-type="nvarchar" not-null="false" />
+    </property>
+    <property name="Latitude">
+      <column name="latitude" sql-type="nvarchar" not-null="false" />
+    </property>
+    <property name="Longitude">
+      <column name="longitude" sql-type="nvarchar" not-null="false" />
+    </property>
+    <property name="FilePath">
+      <column name="filePath" sql-type="nvarchar" not-null="false" />
+    </property>
+    <property name="FileName">
+      <column name="fileName" sql-type="nvarchar" not-null="false" />
+    </property>
+    <property name="OriginalFileName">
+      <column name="originalFileName" sql-type="nvarchar" not-null="false" />
+    </property>
+    <property name="RequestNumber">
+      <column name="requestNumber" sql-type="nvarchar" not-null="false" />
+    </property>
+    <property name="Info">
+      <column name="info" sql-type="nvarchar" not-null="true" />
+    </property>
+  </class>
+</hibernate-mapping>

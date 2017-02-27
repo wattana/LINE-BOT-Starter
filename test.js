@@ -5,6 +5,27 @@ var client = new Client();
 var request = require('request');
 var fs = require('fs');
 
+router.get('/listContactPerson', function(req, res, next) {
+  var args = {
+      headers: { 
+        "Authorization": "token",
+        "Content-Type": "application/json" 
+      }, // request headers 
+      data :   {
+        contactId : '489057F9-1F48-49B6-9464-BD2247C23642'
+    }
+  };
+  client.post("https://imind.ibss.co.th/Line.WebService/LineService.asmx/listContactPerson", args, 
+  function (result, response) {
+    // parsed response body as js object 
+    console.log('result',result);
+    // raw response 
+    //console.log(response);
+    res.send(result)
+  });
+    //res.send('Test sendText success\n')
+});
+
 router.get('/sendText', function(req, res, next) {
   var args = {
       headers: { 
@@ -14,6 +35,7 @@ router.get('/sendText', function(req, res, next) {
       data :   {
         agentId: 'FF50CE0C-4119-490A-B1E8-B109571374C8',
         contactId : '489057F9-1F48-49B6-9464-BD2247C23642',
+        contactPersonId : 'FE27D924-DEAF-4657-B6BB-01ECFF37A716',
         text : 'test'
     }
   };
@@ -33,6 +55,7 @@ router.get('/sendImage', function(req, res, next) {
         // Pass a simple key-value pair 
         agentId: 'FF50CE0C-4119-490A-B1E8-B109571374C8',
         contactId : '489057F9-1F48-49B6-9464-BD2247C23642',
+        contactPersonId : 'FE27D924-DEAF-4657-B6BB-01ECFF37A716',
         // Pass data via Streams 
         imageFile: fs.createReadStream(__dirname + '/resources/images/example.jpg')
     };

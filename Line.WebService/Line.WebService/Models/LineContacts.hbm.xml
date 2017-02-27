@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<hibernate-mapping assembly="Line.WebService" namespace="Line.WebService.Models" xmlns="urn:nhibernate-mapping-2.2">
+  <class name="LineContacts" table="line_contacts" lazy="true" >
+	<id name="Id" column="id">
+		<generator class="identity" />
+	</id>
+	<property name="ContactId">
+      <column name="contact_id" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="ContactPersonId">
+      <column name="contact_person_id" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="LineId">
+      <column name="line_id" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="LineName">
+      <column name="line_name" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="SourceType">
+      <column name="sourceType" sql-type="varchar" not-null="false" />
+    </property>
+    <property name="StatusMessage">
+      <column name="statusMessage" sql-type="nvarchar" not-null="false" />
+    </property>
+    <property name="PictureUrl">
+      <column name="pictureUrl" sql-type="nvarchar" not-null="false" />
+    </property>
+    <property name="ActiveFlag">
+      <column name="active_flag" sql-type="char" not-null="true" />
+    </property>
+    <property name="JoinDate">
+      <column name="join_date" sql-type="bigint" not-null="false" />
+    </property>
+    <property name="InviteBy">
+      <column name="invite_by" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="InviteDate">
+      <column name="invite_date" sql-type="bigint" not-null="false" />
+    </property>
+    <property name="LeaveDate">
+      <column name="leave_date" sql-type="bigint" not-null="false" />
+    </property>
+  </class>
+</hibernate-mapping>

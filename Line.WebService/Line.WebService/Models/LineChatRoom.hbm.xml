@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<hibernate-mapping assembly="Line.WebService" namespace="Line.WebService.Models" xmlns="urn:nhibernate-mapping-2.2">
+  <class name="LineChatRoom" table="line_chat_room" lazy="true" >
+	<id name="Id" column="id">
+		<generator class="identity" />
+	</id>
+    <property name="UserId">
+      <column name="userId" sql-type="nvarchar" not-null="true" />
+    </property>
+    <property name="ContactId">
+      <column name="contact_id" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="ContactPersonId">
+      <column name="contact_person_id" sql-type="uniqueidentifier" not-null="false" />
+    </property>
+    <property name="DisplayName">
+      <column name="displayName" sql-type="nvarchar" not-null="false" />
+    </property>
+    <property name="PictureUrl">
+      <column name="pictureUrl" sql-type="nvarchar" not-null="false" />
+    </property>
+    <property name="StatusMessage">
+      <column name="statusMessage" sql-type="nvarchar" not-null="false" />
+    </property>
+    <property name="SourceType">
+      <column name="sourceType" sql-type="nvarchar" not-null="false" />
+    </property>
+    <property name="MessageType">
+      <column name="messageType" sql-type="nvarchar" not-null="false" />
+    </property>
+    <property name="Message">
+      <column name="message" sql-type="nvarchar" not-null="false" />
+    </property>
+    <property name="Unread">
+      <column name="unread" sql-type="int" not-null="true" />
+    </property>
+    <property name="CreateTime">
+      <column name="createtime" sql-type="bigint" not-null="false" />
+    </property>
+    <property name="UpdateTime">
+      <column name="updatetime" sql-type="bigint" not-null="false" />
+    </property>
+    <property name="ActiveFlag">
+      <column name="active_flag" sql-type="char" not-null="true" />
+    </property>
+  </class>
+</hibernate-mapping>

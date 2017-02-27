@@ -120,6 +120,9 @@
     <EmbeddedResource Include="Models\Attachments.hbm.xml" />
     <Content Include="LineService.asmx" />
     <Content Include="LoginService.asmx" />
+    <EmbeddedResource Include="Models\LineChatRoom.hbm.xml" />
+    <EmbeddedResource Include="Models\LineContacts.hbm.xml" />
+    <EmbeddedResource Include="Models\LineMessages.hbm.xml" />
     <Content Include="no_pictures.jpg" />
     <Content Include="packages.config" />
     <Content Include="ApplicationInsights.config">
@@ -164,6 +167,9 @@
     <Compile Include="Models\Attachments.cs" />
     <Compile Include="Models\ContactPersons.cs" />
     <Compile Include="Models\Contacts.cs" />
+    <Compile Include="Models\LineChatRoom.cs" />
+    <Compile Include="Models\LineContacts.cs" />
+    <Compile Include="Models\LineMessages.cs" />
     <Compile Include="Models\Prefix.cs" />
     <Compile Include="Models\RequestActivities.cs" />
     <Compile Include="Models\RequestCategories.cs" />

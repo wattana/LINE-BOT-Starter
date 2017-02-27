@@ -482,14 +482,15 @@ app.get('/pushMessage', function (req, res) {
 })
 
 app.post('/contactPushMessage', jsonParser, function (req, res) {
-  var data = {
-        roomId : 0,
+  if (req.body.contactPersonId) {
+    var data = {
+        roomId : req.body.roomId,
         replyToken: "",
         type : "message",
         timestamp : Date.now(),//messageEv.timestamp ,
         sourceType : "agent" ,
-        sourceUserId : req.body.agentId ,
-        contactId : req.body.contactId ,
+        sourceUserId : req.body.userId ,
+        contactId : req.body.contactId  ,
         "source": {
             "type": "agent",
             "userId": req.body.agentId
@@ -497,14 +498,40 @@ app.post('/contactPushMessage', jsonParser, function (req, res) {
         message : {
             id : 0 ,
             type: "text" , 
-            text: req.body.text
+            text: message
         }
+    }
+    onPushMessage(data)
+    res.json({
+      success : true,
+      message : data
+    })
+    
+  } else {
+    var data = {
+          roomId : 0,
+          replyToken: "",
+          type : "message",
+          timestamp : Date.now(),//messageEv.timestamp ,
+          sourceType : "agent" ,
+          sourceUserId : req.body.agentId ,
+          contactId : req.body.contactId ,
+          "source": {
+              "type": "agent",
+              "userId": req.body.agentId
+          },
+          message : {
+              id : 0 ,
+              type: "text" , 
+              text: req.body.text
+          }
+    }
+    onPushContactMessage(data)
+    res.json({
+      success : true,
+      message : data
+    })
   }
-  onPushContactMessage(data)
-  res.json({
-    success : true,
-    message : data
-  })
 })
 
 app.get('/getImage', function (req, res) {
@@ -1219,7 +1246,7 @@ app.get('/listRoom',function (req, res) {
       var request = new DbRequest(
         "SELECT id, sourceType,userId ,contact_id, contact_person_id, displayName, pictureUrl,"+ 
         "statusMessage, messageType, message ,createtime, updatetime, unread, active_flag FROM line_chat_room "+
-        "where contact_id is not null", 
+        "where contact_id is not null and active_flag='1'", 
         function(err, rowCount , row) {
           db.close();
           if (err) {

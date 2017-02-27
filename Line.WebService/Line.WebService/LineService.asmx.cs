@@ -1,6 +1,13 @@
-﻿using System;
+﻿using Line.WebService.Commons;
+using Line.WebService.Models;
+using Line.WebService.Repositories;
+using NHibernate;
+using NHibernate.Criterion;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -22,7 +29,7 @@ namespace Line.WebService
     {
 
         [WebMethod]
-        public string TestSendText(string contactPersonId, String agentId, string text)
+        public string TestSendText(string text)
         {
             var json = new
             {
@@ -66,14 +73,132 @@ namespace Line.WebService
         }
 
         [WebMethod]
-        public string SendText(string contactId, String agentId, string text)
+        public string TestListContactPerson()
+        {
+            var ttt = new DateTime(1488182213199);
+            var request = (HttpWebRequest)WebRequest.Create("https://imind.ibss.co.th/Line.WebService/LineService.asmx/ListContactPerson");
+            request.Method = "POST";
+            request.ContentType = "application/json";
+            request.Accept = "application/json";
+            string DATA = @"{""contactId"":""489057F9-1F48-49B6-9464-BD2247C23642""}";
+            request.ContentLength = DATA.Length;
+            using (Stream webStream = request.GetRequestStream())
+            using (StreamWriter requestWriter = new StreamWriter(webStream, System.Text.Encoding.ASCII))
+            {
+                requestWriter.Write(DATA);
+            }
+            string text;
+            var response = (HttpWebResponse)request.GetResponse();
+            using (var sr = new StreamReader(response.GetResponseStream()))
+            {
+                text = sr.ReadToEnd();
+            }
+            return text;
+        }
+
+        [WebMethod]
+        public JsonData ListContactPerson(string contactId) {
+            JsonData jd = new JsonData();
+            var list = new List<SerializableDictionary<string, object>>();
+            using (ISession session = NHibernateHelper.OpenSession())
+            {
+                ICriteria criteria = session.CreateCriteria<LineContacts>()
+                                            .Add(Expression.Eq("ContactId", Guid.Parse(contactId)))
+                                            .Add(Expression.Eq("ActiveFlag","1"));
+                var models = criteria.List<LineContacts>();
+                foreach (var model in models)
+                {
+                    var dict = ObjectToDictionaryHelper.ToDictionary(model);
+                    var contactPerson = session.Get<ContactPersons>(model.ContactPersonId);
+                    dict["PersonCode"] = contactPerson.PersonCode;
+                    dict["PersonName"] = contactPerson.PersonName;
+                    list.Add(dict);
+                }
+            }
+            jd.rows = list;
+            jd.total = list.Count;
+            return jd;
+        }
+
+        [WebMethod]
+        public JsonData ListMessage(string contactId, int start, int limit)
+        {
+            JsonData jd = new JsonData();
+            var list = new List<SerializableDictionary<string, object>>();
+            using (ISession session = NHibernateHelper.OpenSession())
+            {
+                ICriteria criteria = session.CreateCriteria<LineMessages>()
+                                            .Add(Expression.Eq("ContactId", Guid.Parse(contactId)));
+                var rowcount = CriteriaTransformer.Clone(criteria).SetProjection(Projections.RowCount());
+                criteria.AddOrder(Order.Desc("Timestamp"))
+                        .SetFirstResult(start)
+                        .SetMaxResults(limit);
+                var models = criteria.List<LineMessages>();
+                foreach (var model in models)
+                {
+                    var dict = ObjectToDictionaryHelper.ToDictionary(model);
+                    var lineContacts = session.CreateQuery("from LineContacts where LineId=?")
+                                            .SetParameter(0, model.SourceUserId).List<LineContacts>();
+                    if (lineContacts.Count > 0)
+                    {
+                        if (model.SourceType == "agent")
+                        {
+                            var agent = session.Get<Agents>(Guid.Parse(lineContacts[0].LineId));
+                            dict["PersonCode"] = "";
+                            dict["PersonName"] = agent.AgentName;
+                        }
+                        else
+                        {
+                            var contactPerson = session.Get<ContactPersons>(lineContacts[0].ContactPersonId);
+                            dict["PersonCode"] = contactPerson.PersonCode;
+                            dict["PersonName"] = contactPerson.PersonName;
+                        }
+                    }
+                    list.Add(dict);
+                }
+                jd.total = rowcount.FutureValue<int>().Value;
+            }
+            jd.rows = list;
+         return jd;
+        }
+
+
+        [WebMethod]
+        public string SendText(string contactId, string contactPersonId, string agentId, string text)
         {
             string result = "";
+            var roomId = 0;
+            var userId = "";
+            if (contactPersonId != null)
+            {
+                using (ISession session = NHibernateHelper.OpenSession())
+                {
+                    var models = session.CreateQuery("from LineChatRoom where ContactPersonId=? and ActiveFlag='1'")
+                                        .SetParameter(0, Guid.Parse(contactPersonId)).List<LineChatRoom>();
+                    if (models.Count > 0)
+                    {
+                        roomId = models[0].Id;
+                    }
+
+                    var lineContacts = session.CreateQuery("from LineContacts where ContactPersonId=? and ActiveFlag='1'")
+                                        .SetParameter(0, Guid.Parse(contactPersonId)).List<LineContacts>();
+                    if (lineContacts.Count > 0)
+                    {
+                        userId = lineContacts[0].LineId;
+                    }
+                }
+            } else { 
+                contactPersonId = "";
+            }
+
             using (var client = new HttpClient())
             {
                 var formContent = new FormUrlEncodedContent(new[]
                     {
                     new KeyValuePair<string, string>("contactId", contactId),
+                    new KeyValuePair<string, string>("contactPersonId", contactPersonId),
+                    new KeyValuePair<string, string>("roomId", roomId.ToString()),
+                    new KeyValuePair<string, string>("userId", userId),
                     new KeyValuePair<string, string>("text", text),
                     new KeyValuePair<string, string>("agentId", agentId)
                 });
@@ -106,11 +231,42 @@ namespace Line.WebService
             //System.Diagnostics.Debug.WriteLine("---" + file.ContentType);
             string agentId = parameters.Get("agentId");
             string contactId = parameters.Get("contactId");
+            string contactPersonId = parameters.Get("contactPersonId");
+            var roomId = 0;
+            var userId = "";
+            var url = ConfigurationManager.AppSettings["LINE_SERVICE_URL"] + "/contactUpload";
+            if (contactPersonId != null)
+            {
+                url = ConfigurationManager.AppSettings["LINE_SERVICE_URL"] + "/upload";
+                using (ISession session = NHibernateHelper.OpenSession())
+                {
+                    var models = session.CreateQuery("from LineChatRoom where ContactPersonId=? and ActiveFlag='1'")
+                                        .SetParameter(0, Guid.Parse(contactPersonId)).List<LineChatRoom>();
+                    if (models.Count > 0)
+                    {
+                        roomId = models[0].Id;
+                    }
+
+                    var lineContacts = session.CreateQuery("from LineContacts where ContactPersonId=? and ActiveFlag='1'")
+                                        .SetParameter(0, Guid.Parse(contactPersonId)).List<LineContacts>();
+                    if (lineContacts.Count > 0)
+                    {
+                        userId = lineContacts[0].LineId;
+                    }
+                }
+            }
+            else
+            {
+                contactPersonId = "";
+            }
 
             using (var client = new HttpClient())
             {
                 MultipartFormDataContent form = new MultipartFormDataContent();
                 form.Add(new StringContent(contactId), "contactId");
+                form.Add(new StringContent(contactPersonId), "contactPersonId");
+                form.Add(new StringContent(roomId.ToString()), "id");
+                form.Add(new StringContent(userId), "userId");
                 form.Add(new StringContent(agentId), "agentId");
                 //client.DefaultRequestHeaders.Add("Authorization", ConfigurationManager.AppSettings["TOKEN"]);
                 var stream = file.InputStream;
@@ -121,7 +277,7 @@ namespace Line.WebService
                     FileName = file.FileName
                 };
                 form.Add(contentStream , "uploadFile");
-                var response = client.PostAsync(ConfigurationManager.AppSettings["LINE_SERVICE_URL"] + "/contactUpload",form).Result;
+                var response = client.PostAsync(url, form).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
