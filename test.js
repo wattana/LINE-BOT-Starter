@@ -39,7 +39,7 @@ router.get('/sendText', function(req, res, next) {
         text : 'test'
     }
   };
-  client.post("http://vm:46233/lineservice.asmx/sendText", args, 
+  client.post("https://imind.ibss.co.th/Line.WebService/LineService.asmx/sendText", args, 
   function (result, response) {
     // parsed response body as js object 
     console.log('result',result);
@@ -89,7 +89,7 @@ router.get('/sendImage', function(req, res, next) {
     */
     
     request.post({
-        url:'http://vm:46233/lineservice.asmx/sendImage', 
+        url:'https://imind.ibss.co.th/Line.WebService/LineService.asmx/SendImage', 
         headers : {
             "ContentType" : 'application/json'
         },

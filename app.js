@@ -431,6 +431,10 @@ app.get("/index.html",
     if (req.isAuthenticated()) {
       return next();
     } 
+    if (req.query.agentId) {
+      res.redirect('/login/authenticate?username=agentId:'+req.query.agentId+"&password=@@@@autologin@@@@");
+      return;
+    }
     res.redirect('/login.html');
   },
   function (req, res) {

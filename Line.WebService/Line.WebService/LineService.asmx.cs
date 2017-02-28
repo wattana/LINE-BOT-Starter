@@ -5,6 +5,7 @@ using NHibernate;
 using NHibernate.Criterion;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Configuration;
 using System.IO;
 using System.Net;
@@ -94,6 +95,85 @@ namespace Line.WebService
                 text = sr.ReadToEnd();
             }
             return text;
+        }
+
+        [WebMethod]
+        public string TestSendImage()
+        {
+            WebResponse wresp = null;
+            string url = "http://vm:46233/lineservice.asmx/SendImage";//"http://10.75.1.84:8080/sign/sign";
+            HttpWebRequest wr;
+
+            try
+            {
+                //System.Diagnostics.Debug.WriteLine(string.Format("Uploading {0} to {1}", file, url));
+                string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x");
+                byte[] boundarybytes = System.Text.Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n");
+
+                wr = (HttpWebRequest)WebRequest.Create(url);
+                wr.ContentType = "multipart/form-data; boundary=" + boundary;
+                wr.Method = "POST";
+                wr.KeepAlive = true;
+                wr.Credentials = System.Net.CredentialCache.DefaultCredentials;
+
+                Stream rs = wr.GetRequestStream();
+
+                NameValueCollection values = new NameValueCollection();
+                values.Add("agentId", "Alan");
+                values.Add("contactId", "Alan fff");
+                foreach (string key in values.Keys)
+                {
+                    // Write item to stream
+                    byte[] formItemBytes = System.Text.Encoding.UTF8.GetBytes(string.Format("Content-Disposition: form-data; name=\"{0}\";\r\n\r\n{1}", key, values[key]));
+                    rs.Write(boundarybytes, 0, boundarybytes.Length);
+                    rs.Write(formItemBytes, 0, formItemBytes.Length);
+                }
+                //string formdataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
+
+                rs.Write(boundarybytes, 0, boundarybytes.Length);
+
+                string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n";
+                string header = string.Format(headerTemplate, "imageFile", "file", "image/png");
+                byte[] headerbytes = System.Text.Encoding.UTF8.GetBytes(header);
+                rs.Write(headerbytes, 0, headerbytes.Length);
+
+                var file =  Server.MapPath("no_pictures.jpg"); ;
+                FileStream fileStream = new FileStream(file, FileMode.Open, FileAccess.Read);
+                byte[] buffer = new byte[4096];
+                int bytesRead = 0;
+                while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) != 0)
+                {
+                    rs.Write(buffer, 0, bytesRead);
+                }
+                fileStream.Close();
+
+                byte[] trailer = System.Text.Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
+                rs.Write(trailer, 0, trailer.Length);
+                rs.Close();
+
+                wresp = wr.GetResponse();
+                Stream stream = wresp.GetResponseStream();
+                StreamReader reader = new StreamReader(stream);
+                string Result = reader.ReadToEnd();
+
+                JavaScriptSerializer json_serializer = new JavaScriptSerializer();
+                //digiSignReponse = json_serializer.Deserialize<DigiSign>(Result.Trim());
+
+            }
+            catch (Exception ex)
+            {
+
+                if (wresp != null)
+                {
+                    wresp.Close();
+                    wresp = null;
+                }
+            }
+            finally
+            {
+                wr = null;
+            }
+            return "ok";
         }
 
         [WebMethod]

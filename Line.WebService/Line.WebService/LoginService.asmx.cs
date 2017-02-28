@@ -70,5 +70,37 @@ namespace Line.WebService
 
             return jd;
         }
+
+        [WebMethod]
+        public JsonData autoLogin(string agentId)
+        {
+            JsonData jd = new JsonData();
+
+            using (ISession session = NHibernateHelper.OpenSession())
+            {
+                try
+                {
+                    var model = session.Get<Agents>(Guid.Parse(agentId));
+                    if (model != null)
+                    {
+                        jd.success = true;
+                        jd.refId = model.AgentId.ToString();
+                    }
+                    else
+                    {
+                        jd.success = false;
+                        jd.msg = "ไม่พบข้อมูลผู้ใช้ระบบ";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    jd.success = false;
+                    jd.msg = ex.Message;
+                }
+            }
+
+
+            return jd;
+        }
     }
 }

@@ -26,20 +26,37 @@ passport.use(new LocalStrategy(
         if (err) {
             return done(err);
         }
-        client.login({
-            userLogin : username,
-            password : password,
-        }, function(err, result) {
-            //console.log("login result", result,result.loginResult.success)
-            if (result.loginResult.success) {
-                return done(null, {
-                    id : result.loginResult.refId,
-                    username : username
-                });
-            } else {
-                return done(null, false, { message: result.loginResult.msg });
-            }
-        });
+        if (password == '@@@@autologin@@@@' && username.indexOf("agentId:") != -1) {
+            client.autoLogin({
+                agentId : username.substring(8)
+            }, function(err, result) {
+                //console.log("login result", result,result.loginResult.success)
+                if (result.autoLoginResult.success) {
+                    return done(null, {
+                        id : result.autoLoginResult.refId,
+                        username : username
+                    });
+                } else {
+                    return done(null, false, { message: result.autoLoginResult.msg });
+                }
+            });
+
+        } else {
+            client.login({
+                userLogin : username,
+                password : password,
+            }, function(err, result) {
+                //console.log("login result", result,result.loginResult.success)
+                if (result.loginResult.success) {
+                    return done(null, {
+                        id : result.loginResult.refId,
+                        username : username
+                    });
+                } else {
+                    return done(null, false, { message: result.loginResult.msg });
+                }
+            });
+        }
       });
   },
   function(params, done) {
@@ -70,6 +87,18 @@ router.post('/authenticate',
                                    */
 
 router.post('/authenticate', function(req, res, next) {
+    passport.authenticate('local', function(err, user, info) {
+        console.log("authenticate",err, user, info)
+        if (err) { return next(err); }
+        if (!user) { return res.redirect('/login.html?info='+info.message); }
+        req.logIn(user, function(err) {
+            if (err) { return next(err); }
+            return res.redirect('/');
+        });
+    })(req, res, next);    
+}); 
+
+router.get('/authenticate', function(req, res, next) {
     passport.authenticate('local', function(err, user, info) {
         console.log("authenticate",err, user, info)
         if (err) { return next(err); }
