@@ -502,7 +502,7 @@ app.post('/contactPushMessage', jsonParser, function (req, res) {
         message : {
             id : 0 ,
             type: "text" , 
-            text: message
+            text: req.body.text
         }
     }
     onPushMessage(data)
