@@ -184,11 +184,8 @@ Ext.define('LineChat.Application', {
             },
             width : 800,
             height : 500,
-            constrain : false,
             maximized : true,
             maximizable : true,
-            stateId : 'windowMoreMessage2',
-            stateful : true,
             items: [{ 
                 xtype : 'messagechat',
                 selType : 'rowmodel',
