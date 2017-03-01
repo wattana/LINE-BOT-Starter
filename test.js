@@ -57,7 +57,7 @@ router.get('/sendImage', function(req, res, next) {
         contactId : '489057F9-1F48-49B6-9464-BD2247C23642',
         contactPersonId : 'FE27D924-DEAF-4657-B6BB-01ECFF37A716',
         // Pass data via Streams 
-        imageFile: fs.createReadStream(__dirname + '/resources/images/example.jpg')
+        uploadFile: fs.createReadStream(__dirname + '/resources/images/example.jpg')
     };
     /*
     request({
@@ -65,7 +65,7 @@ router.get('/sendImage', function(req, res, next) {
         method: 'POST',
         json:{
             "requestId" : "10",
-            imageFile: fs.createReadStream(__dirname + '/resources/images/example.jpg')
+            uploadFile: fs.createReadStream(__dirname + '/resources/images/example.jpg')
         },
         /
         multipart: [
@@ -90,6 +90,69 @@ router.get('/sendImage', function(req, res, next) {
     
     request.post({
         url:'https://imind.ibss.co.th/Line.WebService/LineService.asmx/SendImage', 
+        headers : {
+            "ContentType" : 'application/json'
+        },
+        formData: formData
+    }, 
+        function optionalCallback(err, httpResponse, body) {
+        if (err) {
+            return console.error('upload failed:', err);
+        }
+        console.log('Upload successful!  Server responded with:', body);
+        res.send('Upload successful!  Server responded with:'+ body)
+    });
+    
+
+/*
+    request({
+        preambleCRLF: true,
+        postambleCRLF: true,
+        json : true,
+        uri: 'http://vm:46233/lineservice.asmx/sendImage',
+        multipart: [
+        {
+            'content-type': 'application/json',
+            body: JSON.stringify({foo: 'bar', _attachments: {'message.txt': {follows: true, length: 18, 'content_type': 'text/plain' }}})
+        },
+        { body: 'I am an attachment' },
+        { body: fs.createReadStream(__dirname + '/resources/images/example.jpg') }
+        ],
+        // alternatively pass an object containing additional options 
+        multipart: {
+        chunked: false,
+        data: [
+            {
+            'content-type': 'application/json',
+            body: JSON.stringify({foo: 'bar', _attachments: {'message.txt': {follows: true, length: 18, 'content_type': 'text/plain' }}})
+            },
+            { body: 'I am an attachment' }
+        ]
+        }
+    },
+    function (error, response, body) {
+        if (error) {
+        return console.error('upload failed:', error);
+        }
+        console.log('Upload successful!  Server responded with:', body);
+        res.send('Upload successful!  Server responded with:'+ body)
+    })
+    */
+    
+});
+
+router.get('/sendPdf', function(req, res, next) {
+    var formData = {
+        // Pass a simple key-value pair 
+        agentId: 'FF50CE0C-4119-490A-B1E8-B109571374C8',
+        contactId : '489057F9-1F48-49B6-9464-BD2247C23642',
+        contactPersonId : 'FE27D924-DEAF-4657-B6BB-01ECFF37A716',
+        // Pass data via Streams 
+        uploadFile: fs.createReadStream(__dirname + '/resources/test.pdf')
+    };
+    
+    request.post({
+        url:'http://vm:46233/LineService.asmx/SendPdf', 
         headers : {
             "ContentType" : 'application/json'
         },

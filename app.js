@@ -1238,6 +1238,13 @@ app.get('/listMessage',function (req, res) {
   */
 });
 
+app.get('/listMessageByContactId',function (req, res) {
+  res.redirect('/login/authenticate?username=agentId:'+req.query.agentId+
+              "&password=@@@@autologin@@@@&page=listMessageByContactId"+
+              "&contactId="+req.query.contactId);
+  //res.redirect('/authenticate/'+'&page=listMessageByContactId');
+})
+
 app.get('/listRoom',function (req, res) {
   //console.log(req)
   var messages = [];

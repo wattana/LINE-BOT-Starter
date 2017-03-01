@@ -101,6 +101,11 @@ Ext.define('LineChat.Application', {
                     },
                     text : result.line_name
                 }])
+                var params = Ext.urlDecode(window.location.search.substring(1));
+                console.log("prams Application",params)
+                if (params.page == 'listMessageByContactId') {
+                    me.listMessageByContactId(params);
+                }
             	LineChat.app.hideMask();
             },
             failure: LineChat.app.failureHandler
@@ -159,5 +164,102 @@ Ext.define('LineChat.Application', {
                 }
             }
         );
+    },
+
+    listMessageByContactId: function (params) {
+        var me = this;
+        var userId = params.userId;
+        var agentId = params.agentId;
+        var contactId = params.contactId;
+        var roomId = params.id
+        
+
+        var win = 
+        Ext.create('Ext.window.Window', {
+            title: 'ข้อความทั้งหมด',
+            layout : {
+                type : 'vbox',
+                align : 'stretch',
+                pack: 'start'
+            },
+            width : 800,
+            height : 500,
+            constrain : false,
+            maximized : true,
+            maximizable : true,
+            stateId : 'windowMoreMessage2',
+            stateful : true,
+            items: [{ 
+                xtype : 'messagechat',
+                selType : 'rowmodel',
+                store : {
+                    type :'buffered',
+                    fields: [
+                        'replyToken',
+                        'eventType',
+                        {
+                            name : 'timestamp',
+                            type : 'int'
+                        },
+                        'sourceType',
+                        'sourceUserId', 
+                        'messageId', 
+                        'messageType', 
+                        'messageText',
+                        {
+                            name : 'message'
+                        },
+                        {
+                            name : 'date',
+                            convert: function (value, record) {
+                                return new Date(record.get("timestamp"));
+                            }
+                        },
+                        'info'
+                    ],
+                    sorters: [{
+                        property: 'timestamp',
+                        direction: 'DESC'
+                    }],
+                    autoLoad : false,
+                    pageSize : 25,
+                    proxy: {
+                        type: 'ajax',
+                        url: LineChat.app.baseURL+'listMessage',
+                        reader: {
+                            type: 'json',
+                            rootProperty: 'data'
+                        }
+                    }
+                },
+                flex : 1,
+                scrollToBottom : false,
+                listeners : {
+                    viewready : function (grid) {
+                        if (userId) {
+                            grid.getStore().getProxy().setExtraParam("roomId", roomId)
+                            grid.getStore().getProxy().setExtraParam("contactId", null)
+                        } else {
+                            grid.getStore().getProxy().setExtraParam("roomId", null)
+                            grid.getStore().getProxy().setExtraParam("contactId", contactId)                            
+                        }
+                        grid.getStore().load({
+                            callback: function (records, operation, success) {
+                            }
+                        })
+                    },
+                    selectionchangexx :  function( sm , selected , eOpts ) {
+                        var btn = win.down("button[reference=createRequestBtn]")
+                        var selection = sm.getSelection()
+                        if (selected.length)
+                            btn.setText("ออกใบงาน ("+sm.getSelection().length+")")
+                        else
+                            btn.setText("ออกใบงาน")
+                        btn.setDisabled(selection == 0) 
+                    }
+                }
+            }]
+        }).show();
+        
     }
 });

@@ -304,7 +304,7 @@ namespace Line.WebService
 
             var Request = HttpContext.Current.Request;
             System.Collections.Specialized.NameValueCollection parameters = HttpContext.Current.Request.Params;
-            HttpPostedFile file = HttpContext.Current.Request.Files["imageFile"];
+            HttpPostedFile file = HttpContext.Current.Request.Files["uploadFile"];
             //System.Diagnostics.Debug.WriteLine("---" + parameters.Get("requestId"));
             //System.Diagnostics.Debug.WriteLine("---" + file.FileName);
             //System.Diagnostics.Debug.WriteLine("---" + file.ContentLength);
@@ -356,7 +356,91 @@ namespace Line.WebService
                     Name = "uploadFile",
                     FileName = file.FileName
                 };
+                contentStream.Headers.ContentType = new MediaTypeWithQualityHeaderValue(file.ContentType);
+                contentStream.Headers.ContentLength = file.ContentLength;
                 form.Add(contentStream , "uploadFile");
+                var response = client.PostAsync(url, form).Result;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    result = response.Content.ReadAsStringAsync().Result;
+                    //Console.WriteLine(content);
+                    // Access variables from the returned JSON object
+                    //var appHref = content.links.applications.href;
+                }
+                else
+                {
+                    result = "{sucess:false , msg : \"" + response.Content.ReadAsStringAsync().Result + "\"}";
+                }
+            }
+            Context.Response.Clear();
+            Context.Response.ContentType = "text/html";
+            Context.Response.Write(result);
+            Context.Response.End();
+        }
+
+        [WebMethod]
+        public void SendPdf()
+        {
+            string result = "";
+
+            var Request = HttpContext.Current.Request;
+            System.Collections.Specialized.NameValueCollection parameters = HttpContext.Current.Request.Params;
+            HttpPostedFile file = HttpContext.Current.Request.Files["uploadFile"];
+            //System.Diagnostics.Debug.WriteLine("---" + parameters.Get("requestId"));
+            //System.Diagnostics.Debug.WriteLine("---" + file.FileName);
+            //System.Diagnostics.Debug.WriteLine("---" + file.ContentLength);
+            //System.Diagnostics.Debug.WriteLine("---" + file.ContentType);
+            string agentId = parameters.Get("agentId");
+            string contactId = parameters.Get("contactId");
+            string contactPersonId = parameters.Get("contactPersonId");
+            var roomId = 0;
+            var userId = "";
+            var url = ConfigurationManager.AppSettings["LINE_SERVICE_URL"] + "/contactUpload";
+            if (contactPersonId != null)
+            {
+                url = ConfigurationManager.AppSettings["LINE_SERVICE_URL"] + "/upload";
+                using (ISession session = NHibernateHelper.OpenSession())
+                {
+                    var models = session.CreateQuery("from LineChatRoom where ContactPersonId=? and ActiveFlag='1'")
+                                        .SetParameter(0, Guid.Parse(contactPersonId)).List<LineChatRoom>();
+                    if (models.Count > 0)
+                    {
+                        roomId = models[0].Id;
+                    }
+
+                    var lineContacts = session.CreateQuery("from LineContacts where ContactPersonId=? and ActiveFlag='1'")
+                                        .SetParameter(0, Guid.Parse(contactPersonId)).List<LineContacts>();
+                    if (lineContacts.Count > 0)
+                    {
+                        userId = lineContacts[0].LineId;
+                    }
+                }
+            }
+            else
+            {
+                contactPersonId = "";
+            }
+
+            using (var client = new HttpClient())
+            {
+                MultipartFormDataContent form = new MultipartFormDataContent();
+                form.Add(new StringContent(contactId), "contactId");
+                form.Add(new StringContent(contactPersonId), "contactPersonId");
+                form.Add(new StringContent(roomId.ToString()), "id");
+                form.Add(new StringContent(userId), "userId");
+                form.Add(new StringContent(agentId), "agentId");
+                //client.DefaultRequestHeaders.Add("Authorization", ConfigurationManager.AppSettings["TOKEN"]);
+                var stream = file.InputStream;
+                var contentStream = new StreamContent(stream);
+                contentStream.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
+                {
+                    Name = "uploadFile",
+                    FileName = file.FileName
+                };
+                contentStream.Headers.ContentType = new MediaTypeWithQualityHeaderValue(file.ContentType);
+                contentStream.Headers.ContentLength = file.ContentLength;
+                form.Add(contentStream, "uploadFile");
                 var response = client.PostAsync(url, form).Result;
 
                 if (response.IsSuccessStatusCode)

@@ -105,6 +105,9 @@ router.get('/authenticate', function(req, res, next) {
         if (!user) { return res.redirect('/login.html?info='+info.message); }
         req.logIn(user, function(err) {
             if (err) { return next(err); }
+            if (req.query.page) {
+                return res.redirect('/index.html?page='+req.query.page+"&contactId="+req.query.contactId);
+            }
             return res.redirect('/');
         });
     })(req, res, next);    
