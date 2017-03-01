@@ -2519,6 +2519,7 @@ app.post('/sendKbDocument', function (req, res) {
                 cbx()
             });
             io.emit('message', {
+              id : messageEv.id,
               roomId : room.id,
               userId: messageEv.source.userId,
               contactId : room.contact_id, 
