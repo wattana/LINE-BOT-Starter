@@ -3333,7 +3333,7 @@ function saveMessage(db , room, messageEv, callback) {
     request.addParameter('longitude', TYPES.VarChar, messageEv.message.type == 'location'? messageEv.message.longitude : "");
     request.addParameter('filePath', TYPES.NVarChar, messageEv.message.filePath);
     request.addParameter('fileName', TYPES.NVarChar, messageEv.message.fileName);
-    request.addParameter('originalFileName', TYPES.NVarChar, messageEv.message.originalFileName);
+    request.addParameter('originalFileName', TYPES.NVarChar, messageEv.message.originalFileName || messageEv.message.fileName);
     request.addParameter('info', TYPES.NVarChar, JSON.stringify(messageEv));
     db.execSql(request);
 
