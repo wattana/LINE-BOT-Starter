@@ -34,10 +34,14 @@ Ext.define('LineChat.view.main.MainController', {
         socket.on('follow', function (data) {
             //me.addContactMessage(data)
             Ext.getStore("User").load() 
+            Ext.getStore("ContactTree").load() 
+            Ext.getStore("Room").load() 
         });
         socket.on('unfollow', function (data) {
             //me.addContactMessage(data)
             Ext.getStore("User").load() 
+            Ext.getStore("ContactTree").load() 
+            Ext.getStore("Room").load() 
         });
     },
 
@@ -570,7 +574,7 @@ Ext.define('LineChat.view.main.MainController', {
                     name : 'requestNumber'
                 },{
                     xtype : 'button',
-                    text : 'แก้ไขใบงาน',
+                    text : 'เพิ่มประวัติใบงาน',
                     formBind : true,
                     margin : '0 0 0 10',
                     handler : function (btn) {

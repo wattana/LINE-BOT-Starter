@@ -16,7 +16,17 @@ Ext.define('LineChat.Application', {
     
     init : function ( app) {
         var me = this;
+        //this.mainView = "LineChat.view.main.MessagePanel"
+        //return;
         Ext.state.Manager.setProvider(Ext.create('Ext.state.CookieProvider', {}));
+        var params = Ext.urlDecode(window.location.search.substring(1));
+        console.log("params Application",params)
+        /*
+        if (params.page == 'listMessageByContactId') {
+            me.listMessageByContactId(params);
+        }
+        */
+        app.baseParams = params;
 
         var roomStore = this.getStore('Room');
         var contactStore = this.getStore('Contact');
@@ -34,27 +44,30 @@ Ext.define('LineChat.Application', {
             this.getStore('Message').getProxy().setUrl("http://localhost:3000/listMessage")
             app.baseURL = "http://localhost:3000/";
         }
-        roomStore.load({
-            callback : function (records) {
-                var unread = 0;
-                for (var i=0; i<records.length;i++) {
-                    unread += records[i].get("unread")
+        if (params.page == 'listMessageByContactId') {
+        } else {
+            roomStore.load({
+                callback : function (records) {
+                    var unread = 0;
+                    for (var i=0; i<records.length;i++) {
+                        unread += records[i].get("unread")
+                    }
+                    var tabBar =  me.getMainView().down("tabpanel[region=west]").getTabBar()
+                    tabBar.down("tab[text=Chat]").setBadgeText(unread)
                 }
-                var tabBar =  me.getMainView().down("tabpanel[region=west]").getTabBar()
-                tabBar.down("tab[text=Chat]").setBadgeText(unread)
-            }
-            
-        });
-        contactStore.load();
-        contactTreeStore.load();
-        userStore.load();
-        /*
-        requestStore.load({
-            callback : function (records) {
-                console.log('requestStore',records)
-            }
-        });
-        */
+                
+            });
+            contactStore.load();
+            contactTreeStore.load();
+            userStore.load();
+            /*
+            requestStore.load({
+                callback : function (records) {
+                    console.log('requestStore',records)
+                }
+            });
+            */
+        }
     },
 
     launch: function () {
@@ -93,18 +106,15 @@ Ext.define('LineChat.Application', {
                 */
                 //console.log(LineChat.app.info)
                 var messagePanel = me.getMainView().down("form[reference=roomInfoForm]")
-                //console.log(messagePanel)
-                messagePanel.getHeader().add([{
-                    xtype : 'label',
-                    style : {
-                        color : 'white'
-                    },
-                    text : result.line_name
-                }])
-                var params = Ext.urlDecode(window.location.search.substring(1));
-                console.log("prams Application",params)
-                if (params.page == 'listMessageByContactId') {
-                    me.listMessageByContactId(params);
+                if (messagePanel) {
+                    //console.log(messagePanel)
+                    messagePanel.getHeader().add([{
+                        xtype : 'label',
+                        style : {
+                            color : 'white'
+                        },
+                        text : result.line_name
+                    }])
                 }
             	LineChat.app.hideMask();
             },

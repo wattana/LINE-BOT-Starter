@@ -61,7 +61,7 @@ namespace Line.WebService.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to แก้ไขใบงาน.
+        ///   Looks up a localized string similar to LINE.
         /// </summary>
         internal static string editRequest {
             get {

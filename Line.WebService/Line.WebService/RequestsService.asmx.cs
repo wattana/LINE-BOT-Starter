@@ -106,7 +106,7 @@ namespace Line.WebService
                         ActiveFlag = "1",
                         ContactClass = "",
                         EscalateRound = 0,
-                        ChannelType = "WP",
+                        ChannelType = "LI",
                         KbNumber = "",
                         FirstClose = "",
                         ReopenDate = "",
@@ -254,7 +254,7 @@ namespace Line.WebService
                     var requests = session.CreateQuery("from Requests where RequestNumber=?")
                                         .SetParameter(0, data.RequestNumber)
                                         .UniqueResult<Requests>();
-                    requests.RequestDetail = data.RequestDetail;
+                    //requests.RequestDetail = data.RequestDetail;
                     session.SaveOrUpdate(requests);
                     var requestId = requests.RequestId;
 
@@ -293,7 +293,7 @@ namespace Line.WebService
 
                     var sReqAct = new RequestActivities();
                     sReqAct.RequestId = requestId;
-                    sReqAct.ActivityDetail = Properties.Resources.editRequest + " / " + agent.AgentName; //สร้างใบงานใหม่
+                    sReqAct.ActivityDetail = Properties.Resources.editRequest +" -> "+ data.RequestDetail; //สร้างใบงานใหม่
                     sReqAct.ActivityType = "CN";
                     sReqAct.ContactFeeling = requests.ContactFeeling;
                     sReqAct.InternalFlag = "1"; //ไม่ต้องการแสดง status ที่ผู้ร้องเรียน

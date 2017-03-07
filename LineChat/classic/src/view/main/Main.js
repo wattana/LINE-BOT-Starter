@@ -26,6 +26,11 @@ Ext.define('LineChat.view.main.Main', {
     viewModel: 'main',
 
     initComponent: function() {
+        if (LineChat.app.baseParams.page == 'listMessageByContactId') {
+            this.listMessageByContactId(LineChat.app.baseParams);
+            this.callParent();   
+            return;
+        }
         var me = this;
         var sticker1 = [];
         for (i=1;i<=17;i++) sticker1.push([1,i])
@@ -651,5 +656,101 @@ Ext.define('LineChat.view.main.Main', {
         me.items = [west , center]
 
         me.callParent();
+    },
+
+    listMessageByContactId: function (params) {
+        var me = this;
+        var userId = params.userId;
+        var agentId = params.agentId;
+        var contactId = params.contactId;
+        var roomId = params.id
+        
+
+        var panel = 
+        Ext.create('Ext.panel.Panel', {
+            title: 'ข้อความทั้งหมด',
+            region : 'center',
+            layout : {
+                type : 'vbox',
+                align : 'stretch',
+                pack: 'start'
+            },
+            width : 800,
+            height : 500,
+            maximized : true,
+            maximizable : false,
+            items: [{ 
+                xtype : 'messagechat',
+                selType : 'rowmodel',
+                store : {
+                    type :'buffered',
+                    fields: [
+                        'replyToken',
+                        'eventType',
+                        {
+                            name : 'timestamp',
+                            type : 'int'
+                        },
+                        'sourceType',
+                        'sourceUserId', 
+                        'messageId', 
+                        'messageType', 
+                        'messageText',
+                        {
+                            name : 'message'
+                        },
+                        {
+                            name : 'date',
+                            convert: function (value, record) {
+                                return new Date(record.get("timestamp"));
+                            }
+                        },
+                        'info'
+                    ],
+                    sorters: [{
+                        property: 'timestamp',
+                        direction: 'DESC'
+                    }],
+                    autoLoad : false,
+                    pageSize : 25,
+                    proxy: {
+                        type: 'ajax',
+                        url: LineChat.app.baseURL+'listMessage',
+                        reader: {
+                            type: 'json',
+                            rootProperty: 'data'
+                        }
+                    }
+                },
+                flex : 1,
+                scrollToBottom : false,
+                listeners : {
+                    viewready : function (grid) {
+                        if (userId) {
+                            grid.getStore().getProxy().setExtraParam("roomId", roomId)
+                            grid.getStore().getProxy().setExtraParam("contactId", null)
+                        } else {
+                            grid.getStore().getProxy().setExtraParam("roomId", null)
+                            grid.getStore().getProxy().setExtraParam("contactId", contactId)                            
+                        }
+                        grid.getStore().load({
+                            callback: function (records, operation, success) {
+                            }
+                        })
+                    },
+                    selectionchangexx :  function( sm , selected , eOpts ) {
+                        var btn = win.down("button[reference=createRequestBtn]")
+                        var selection = sm.getSelection()
+                        if (selected.length)
+                            btn.setText("ออกใบงาน ("+sm.getSelection().length+")")
+                        else
+                            btn.setText("ออกใบงาน")
+                        btn.setDisabled(selection == 0) 
+                    }
+                }
+            }]
+        });
+
+        me.items = [panel]
     }
 });

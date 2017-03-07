@@ -428,13 +428,13 @@ app.get("/", function (req, res) {
 
 app.get("/index.html", 
   function (req, res, next){
-    if (req.isAuthenticated()) {
-      return next();
-    } 
     if (req.query.agentId) {
       res.redirect('/login/authenticate?username=agentId:'+req.query.agentId+"&password=@@@@autologin@@@@");
       return;
     }
+    if (req.isAuthenticated()) {
+      return next();
+    } 
     res.redirect('/login.html');
   },
   function (req, res) {
@@ -1479,8 +1479,9 @@ app.get('/listContactTree',function (req, res) {
         //console.log("being")
         var request = new DbRequest(
         "SELECT chat_room.contact_id as contactId, contacts.name as displayName ,max(chat_room.updatetime) as updatetime"+ 
-          " FROM line_chat_room chat_room, contacts "+
+          " FROM line_chat_room chat_room, contacts ,line_contacts "+
           "Where chat_room.contact_id = contacts.contact_id and chat_room.contact_id is not null"+
+          " and line_contacts.line_id = chat_room.userId and line_contacts.active_flag='1'"+
             ((req.query.query) ? " and contacts.name like @query ":"") +
           " group by  chat_room.contact_id, contacts.name", 
         function(err, rowCount , row) {
