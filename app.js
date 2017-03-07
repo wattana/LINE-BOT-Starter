@@ -2071,7 +2071,8 @@ app.get('/listContactPerson',function (req, res) {
           console.log(err)
           return;
       }
-      var request = new DbRequest("SELECT count(*) as total FROM contact_persons where active_flag='1'", 
+      var request = new DbRequest("SELECT count(*) as total FROM contact_persons where active_flag='1'"
+                      +((req.query.query) ? " and person_name like @query ":""), 
         function(err, rowCount , row) {
           if (err) {
               db.close();
@@ -2083,7 +2084,9 @@ app.get('/listContactPerson',function (req, res) {
           } else {   
               var request = new DbRequest(
                 "SELECT contact_id, contact_person_id, person_code, person_name, email_addr "+
-                "FROM contact_persons where active_flag='1' order by person_name "+
+                "FROM contact_persons where active_flag='1' "+
+                ((req.query.query) ? " and person_name like @query ":"")+
+                "order by person_name "+
                 "OFFSET @start ROWS FETCH FIRST @limit ROWS ONLY", 
                 function(err, rowCount , row) {
                   db.close();
@@ -2109,9 +2112,9 @@ app.get('/listContactPerson',function (req, res) {
                   });
                   messages.push(record)
                 });
+                if (req.query.query) request.addParameter('query', TYPES.NVarChar, '%'+req.query.query+'%');
                 request.addParameter('start', TYPES.Int, req.query.start);
                 request.addParameter('limit', TYPES.Int, req.query.limit);
-
                 db.execSql(request);
           }
       })
@@ -2120,6 +2123,7 @@ app.get('/listContactPerson',function (req, res) {
             total = column.value
           });
       });
+      if (req.query.query) request.addParameter('query', TYPES.NVarChar, '%'+req.query.query+'%');
       db.execSql(request);
   })
 });

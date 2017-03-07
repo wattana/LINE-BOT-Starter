@@ -7,6 +7,35 @@ Ext.define('LineChat.view.main.UserListController', {
         console.log(record)
         var me = this;
         if (!this.contactPersonWin) {
+            var store = Ext.create("Ext.data.BufferedStore",{
+                fields: [
+                    'request_id',
+                    'request_number',
+                    'contact_id',
+                    {
+                        name: 'request_detail',
+                        convertxx: function (value, record) {
+                            console.log(value)
+                            return value.replace("\n","<br/>")
+                        }
+                    },
+                    {
+                        name: 'open_date',
+                        type: 'date',
+                        dateFormat:"YmdHis"
+                    }
+                ],
+                autoLoad : true,
+                pageSize : 25,
+                proxy: {
+                    type: 'ajax',
+                    url: LineChat.app.baseURL+'listContactPerson',
+                    reader: {
+                        type: 'json',
+                        rootProperty: 'data'
+                    }
+                }
+            });
             var win=
                 Ext.create('Ext.window.Window', {
                 title: 'User Dummy',
@@ -185,39 +214,10 @@ Ext.define('LineChat.view.main.UserListController', {
                         items: {
                             flex: 1,
                             xtype: 'searchfield',
-                            store: 'ContactTree'
+                            store: store
                         }
                     }],
-                    store : {
-                        type :'buffered',
-                        fields: [
-                            'request_id',
-                            'request_number',
-                            'contact_id',
-                            {
-                                name: 'request_detail',
-                                convertxx: function (value, record) {
-                                    console.log(value)
-                                    return value.replace("\n","<br/>")
-                                }
-                            },
-                            {
-                                name: 'open_date',
-                                type: 'date',
-                                dateFormat:"YmdHis"
-                            }
-                        ],
-                        autoLoad : true,
-                        pageSize : 25,
-                        proxy: {
-                            type: 'ajax',
-                            url: LineChat.app.baseURL+'listContactPerson',
-                            reader: {
-                                type: 'json',
-                                rootProperty: 'data'
-                            }
-                        }
-                    },
+                    store : store,
                     columns: [
                         { text: 'รหัส',  dataIndex: 'person_code', width:120 },
                         { text: 'ชื่อ', dataIndex: 'person_name', flex: 1 }
