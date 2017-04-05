@@ -1291,9 +1291,14 @@ app.get('/listRoom',function (req, res) {
           return;
       }
       var request = new DbRequest(
-        "SELECT id, sourceType,userId ,contact_id, contact_person_id, displayName, pictureUrl,"+ 
-        "statusMessage, messageType, message ,createtime, updatetime, unread, active_flag FROM line_chat_room "+
-        "where contact_id is not null and active_flag='1' and sourceType='user'", 
+        "SELECT id, person_name as personName, sourceType,userId ,line_chat_room.contact_id, "+
+        "line_chat_room.contact_person_id, displayName, pictureUrl,"+ 
+        "statusMessage, messageType, message ,createtime, "+
+        "updatetime, unread, line_chat_room.active_flag "+
+        "FROM line_chat_room ,contact_persons "+
+        "where line_chat_room.contact_person_id = contact_persons.contact_person_id "+
+        "and line_chat_room.contact_id is not null and line_chat_room.active_flag='1' "+
+        "and line_chat_room.sourceType='user'", 
         function(err, rowCount , row) {
           db.close();
           if (err) {
@@ -1509,9 +1514,12 @@ app.get('/listContactTree',function (req, res) {
       db.on('connect', function(err) {
           var children = []
           var request = new DbRequest(
-            "SELECT id AS id, sourceType,userId ,contact_id, contact_person_id, displayName, pictureUrl,"+ 
-            "statusMessage, messageType, message ,createtime, updatetime, active_flag FROM line_chat_room "+
-            "where active_flag='1' and contact_id = @contactId", 
+            "SELECT id AS id, sourceType,userId ,line_chat_room.contact_id, line_chat_room.contact_person_id, "+
+            "displayName, pictureUrl, person_name as personName, "+ 
+            "statusMessage, messageType, message ,createtime, updatetime, line_chat_room.active_flag "+
+            "FROM line_chat_room, contact_persons "+
+            "where line_chat_room.contact_person_id = contact_persons.contact_person_id "+
+            "and line_chat_room.active_flag='1' and line_chat_room.contact_id = @contactId", 
             function(err, rowCount , row) {
               db.close();
               if (err) {
@@ -2804,9 +2812,12 @@ function unFollowHandler(db ,data , cb) {
 
 function contactRoom (db , contact, callback ,cbx) {
     var request = new DbRequest(
-      "SELECT id AS id, sourceType,userId ,contact_id, contact_person_id, displayName, pictureUrl,"+ 
-      "statusMessage, messageType, message ,createtime, updatetime, active_flag FROM line_chat_room "+
-      "where active_flag='1' and contact_id = @contactId", 
+      "SELECT id AS id, sourceType,userId ,line_chat_room.contact_id, line_chat_room.contact_person_id, "+
+      "displayName, pictureUrl, person_name as personName, "+ 
+      "statusMessage, messageType, message ,createtime, updatetime, line_chat_room.active_flag "+
+      "FROM line_chat_room, contact_persons "+
+      "where line_chat_room.contact_person_id = contact_persons.contact_person_id "+
+      "and line_chat_room.active_flag='1' and line_chat_room.contact_id = @contactId", 
       function(err, rowCount , row) {
         if (err) {
           console.log("select line_chat_room error ",err);
@@ -2949,9 +2960,11 @@ function createRoom(db, room, messageEv, cb) {
                   "line_contacts.contact_person_id , "+
                   "line_contacts.line_id ,"+
                   "line_contacts.line_name, "+
+                  "contact_persons.person_name, "+
                   "contacts.name as contactName "+
-                  "FROM line_contacts, contacts "+
+                  "FROM line_contacts, contacts, contact_persons "+
                   "where line_contacts.contact_id = contacts.contact_id "+
+                  "and line_contacts.contact_person_id = contact_persons.contact_person_id "+
                   "and line_contacts.line_id = @line_id "+
                   "and line_contacts.active_flag='1'",
                 function(err, rowCount , row) {
@@ -3091,6 +3104,7 @@ function createRoom(db, room, messageEv, cb) {
                       sourceType : messageEv.source.type,
                       sourceUserId: messageEv.source.userId,
                       displayName : result.displayName,
+                      personName : room.person_name,
                       pictureUrl : result.pictureUrl ,
                       statusMessage : result.statusMessage ,
                       message : messageEv.message ,

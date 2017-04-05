@@ -22,6 +22,7 @@ Ext.define('LineChat.view.main.MainController', {
             //console.log("newroom",data);
             Ext.getStore("User").load() 
             //Ext.getStore("ContactTree").load() 
+            me.reloadContactTree(data);
             me.addChatRoom(data)
         });
         socket.on('message', function (data) {

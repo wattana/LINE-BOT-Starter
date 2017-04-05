@@ -36,7 +36,7 @@ Ext.define('LineChat.view.main.ContactTree', {
                     '<i title="Delete" class="fa fa-minus-circle delete-btn" aria-hidden="true" style="font-size: 26px;float: right;color: orangered;"></i>',
                 '</div>',
                 '<div class="chat-message" style="padding:3px;">',
-                    '<span class="chat-by-name" style="margin-right: 2px">{displayName}</span>',
+                    '<span class="chat-by-name" style="margin-right: 2px">{[this.getDisplayName(values)]}</span>',
                     '<div class="chat-message">',
                         '<span class="chat-by-name" style="margin-right: 2px">{[this.getMessage(values)]} </span>',
                     '</div>',
@@ -52,6 +52,9 @@ Ext.define('LineChat.view.main.ContactTree', {
                         }
                     }
                     return Ext.String.ellipsis(message.messageText, 30)
+                },
+                getDisplayName : function (message) {
+                    return Ext.String.ellipsis(message.personName||message.displayName, 30)
                 },
                 statusColor: function (waitFlag, talkDatetime) {
                     if (waitFlag == '1') {

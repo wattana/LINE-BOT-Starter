@@ -28,7 +28,7 @@ Ext.define('LineChat.view.main.RoomList', {
                     '<div style="float:left;margin-right: 8px;color:gray">',
                         '<img src="{pictureUrl}/small" title="{displayName}">',
                     '</div>',
-                    '<span class="chat-by-name" style="margin-right: 2px">{displayName}</span>',
+                    '<span class="chat-by-name" style="margin-right: 2px">{[this.getDisplayName(values)]}</span>',
                     '<div class="chat-message">',
                         '<span class="chat-by-name" style="margin-right: 2px">{[this.getMessage(values)]} </span>',
                     '</div>',
@@ -44,6 +44,9 @@ Ext.define('LineChat.view.main.RoomList', {
                         }
                     }
                     return Ext.String.ellipsis(message.messageText, 50)
+                },
+                getDisplayName : function (message) {
+                    return Ext.String.ellipsis(message.personName||message.displayName, 30)
                 },
                 statusColor: function (waitFlag, talkDatetime) {
                     if (waitFlag == '1') {
@@ -91,18 +94,18 @@ Ext.define('LineChat.view.main.RoomList', {
             }
         );
         var talkerTpl = Ext.create('Ext.XTemplate',
-        '<div class="chat-room-item ">',                
-            '<div style="float:left;margin-right: 8px;color:gray">',
-                '<tpl if="imgUrl == \'\'">',
-                    '<i class="fa fa-user fa-2x"></i>',
-                '<tpl else>',
-                    '<img src="{pictureUrl}/small" title="{createBy}">',
-                '</tpl>',
-            '</div>',
-            '<div class="chat-message">',
-                '<span class="chat-by-name" style="margin-right: 2px">{displayName} </span>',
-            '</div>',
-        '</div>');
+            '<div class="chat-room-item ">',                
+                '<div style="float:left;margin-right: 8px;color:gray">',
+                    '<tpl if="imgUrl == \'\'">',
+                        '<i class="fa fa-user fa-2x"></i>',
+                    '<tpl else>',
+                        '<img src="{pictureUrl}/small" title="{createBy}">',
+                    '</tpl>',
+                '</div>',
+                '<div class="chat-message">',
+                    '<span class="chat-by-name" style="margin-right: 2px">{displayName} </span>',
+                '</div>',
+            '</div>');
 
         me.columns = [
             { 
