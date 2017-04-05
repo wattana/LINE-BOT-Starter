@@ -122,7 +122,7 @@ Ext.define('LineChat.view.main.Main', {
                 }
             },
             items: [{
-                title: 'Contact',
+                title: 'Customer',
                 iconCls: 'fa-users',
                 layout: 'fit',
                 items: [{

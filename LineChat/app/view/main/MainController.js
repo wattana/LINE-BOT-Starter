@@ -19,16 +19,18 @@ Ext.define('LineChat.view.main.MainController', {
         var socket = io(socketUrl);
         this.socket = socket;
         socket.on('newroom', function (data) {
-            console.log("newroom",data);
-            socket.emit('my other event', { my: 'data' });
+            //console.log("newroom",data);
+            Ext.getStore("User").load() 
+            Ext.getStore("ContactTree").load() 
+            //socket.emit('my other event', { my: 'data' });
             me.addChatRoom(data)
         });
         socket.on('message', function (data) {
-            console.log('message', data);
+            //console.log('message', data);
             me.addMessage(data)
         });
         socket.on('contactMessage', function (data) {
-            console.log('contact message', data);
+            //console.log('contact message', data);
             me.addContactMessage(data)
         });
         socket.on('follow', function (data) {
@@ -42,6 +44,23 @@ Ext.define('LineChat.view.main.MainController', {
             Ext.getStore("User").load() 
             Ext.getStore("ContactTree").load() 
             Ext.getStore("Room").load() 
+        });
+        socket.on('disableRoom', function (data) {
+            Ext.getStore("ContactTree").load() 
+            var chatRoomGrid = me.getView().down('roomlist')
+            var roomRecord = chatRoomGrid.getStore().findRecord("id", data.roomId)
+            chatRoomGrid.getStore().remove(roomRecord)
+            me.setChatUnreadCnt()
+        });
+        socket.on('messageReaded', function (data) {
+            //console.log('messageReaded', data);
+            var roomInfo = me.getView().getReferences().roomInfoForm;
+            if (data.roomId != roomInfo.down("hidden[name=id]").getValue()) {
+                var chatRoomGrid = me.getView().down('roomlist')
+                var roomRecord = chatRoomGrid.getStore().findRecord("id", data.roomId)
+                chatRoomGrid.getStore().remove(roomRecord)
+                me.setChatUnreadCnt()
+            }
         });
     },
 
@@ -60,8 +79,19 @@ Ext.define('LineChat.view.main.MainController', {
     },
 
     talkingWith: function (view, record, item, index, e, options) {
-        if (e && e.getTarget('div.x-delete-btn')) return;
         var me = this;
+        if (e && e.getTarget('i.delete-btn')){
+            Ext.Msg.confirm('Confirm','ยืนยันทำรายการลบข้อมูล',function(btn){
+                //console.log("confirm",btn)
+                if (btn == 'yes') {
+                    me.socket.emit('disableRoom',
+                    {
+                        roomId : record.get('id')
+                    });
+                }
+            })
+            return;
+        } 
         this.getView().getReferences().center.enable()
         var roomInfo = this.getView().getReferences().roomInfoForm;
         roomInfo.reset();
@@ -267,9 +297,13 @@ Ext.define('LineChat.view.main.MainController', {
         if (roomRecord) {
             var grid = this.getView().down('messagechat')
             var updatetime = new Date(parseInt(chatMessage.timestamp));
-            roomRecord.set("updatetime", chatMessage.timestamp)
-            roomRecord.set("talkDatetime", updatetime)
-            roomRecord.set("message", chatMessage.messageText)
+            roomRecord.set({
+                updatetime : chatMessage.timestamp,
+                talkDatetime : updatetime,
+                message : chatMessage.messageText,
+                messageText : chatMessage.messageText,
+                sourceType : chatMessage.sourceType
+            });
             //console.log('roomRecord',roomRecord)
             
             if (roomRecord.get("id") == roomInfo.down("hidden[name=id]").getValue()) {

@@ -195,11 +195,42 @@ io.on('connection', function(socket){
   socket.on('pushMessage', onPushMessage);
   socket.on('pushContactMessage', onPushContactMessage);
   socket.on('messageReaded', onMessageReaded);
+  socket.on('disableRoom', onDisableRoom);
 });
+
+function onDisableRoom (data) {
+    console.log('onDisableRoom',data)
+    //console.log("###############------- ############## wat")
+    var db = new Connection(dbConfig);
+    db.on('connect', function(err) {
+        if (err) {
+            console.log(err)
+            return;
+        }
+        var request = new DbRequest(
+           "update line_chat_room set "+
+              "active_flag = '0' "+
+              "WHERE id = @roomId and active_flag='1'",
+          function(err, rowCount , row) {
+            db.close();
+            if (err) {
+              console.log("UpdateRoom error ",err);
+              throw err;
+            }
+            io.emit('disableRoom', {
+              id : data.roomId,
+              roomId : data.roomId
+            });
+          });
+          request.addParameter('roomId', TYPES.Int, data.roomId);
+          db.execSql(request);   
+    });
+              
+}
 
 function onPushMessage (data) {
   //var message = '{"to": +'+data.sourceUserId+',"messages":[{"type":"text","text":'+data.message.text+'}]}'
-  //console.log(data, message)
+  console.log('onPushMessage',data)
   var args = {
     headers: { 
         "Authorization": token,
@@ -377,6 +408,10 @@ function onMessageReaded (data) {
                   console.log("UpdateRoom error ",err);
                   throw err;
                 }
+                io.emit('messageReaded', {
+                    id : data.roomId,
+                    roomId : data.roomId
+                });
             });
             request.addParameter('roomId', TYPES.Int, data.roomId);
             db.execSql(request);
@@ -1257,7 +1292,7 @@ app.get('/listRoom',function (req, res) {
       var request = new DbRequest(
         "SELECT id, sourceType,userId ,contact_id, contact_person_id, displayName, pictureUrl,"+ 
         "statusMessage, messageType, message ,createtime, updatetime, unread, active_flag FROM line_chat_room "+
-        "where contact_id is not null and active_flag='1'", 
+        "where contact_id is not null and active_flag='1' and sourceType='user'", 
         function(err, rowCount , row) {
           db.close();
           if (err) {
@@ -1482,6 +1517,7 @@ app.get('/listContactTree',function (req, res) {
           " FROM line_chat_room chat_room, contacts ,line_contacts "+
           "Where chat_room.contact_id = contacts.contact_id and chat_room.contact_id is not null"+
           " and line_contacts.line_id = chat_room.userId and line_contacts.active_flag='1'"+
+          " and chat_room.active_flag='1'"+
             ((req.query.query) ? " and contacts.name like @query ":"") +
           " group by  chat_room.contact_id, contacts.name", 
         function(err, rowCount , row) {
@@ -2733,7 +2769,7 @@ function contactRoom (db , contact, callback ,cbx) {
     var request = new DbRequest(
       "SELECT id AS id, sourceType,userId ,contact_id, contact_person_id, displayName, pictureUrl,"+ 
       "statusMessage, messageType, message ,createtime, updatetime, active_flag FROM line_chat_room "+
-      "where contact_id = @contactId", 
+      "where active_flag='1' and contact_id = @contactId", 
       function(err, rowCount , row) {
         if (err) {
           console.log("select line_chat_room error ",err);
@@ -2751,6 +2787,7 @@ function contactRoom (db , contact, callback ,cbx) {
         });
         record.contactId = record.contact_id, 
         record.contactPersonId = record.contact_person_id,
+        record.messageText = record.message ,
         record.icon = record.pictureUrl+"/small" ,
         record.cls = 'leaf-icon',
         record.leaf = true
@@ -3142,7 +3179,7 @@ function updateRoom(db, room, messageEv, cb) {
               ",unread = unread+1 "+
               ",sourceType = @sourceType "+
               ",updatetime = @updatetime "+
-              "WHERE userId = @userId and active_flag='1'",
+              "WHERE id = @roomId and active_flag='1'",
               function(err, rowCount , row) {
                 if (err) {
                   console.log("UpdateRoom error ",err);
@@ -3182,7 +3219,7 @@ function updateRoom(db, room, messageEv, cb) {
               request.addParameter('message', TYPES.NVarChar, messageText);
               request.addParameter('sourceType', TYPES.NVarChar, messageEv.source.type);
               request.addParameter('updatetime', TYPES.BigInt, messageEv.timestamp);
-              request.addParameter('userId', TYPES.VarChar, messageEv.source.userId);
+              request.addParameter('roomId', TYPES.Int, room.id);
               db.execSql(request);   
 
       /*              

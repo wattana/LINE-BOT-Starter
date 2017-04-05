@@ -2,7 +2,10 @@ Ext.define('LineChat.store.Room', {
     extend: 'Ext.data.Store',
 
     alias: 'store.room',
-
+    sorters: [{
+         property: 'updatetime',
+         direction: 'DESC'
+    }],
     fields: [
         'id',
         'userId',

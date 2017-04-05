@@ -23,6 +23,81 @@ Ext.define('LineChat.view.main.ContactTree', {
     initComponent: function() {
         var me = this;
         this.width = 600;
+        var talkerWithTpl = Ext.create('Ext.XTemplate',
+            '<div class="chat-room-item" style="position: absolute;top: 0px;width: 403px;left: 100px;">',
+                '<div class="chat-message" style="padding:3px;float:right">',
+                    '<div style="float:left;margin-right: 1px;color:{[this.statusColor(values.waitFlag,values.talkDatetime)]}">',
+                        '<i class="fa fa-comment fa-lg"></i>',
+                    '</div>',
+                    '<div class="chat-datetime">{[this.elapsed(values.waitFlag,values.talkDatetime,values.joinDatetime)]}</div>',
+                    '<tpl if="unread &gt; 0">',
+                        '<span class="chat-by-name x-tab-badgeCls" style="top: 25px;right: 29px;">{unread}</span>',
+                    '</tpl>',
+                    '<i title="Delete" class="fa fa-minus-circle delete-btn" aria-hidden="true" style="font-size: 26px;float: right;color: orangered;"></i>',
+                '</div>',
+                '<div class="chat-message" style="padding:3px;">',
+                    '<span class="chat-by-name" style="margin-right: 2px">{displayName}</span>',
+                    '<div class="chat-message">',
+                        '<span class="chat-by-name" style="margin-right: 2px">{[this.getMessage(values)]} </span>',
+                    '</div>',
+                '</div>',
+            '</div>',
+            {
+                getMessage : function (message) {
+                    if (message.messageType != 'text') {
+                        if (message.sourceType == 'agent') {
+                            return Ext.String.ellipsis("You "+message.messageText, 30)
+                        } else {
+                            return Ext.String.ellipsis(message.displayName+" "+message.messageText, 30)
+                        }
+                    }
+                    return Ext.String.ellipsis(message.messageText, 30)
+                },
+                statusColor: function (waitFlag, talkDatetime) {
+                    if (waitFlag == '1') {
+                        return 'gray'
+                    } else {
+                        var minutes = Ext.Date.getElapsed(talkDatetime) / 60000
+                        if (minutes <= 3) {
+                            return "green"
+                        } else if (minutes <= 5) {
+                            return "orange"
+                        }
+                    }
+                    return 'red'
+                },
+                elapsed: function (waitFlag, talkDatetime, joinDatetime) {
+                    if (waitFlag == '1') {
+                        return 'Wait'
+                    }
+                    var seconds = Math.floor(Ext.Date.getElapsed(talkDatetime || joinDatetime) / 1000)
+
+                    var interval = Math.floor(seconds / 31536000);
+
+                    if (interval >= 1) {
+                        return interval + " years ago";
+                    }
+                    interval = Math.floor(seconds / 2592000);
+                    if (interval >= 1) {
+                        return interval + " months ago";
+                    }
+                    interval = Math.floor(seconds / 86400);
+                    if (interval >= 1) {
+                        return interval + " days ago";
+                    }
+                    interval = Math.floor(seconds / 3600);
+                    if (interval >= 1) {
+                        return interval + " hours ago";
+                    }
+                    interval = Math.floor(seconds / 60);
+                    if (interval >= 1) {
+                        return interval + " minutes ago";
+                    }
+                    if (interval == 0) return "Now";
+                    return Math.floor(seconds) + " seconds ago";
+                }
+            }
+        );
         this.tbarx = [{
             text : 'test',
             handler : function () {
@@ -38,6 +113,35 @@ Ext.define('LineChat.view.main.ContactTree', {
             items: {
                 flex: 1,
                 xtype: 'searchfield',
+                onFieldMutation: function(e) {
+                    var me = this,
+                    key = e.getKey(),
+                    isDelete = key === e.BACKSPACE || key === e.DELETE,
+                    rawValue = me.inputEl.dom.value,
+                    len = rawValue.length;
+                    if (me.doQueryTask) {
+                        me.doQueryTask = new Ext.util.DelayedTask(me.doRawQuery, me);
+                    }
+                    if (!me.readOnly && (rawValue !== me.lastMutatedValue || isDelete) && key !== e.TAB) {
+                        me.lastMutatedValue = rawValue;
+                        me.lastKey = key;
+                        if (len && (e.type !== 'keyup' || (!e.isSpecialKey() || isDelete))) {
+                            me.doQueryTask.delay(me.queryDelay);
+                        }
+                    }
+                },
+                doRawQuery : function () {
+                    var me = this,
+                    query = me.inputEl.dom.value;
+                    if (query.length >= 3) {
+                        me.onSearchClick()
+                    }
+                },
+                listeners : {
+                    afterrender :function ( me , eOpts ) {
+                        me.doQueryTask = new Ext.util.DelayedTask(me.doRawQuery, me);
+                    }
+                },
                 store: 'ContactTree'
             }
         }]
@@ -259,13 +363,13 @@ Ext.define('LineChat.view.main.ContactTree', {
                 flex: 1,
                 sortable: true,
                 dataIndex: 'displayName',
-                rendererx: function (value, metaData, record, rowIndex, colIndex, store) {
-                    console.log('wat',value)
-                    // style the cell differently depending on how the value relates to the
-                    // average of all values
-                    var average = store.average('grades');
-                    metaData.tdCls = (value < average) ? 'needsImprovement' : 'satisfactory';
-                    return value+"-<br/>"+record.get("user");
+                renderer: function (value, metaData, record, rowIndex, colIndex, store) {
+                    //console.log('wat',record)
+                    if (record.get("leaf")) {
+                        metaData.style="min-height: 50px;"
+                        return talkerWithTpl.apply(record.data)
+                    }
+                    return value;
                 }
             }]
         });
