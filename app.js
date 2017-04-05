@@ -219,7 +219,8 @@ function onDisableRoom (data) {
             }
             io.emit('disableRoom', {
               id : data.roomId,
-              roomId : data.roomId
+              roomId : data.roomId,
+              contactId : data.contactId
             });
           });
           request.addParameter('roomId', TYPES.Int, data.roomId);
@@ -1503,6 +1504,41 @@ app.get('/listContactRoom',function (req, res) {
 
 app.get('/listContactTree',function (req, res) {
   //console.log(req)
+  if (req.query.node != 'root') {
+      var db = new Connection(dbConfig);
+      db.on('connect', function(err) {
+          var children = []
+          var request = new DbRequest(
+            "SELECT id AS id, sourceType,userId ,contact_id, contact_person_id, displayName, pictureUrl,"+ 
+            "statusMessage, messageType, message ,createtime, updatetime, active_flag FROM line_chat_room "+
+            "where active_flag='1' and contact_id = @contactId", 
+            function(err, rowCount , row) {
+              db.close();
+              if (err) {
+                console.log("select line_chat_room error ",err);
+              } 
+              res.json(children);     
+          });
+          request.on('row', function(columns) {
+              //console.log('-------------------',columns[0])
+              var record = {};
+              columns.forEach(function(column) {
+                record[column.metadata.colName] = column.value
+              });
+              record.contactId = record.contact_id, 
+              record.contactPersonId = record.contact_person_id,
+              record.messageText = record.message ,
+              record.icon = record.pictureUrl+"/small" ,
+              record.cls = 'leaf-icon',
+              record.leaf = true
+              children.push(record)
+          });
+
+          request.addParameter('contactId', TYPES.VarChar, req.query.node);
+          db.execSql(request);  
+      });
+      return;
+  }
   var messages = {
     text : ".",
     "children": []
@@ -1535,6 +1571,7 @@ app.get('/listContactTree',function (req, res) {
           columns.forEach(function(column) {
             record[column.metadata.colName] = column.value
           });
+          record.id=record.contactId
           messages.children.push(record)
         });
         if (req.query.query) request.addParameter('query', TYPES.NVarChar, '%'+req.query.query+'%');

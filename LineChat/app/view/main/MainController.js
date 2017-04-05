@@ -21,8 +21,7 @@ Ext.define('LineChat.view.main.MainController', {
         socket.on('newroom', function (data) {
             //console.log("newroom",data);
             Ext.getStore("User").load() 
-            Ext.getStore("ContactTree").load() 
-            //socket.emit('my other event', { my: 'data' });
+            //Ext.getStore("ContactTree").load() 
             me.addChatRoom(data)
         });
         socket.on('message', function (data) {
@@ -36,17 +35,17 @@ Ext.define('LineChat.view.main.MainController', {
         socket.on('follow', function (data) {
             //me.addContactMessage(data)
             Ext.getStore("User").load() 
-            Ext.getStore("ContactTree").load() 
+            //Ext.getStore("ContactTree").load() 
             Ext.getStore("Room").load() 
         });
         socket.on('unfollow', function (data) {
             //me.addContactMessage(data)
             Ext.getStore("User").load() 
-            Ext.getStore("ContactTree").load() 
+            //Ext.getStore("ContactTree").load() 
             Ext.getStore("Room").load() 
         });
         socket.on('disableRoom', function (data) {
-            Ext.getStore("ContactTree").load() 
+            me.reloadContactTree(data);
             var chatRoomGrid = me.getView().down('roomlist')
             var roomRecord = chatRoomGrid.getStore().findRecord("id", data.roomId)
             chatRoomGrid.getStore().remove(roomRecord)
@@ -62,6 +61,13 @@ Ext.define('LineChat.view.main.MainController', {
                 me.setChatUnreadCnt()
             }
         });
+    },
+    reloadContactTree: function(data)  {
+        var contactStore = Ext.getStore("ContactTree");
+        var record = contactStore.findRecord("contactId", data.contactId)
+        contactStore.load({
+            node : record
+        })
     },
 
     onItemSelected: function (sender, record) {
@@ -86,7 +92,8 @@ Ext.define('LineChat.view.main.MainController', {
                 if (btn == 'yes') {
                     me.socket.emit('disableRoom',
                     {
-                        roomId : record.get('id')
+                        roomId : record.get('id'),
+                        contactId : record.get('contactId')
                     });
                 }
             })
@@ -198,6 +205,7 @@ Ext.define('LineChat.view.main.MainController', {
             contactGrid.getStore().insert(0, tmp)
         }
 
+         me.setChatUnreadCnt()
     },
 
     onSendBtnClick: function (btn) {
@@ -314,7 +322,7 @@ Ext.define('LineChat.view.main.MainController', {
                     roomId : chatMessage.roomId
                 });
             } else {
-                console.log('check is current room ',roomRecord.get("contactId") , chatMessage.contactId)
+                //console.log('check is current room ',roomRecord.get("contactId") , chatMessage.contactId)
                 if (roomRecord.get("contactId") != roomInfo.down("hidden[name=contactId]").getValue()) {
                     roomRecord.set("unread", roomRecord.get("unread")+1);     
                     me.setChatUnreadCnt()

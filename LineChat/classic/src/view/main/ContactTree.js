@@ -101,10 +101,20 @@ Ext.define('LineChat.view.main.ContactTree', {
         this.tbarx = [{
             text : 'test',
             handler : function () {
+                /*
                 var rec = me.getStore().getAt(0);
                 console.log(rec)
                 me.getStore().getAt(0).set("user",'wat')
                 me.getStore().getAt(0).set("task",'task')
+                */
+                var contactStore = Ext.getStore("ContactTree");
+                var record = contactStore.findRecord("contactId", "489057F9-1F48-49B6-9464-BD2247C23642")
+
+                console.log(record)
+                var rootNode = me.getRootNode()
+                me.getStore().load({
+                    node : record
+                })
             }
         }]
         me.dockedItems = [{
