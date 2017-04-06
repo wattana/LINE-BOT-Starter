@@ -66,9 +66,19 @@ Ext.define('LineChat.view.main.MainController', {
     reloadContactTree: function(data)  {
         var contactStore = Ext.getStore("ContactTree");
         var record = contactStore.findRecord("contactId", data.contactId)
-        contactStore.load({
-            node : record
-        })
+        if (record) {
+            contactStore.load({
+                node : record,
+                callback : function (records) {
+                    if (records.length == 0) {
+                         record.drop()
+                    }
+                    //console.log("record after callback", records)
+                }
+            })
+        } else {
+            contactStore.load()
+        }
     },
 
     onItemSelected: function (sender, record) {
