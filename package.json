@@ -28,6 +28,14 @@
       "rowCollectionOnRequestCompletion": false
     }
   },
+  "socialminer": {
+    "enable": false,
+    "enableTesting": false,
+    "socialMinerBaseUrl": "http://scm115.nexentel.com",
+    "chatFeedRefUrl": "http://scm115.nexentel.com/ccp/feed/100060",
+    "agentId": "19b4113c-1ac3-4533-b3e7-352745fcc9ca",
+    "contactId": "FF50CE0C-4119-490A-B1E8-B109571374C8"
+  },
   "token": "Bearer {MVJYNb3LtA+efs7m5jbcxhIEeuMekIwto3kLBtF6qUwpykvpvSqqJSKFuHzDJf5tKklfG+BFSx0zuEAG0zFv8IU+tM8tOTUG0uU0Q3lJ/xWg3shdp/wUnph+j+tvIHRfE1zac0+dCe1tFNFbztgKqQdB04t89/1O/w1cDnyilFU=}",
   "webServiceURL": "http://vm:46233/",
   "webHookBaseURL": "https://imind.ibss.co.th",
@@ -45,11 +53,13 @@
     "node-rest-client": "^2.0.1",
     "passport": "^0.3.2",
     "passport-local": "^1.0.0",
+    "passport-remember-me": "0.0.1",
     "request": "^2.79.0",
     "soap": "^0.18.0",
     "socket.io": "^1.7.2",
     "sqlite3": "^3.1.8",
     "tedious": "^1.14.0",
-    "video-thumb": "0.0.3"
+    "video-thumb": "0.0.3",
+    "xml2js": "^0.4.17"
   }
 }

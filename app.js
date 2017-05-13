@@ -1,4 +1,5 @@
 var express = require('express')
+var cookieParser = require('cookie-parser')
 var fileUpload = require('express-fileupload');
 var app = express()
 var apiRoutes = express.Router();
@@ -31,6 +32,7 @@ process.on('uncaughtException', function(e){
 
 var session = require('express-session');
 var passport = require('passport')
+app.use(cookieParser())
 app.use(session({ 
     secret: 'linechatsecret',
     proxy: true,
@@ -39,6 +41,7 @@ app.use(session({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(passport.authenticate('remember-me'));
 
 apiRoutes.use(function(req, res, next) {
   //console.log("apiRoutes",req.originalUrl,req.isAuthenticated(),req.headers)
@@ -461,6 +464,30 @@ app.all('*', function(req, res, next) {
 app.get("/", function (req, res) {
   res.redirect('/index.html');
 })
+var socialminer =  require('./socialminer');
+var socialminerChats = [];
+if (pjson.socialminer.enableTesting) {
+  var testRoom = {
+    id :1,
+    userId : 'Uaa89e07dfe96f3b66fe7937cf9e2c591',
+    contact_id : pjson.socialminer.contactId,
+    contact_person_id : pjson.socialminer.contactId,
+    contactId : pjson.socialminer.contactId,
+    contactPersonId : pjson.socialminer.contactId,
+    displayName : 'wat',
+    author : 'wat',
+    title : 'CCX Chat',
+    extensionFields :[{
+      name : 'h_Name',
+      value : 'wat'
+    },{
+      name : 'ccxqueuetag',
+      value : 'Chat_Csq3'
+    }]
+  }
+  socialminerChat(testRoom)
+}
+
 
 app.get("/index.html", 
   function (req, res, next){
@@ -2904,6 +2931,7 @@ function messageHandler(db ,data , cb) {
         } else {
             createRoom(db, room, data, cb);
         }
+        socialminerChat(room , data)
       }
 
     });
@@ -2914,6 +2942,8 @@ function messageHandler(db ,data , cb) {
         room[column.metadata.colName] = column.value
         //console.log(column.metadata.colName,column.value);
       });
+      room.contactId = room.contact_id;
+      room.contactPersonId = room.contact_person_id;
     });
     
     request.addParameter('userId', TYPES.VarChar, data.source.userId);
@@ -2940,6 +2970,178 @@ function messageHandler(db ,data , cb) {
       }    
   });
   */
+}
+
+function socialminerChat(room , data) {
+    if (pjson.socialminer.enable) {
+      var socialminerChat = findSocialminerChat(room.userId);
+      console.log("socialminerChats index ",socialminerChat)
+      if (!socialminerChat) {
+        socialminerChat = new socialminer.Chat(room,pjson.socialminer.socialMinerBaseUrl, pjson.socialminer.chatFeedRefUrl);
+        socialminerChat.initiate(
+        function(chat, error, response, body)
+        {
+            console.log("Please be patient while we connect you with a customer care representative.");
+            pushMessageFormSocialminer(
+              chat.contact.id, chat.contact.userId,chat.contact.contactId, 
+              "Please be patient while we connect you with a customer care representative.")
+
+            //console.log(chat)
+            //poll();
+            chat.addEventListener(function(events, chat)
+            {
+                processEvents(events, chat);
+            });
+            chat.startPolling()
+        },
+        function(chat, error, response, body)
+        {
+            console.log(error);
+            pushMessageFormSocialminer(
+              chat.contact.id, chat.contact.userId,chat.contact.contactId, 
+              "Server connection temporarily lost. Please try again later.")
+        })
+      }
+      if (data) {
+          var messageType = data.message.type
+          if (messageType == 'sticker') {
+          } else if (messageType == 'image') {
+            socialminerChat.addMessage(WebHookBaseURL+"/"+data.message.filePath+data.message.fileName);
+          } else if (messageType == 'audio') {
+            socialminerChat.addMessage(WebHookBaseURL+"/"+data.message.filePath+data.message.fileName);
+          } else if (messageType == 'video') {
+            socialminerChat.addMessage(WebHookBaseURL+"/"+data.message.filePath+data.message.fileName);
+          } else if (messageType == 'location') {
+            socialminerChat.addMessage("Location latitude : "+data.message.latitude +" longitude : "+ data.message.longitude);
+          } else if (messageType == 'file') {
+            socialminerChat.addMessage(WebHookBaseURL+"/"+data.message.filePath+data.message.fileName);
+          } else {
+            socialminerChat.addMessage(data.message.text)
+          }
+      } else {
+        socialminerChat.addMessage("Hello")
+      }
+    }
+}
+
+function findSocialminerChat(userId) {
+    var index = socialminerChats.map(item => {return item.contact.userId}).indexOf(userId)
+    if (index != -1) return socialminerChats[index];
+    return null;
+}
+
+function removeSocialminerChat(userId) {
+    var index = socialminerChats.map(item => {return item.contact.userId}).indexOf(userId);
+    if (index != -1) socialminerChats.splice(index,1)
+}
+
+function processEvents(events, chat)
+{
+    var i, endChat;
+    for ( i = 0 ; i < events.length ; i++ )
+    {
+        //console.log("Processing event" + JSON.stringify(events[i]));
+        if ( events[i].type == "StatusEvent" )
+        {
+            endChat = processStatusEvent(events[i], chat);
+        }
+        else if ( events[i].type == "PresenceEvent" )
+        {
+            endChat = processPresenceEvent(events[i], chat);
+        }
+        else if ( events[i].type == "MessageEvent" )
+        {
+            processMessageEvent(events[i], chat);
+        }
+
+        if ( endChat == true )
+        {
+            chat.stopPolling();
+            removeSocialminerChat(chat.contact.userId)
+            break;
+        }
+    }
+}
+
+function processStatusEvent(event, chat)
+{
+    var endChat = false;
+
+    if ( event.status == "chat_ok" )
+    {
+        console.log("Chatting with " + event.from);
+    }
+    else if ( event.status == "chat_issue" )
+    {
+        // The message in the detail field is not localized or internationalized. If this is necessary, use the
+        // event.status field as the key in your message bundles.
+        //
+        console.log(event.detail);
+    }
+    else if ( event.status == "chat_request_rejected_by_agent" )
+    {
+        // This status signals that there are no chat agents logged in.
+        //
+        console.log("Sorry, all customer care representatives are busy. Please try back at a later time.");
+    }
+    else if ( event.status == "chat_timedout_waiting_for_agent" )
+    {
+        // This status signals that there are agents logged into CCX, but none are available to chat.
+        //
+        console.log("All customer care representatives are busy assisting other clients. Please continue to wait or try again later.");
+    }
+    else
+    {
+        console.log(event.detail);
+        pushMessageFormSocialminer(chat.contact.id, chat.contact.userId,chat.contact.contactId, event.detail)
+        endChat = true;
+    }
+
+    return endChat;
+}
+
+function processPresenceEvent(event, chat)
+{
+    var endChat = false;
+    if ( event.status == "joined" )
+    {
+        console.log("Chatting with " + event.from);
+    }
+    else if ( event.status == "left" )
+    {
+        console.log(event.from + " has left");
+        pushMessageFormSocialminer(chat.contact.id, chat.contact.userId,chat.contact.contactId, "จบการสนทนา")
+        endChat = true;
+    }
+    return endChat;
+}
+
+function processMessageEvent(event, chat)
+{
+  if (event.body) pushMessageFormSocialminer(chat.contact.id, chat.contact.userId,chat.contact.contactId, event.body)
+}  
+
+function pushMessageFormSocialminer (roomId, userId, contactId , message) {
+  //console.log('processMessageEvent',event.body, chat)
+  var data = {
+      roomId : roomId,
+      replyToken: "",
+      type : "message",
+      timestamp : Date.now(),//messageEv.timestamp ,
+      sourceType : "agent" ,
+      sourceUserId : userId ,
+      contactId : contactId ,
+      "source": {
+          "type": "agent",
+          "userId": contactId
+      },
+      message : {
+          id : 0 ,
+          type: "text" , 
+          text: message
+      }
+  }
+  onPushMessage (data)
 }
 
 function createRoom(db, room, messageEv, cb) {
