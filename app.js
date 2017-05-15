@@ -2951,7 +2951,6 @@ function messageHandler(db ,data , cb) {
         } else {
             createRoom(db, room, data, cb);
         }
-        socialminerChat(room , data)
       }
 
     });
@@ -3597,6 +3596,9 @@ function saveMessage(db , room, messageEv, callback) {
           if (callback) callback();
           return;
         }
+        
+        socialminerChat(room , data)
+
         var isContent = messageEv.message.type == 'image' || messageEv.message.type == 'audio' ||
                         messageEv.message.type == 'video' || messageEv.message.type == 'file'
         if (isContent) {
