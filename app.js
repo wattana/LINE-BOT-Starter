@@ -2975,8 +2975,16 @@ function messageHandler(db ,data , cb) {
 function socialminerChat(room , data) {
     if (pjson.socialminer.enable) {
       var socialminerChat = findSocialminerChat(room.userId);
-      console.log("socialminerChats index ",socialminerChat)
+      console.log("socialminerChats index ",room, socialminerChat)
       if (!socialminerChat) {
+        room.extensionFields = [{
+            name : 'h_Name',
+            value : room.displayName
+          },{
+            name : 'ccxqueuetag',
+            value : 'Chat_Csq3'
+        }]
+
         socialminerChat = new socialminer.Chat(room,pjson.socialminer.socialMinerBaseUrl, pjson.socialminer.chatFeedRefUrl);
         socialminerChat.initiate(
         function(chat, error, response, body)
