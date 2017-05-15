@@ -3029,6 +3029,7 @@ function socialminerChat(room , data) {
               chat.contact.id, chat.contact.userId,chat.contact.contactId, 
               "Server connection temporarily lost. Please try again later.")
         })
+        socialminerChats.push(socialminerChat);
       }
       if (data) {
           var messageType = data.message.type
