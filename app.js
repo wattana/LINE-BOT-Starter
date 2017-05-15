@@ -3596,8 +3596,8 @@ function saveMessage(db , room, messageEv, callback) {
           if (callback) callback();
           return;
         }
-        
-        socialminerChat(room , data)
+
+        socialminerChat(room , messageEv)
 
         var isContent = messageEv.message.type == 'image' || messageEv.message.type == 'audio' ||
                         messageEv.message.type == 'video' || messageEv.message.type == 'file'
