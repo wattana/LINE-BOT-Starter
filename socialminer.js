@@ -7,22 +7,16 @@ socialminer.chat = function(lineContact,socialMinerBaseUrl, chatFeedRefUrl)
 {
     var request = require('request');
     var parseString = require('xml2js').parseString;
-
-    var contact, cookie, chatUrl, feedRefUrl, go = false, pollHandle = null, lastEventId = 0, eventListeners = [];
-    var messages = [];
-    var messageCount = 0;
-    var eventStatus = null;
+    var chatUrl, feedRefUrl;
 
     chatUrl = socialMinerBaseUrl + "/ccp/chat/";
     feedRefUrl = chatFeedRefUrl;
-    contact = lineContact;
-
     /**
      * Process the set of chat events carried in the given eventXmlStr
      *
      * @param eventXmlStr string containing the set of XML chat events
      */
-    processPoll = function (eventXmlStr)
+    processPoll = function (eventXmlStr, chat)
     {
         //console.log("processPoll",eventXmlStr)
         var i, chatEvents, eventId, event, events = [];
@@ -41,22 +35,22 @@ socialminer.chat = function(lineContact,socialMinerBaseUrl, chatFeedRefUrl)
                         //console.log(" event body -> " + event.body);
                         events.push(event);
                         eventId = parseInt(event.id);
-                        if (event.status) eventStatus = event.status
+                        if (event.status) chat.eventStatus = event.status
                         if ( event.body )
                         {
                             event.body = socialminer.utils.decodeString(event.body[0]);
                         }
-                        if (eventId > lastEventId)
+                        if (eventId > chat.lastEventId)
                         {
-                            lastEventId = eventId;
+                            chat.lastEventId = eventId;
                         }
                     }
                 }
             }
             
             //console.log('envents',eventId, events)
-            processEvents(events);
-            notify(events);
+            processEvents(events, chat);
+            notify(events, chat);
         })
     },
 
@@ -65,15 +59,15 @@ socialminer.chat = function(lineContact,socialMinerBaseUrl, chatFeedRefUrl)
      *
      * @param events the list of events to notify listeners of.
      */
-    notify = function(events)
+    notify = function(events, chat)
     {
         var i;
         if (events.length > 0)
         {
             console.log("Notify Events: " + JSON.stringify(events));
-            for (i = 0; i < eventListeners.length; i++)
+            for (i = 0; i < chat.eventListeners.length; i++)
             {
-                eventListeners[i](events ,me);
+                chat.eventListeners[i](events ,chat);
             }
         }
     },
@@ -81,14 +75,14 @@ socialminer.chat = function(lineContact,socialMinerBaseUrl, chatFeedRefUrl)
     /**
      * Poll for new events every 5 seconds.
      */
-    poll = function ()
+    poll = function (chat)
     {
-        console.log('poll', eventStatus, chatUrl+ "?eventid=" + lastEventId,feedRefUrl)
+        console.log('poll', chat.eventStatus, chatUrl+ "?eventid=" + chat.lastEventId,feedRefUrl)
         
         request.get({
-            url: chatUrl + "?eventid=" + lastEventId,
+            url: chatUrl + "?eventid=" + chat.lastEventId,
             headers: {
-                'Cookie' : cookie
+                'Cookie' : chat.cookie
             }
         },function(error, response, body){
             if (error) {
@@ -100,20 +94,20 @@ socialminer.chat = function(lineContact,socialMinerBaseUrl, chatFeedRefUrl)
                     type: "StatusEvent",
                     status: "chat_finished_error",
                     detail: "Server connection temporarily lost. Please try again later."
-                }]);
+                }],chat);
             } else {
                 //console.log(body);
-                processPoll(body);
-                if (go == true)
+                processPoll(body ,chat);
+                if (chat.go == true)
                 {
-                    pollHandle = setTimeout(function() { poll(); }, 5000);
+                    chat.pollHandle = setTimeout(function() { poll(chat); }, 5000);
                 }
             }
 
         });
     };
 
-    processEvents = function(events)
+    processEvents = function(events, chat)
     {
         var i, endChat;
         for ( i = 0 ; i < events.length ; i++ )
@@ -122,26 +116,26 @@ socialminer.chat = function(lineContact,socialMinerBaseUrl, chatFeedRefUrl)
 
             if ( events[i].type == "StatusEvent" )
             {
-                endChat = processStatusEvent(events[i]);
+                endChat = processStatusEvent(events[i], chat);
             }
             else if ( events[i].type == "PresenceEvent" )
             {
-                endChat = processPresenceEvent(events[i]);
+                endChat = processPresenceEvent(events[i], chat);
             }
             else if ( events[i].type == "MessageEvent" )
             {
-                processMessageEvent(events[i]);
+                processMessageEvent(events[i], chat);
             }
 
             if ( endChat == true )
             {
-                stopPolling();
+                chat.stopPolling();
                 break;
             }
         }
     }
 
-    processStatusEvent = function(event)
+    processStatusEvent = function(event, chat)
     {
         var endChat = false;
 
@@ -170,33 +164,33 @@ socialminer.chat = function(lineContact,socialMinerBaseUrl, chatFeedRefUrl)
         return endChat;
     };
 
-    processPresenceEvent = function (event)
+    processPresenceEvent = function (event, chat)
     {
         var endChat = false;
         if ( event.status == "joined" )
         {
             console.log("Chatting with " + event.from);
-            for (var i = 0; i < messages.length; i++)
+            for (var i = 0; i < chat.messages.length; i++)
             {
-                sendMessage(messages[i]);
+                sendMessage(chat.messages[i], chat);
             }
-            messages.splice(0,messages.length)
+            chat.messages.splice(0,chat.messages.length)
         }
         else if ( event.status == "left" )
         {
             console.log(event.from + " has left");
-            endChat = messageCount == 0;
+            endChat = chat.messageCount == 0;
         }
 
         return endChat;
     }
 
-    processMessageEvent = function (event)
+    processMessageEvent = function (event, chat)
     {
         var messageId;
         if ( event.body != "" )
         {
-            messageId = "message" + messageCount++;
+            messageId = "message" + chat.messageCount++;
             //console.log(messageId,event.body)
             /*
             $("#messages").append(
@@ -209,7 +203,7 @@ socialminer.chat = function(lineContact,socialMinerBaseUrl, chatFeedRefUrl)
         }
     }  
 
-    sendMessage = function(message) {
+    sendMessage = function(message, chat) {
         request.put({
             url: chatUrl,
             body: '<Message>' +
@@ -217,7 +211,7 @@ socialminer.chat = function(lineContact,socialMinerBaseUrl, chatFeedRefUrl)
                 '</Message>',
             headers: {
                 'Content-Type': 'application/xml',
-                'Cookie' : cookie
+                'Cookie' : chat.cookie
             }
         }, function(error, response, body){
             if (error) {
@@ -229,25 +223,22 @@ socialminer.chat = function(lineContact,socialMinerBaseUrl, chatFeedRefUrl)
         });
     }
 
-    /**
-     * Stop polling for events.
-    */
-    stopPolling = function ()
-    {
-        go = false;
-        eventStatus = null;
-        if ( pollHandle != null )
-        {
-            clearTimeout(pollHandle);
-            pollHandle = null;
-        }
-    }
+    var main = {
+        cookie : null, 
+        go : false,
+        pollHandle : null, 
+        eventListeners : [],
+        messages : [],
+        messageCount :0,
+        eventStatus : null,
+        lastEventId : 0,
+        contact : lineContact,
 
-    var me = {
-        contact : contact,
         initiate: function (success, error)
         {
+            var me = this;
             var i, contactXml;
+            var contact = this.contact;
             console.log("initiate",contact, chatUrl,contactXml)
 
             contactXml = "<SocialContact>";
@@ -275,17 +266,17 @@ socialminer.chat = function(lineContact,socialMinerBaseUrl, chatFeedRefUrl)
                 if (err) {
                     error.call(this,me, err, response, body);
                 } else {
-                    cookie = response.headers['set-cookie'].join("; ");
+                    me.cookie = response.headers['set-cookie'].join("; ");
                     success.call(this,me, err, response, body);
                 }
             });
         },
 
         addMessage : function (message) {
-            if (eventStatus == 'joined') {
-                sendMessage(message)
+            if (this.eventStatus == 'joined') {
+                sendMessage(message , this)
             } else {
-                messages.push(message)
+                this.messages.push(message)
             }
         },
 
@@ -300,21 +291,31 @@ socialminer.chat = function(lineContact,socialMinerBaseUrl, chatFeedRefUrl)
          */
         addEventListener: function (callback)
         {
-            eventListeners[eventListeners.length] = callback;
+            this.eventListeners[this.eventListeners.length] = callback;
         },
 
         startPolling: function ()
         {
-            go = true;
-            poll();
+            this.go = true;
+            poll(this);
         },
 
+        
         /**
          * Stop polling for events.
-         */
-        stopPolling: stopPolling
+        */
+        stopPolling : function ()
+        {
+            this.go = false;
+            this.eventStatus = null;
+            if ( this.pollHandle != null )
+            {
+                clearTimeout(this.pollHandle);
+                this.pollHandle = null;
+            }
+        }
     }
-    return me;
+    return main;
 }
 
 socialminer.utils = socialminer.utils || {};

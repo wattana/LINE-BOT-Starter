@@ -486,6 +486,26 @@ if (pjson.socialminer.enableTesting) {
     }]
   }
   socialminerChat(testRoom)
+
+  testRoom = {
+    id :2,
+    userId : 'Uaa89e07dfe96f3b66fe7937cf9e2c591',
+    contact_id : pjson.socialminer.contactId,
+    contact_person_id : pjson.socialminer.contactId,
+    contactId : pjson.socialminer.contactId,
+    contactPersonId : pjson.socialminer.contactId,
+    displayName : 'wat22',
+    author : 'wat22',
+    title : 'CCX Chat',
+    extensionFields :[{
+      name : 'h_Name',
+      value : 'wat22'
+    },{
+      name : 'ccxqueuetag',
+      value : 'Chat_Csq3'
+    }]
+  }
+  socialminerChat(testRoom)
 }
 
 
