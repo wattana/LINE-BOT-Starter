@@ -2997,6 +2997,8 @@ function socialminerChat(room , data) {
       var socialminerChat = findSocialminerChat(room.userId);
       console.log("socialminerChats index ",room, socialminerChat)
       if (!socialminerChat) {
+        room.author = room.displayName;
+        room.title = data ? data.message.text:"";
         room.extensionFields = [{
             name : 'h_Name',
             value : room.displayName
@@ -3033,6 +3035,7 @@ function socialminerChat(room , data) {
       }
       if (data) {
           var messageType = data.message.type
+          console.log("data -->>>",data)
           if (messageType == 'sticker') {
           } else if (messageType == 'image') {
             socialminerChat.addMessage(WebHookBaseURL+"/"+data.message.filePath+data.message.fileName);
