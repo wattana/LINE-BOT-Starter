@@ -16,6 +16,7 @@ Ext.define('LineChat.Application', {
     
     init : function ( app) {
         var me = this;
+        app.isEn = true;
         //this.mainView = "LineChat.view.main.MessagePanel"
         //return;
         Ext.state.Manager.setProvider(Ext.create('Ext.state.CookieProvider', {}));
@@ -164,6 +165,33 @@ Ext.define('LineChat.Application', {
             //LineChat.app.msgAlert("Error", msg, response.responseText)
         }
         
+    },
+
+    onLoadPictureError : function() {
+        var targetEl = event.target || event.srcElement;
+        var roomId = targetEl.getAttribute("roomId");
+        console.log("onLoadPictureError",targetEl.getAttribute("roomId"))
+        Ext.Ajax.request({
+			headers: { 'Content-Type': 'application/json','Accept': 'application/json' },
+            withCredentials : true,
+            params : {
+                roomId : roomId
+            },
+            method : 'GET',
+            url: LineChat.app.env.BASE_URL+"updateProfile",
+            success: function (response, opts) {
+            	var result = Ext.decode(response.responseText);
+                console.log(result)
+                if (result.pictureUrl) {
+                    targetEl.src = result.pictureUrl+"/small"
+                    //console.log("record",Ext.getStore("Room").findRecord("id",roomId))
+                    Ext.getStore("Room").findRecord("id",roomId).set({
+                        pictureUrl : result.pictureUrl
+                    })
+                }
+            },
+            failure: LineChat.app.failureHandler
+        });
     },
 
     onAppUpdate: function () {

@@ -2694,6 +2694,83 @@ app.post('/sendKbDocument', function (req, res) {
 
 })
 
+app.get('/updateProfile',function (req, res) {
+  console.log(req.query.roomId)
+  var db = new Connection(dbConfig);
+  var room = {};
+  db.on('connect', function(err) {
+      if (err) {
+          console.log(err)
+          return;
+      }
+      var request = new DbRequest(
+        "SELECT id, userId FROM line_chat_room Where id= @roomId", 
+        function(err, rowCount , row) {
+          if (err) {
+            db.close();
+            console.log("select line_chat_room error ",err);
+            res.json({success:false, msg:err});
+          } else
+          {
+            var args = {
+              headers: { "Authorization": token } // request headers 
+            };
+            client.get("https://api.line.me/v2/bot/profile/"+room.userId, args, 
+              function (result, response) {
+                  // parsed response body as js object 
+                  console.log("Update line_chat_room", [result.displayName, result.pictureUrl,result.statusMessage]);
+                  var request = new DbRequest(
+                    "update line_chat_room set "+
+                    "displayName = @displayName"+
+                    ",pictureUrl = @pictureUrl"+
+                    ",statusMessage = @statusMessage"+
+                    " WHERE id = @roomId",
+                      function(err, rowCount , row) {
+                        console.log('UpdateProfile result ',result);
+                        if (err) {
+                          db.close();
+                          res.json({success:false, msg:err});
+                        } else {
+                          var request = new DbRequest(
+                          "update line_contacts set line_name = @displayName "+ 
+                          ",pictureUrl = @pictureUrl"+
+                          ",statusMessage = @statusMessage"+
+                          " where line_id=@line_id and active_flag='1'" ,
+                          function(err, rowCount , row) {
+                            db.close();
+                            if (err) {
+                              console.log("line_contacts error ",err);
+                              res.json({success:false, msg:err});
+                            } else {
+                              res.json(result);
+                            }
+                          });
+                          request.addParameter('displayName', TYPES.NVarChar, result.displayName);
+                          request.addParameter('pictureUrl', TYPES.NVarChar, result.pictureUrl);
+                          request.addParameter('statusMessage', TYPES.NVarChar, result.statusMessage);
+                          request.addParameter('line_id', TYPES.VarChar, room.userId);
+                          db.execSql(request);
+                        }
+                      });
+                    request.addParameter('displayName', TYPES.NVarChar, result.displayName);
+                    request.addParameter('pictureUrl', TYPES.NVarChar, result.pictureUrl);
+                    request.addParameter('statusMessage', TYPES.NVarChar, result.statusMessage);
+                    request.addParameter('roomId', TYPES.Int, req.query.roomId);
+                    db.execSql(request);                    
+                })
+          }       
+        });
+
+        request.on('row', function(columns) {
+          columns.forEach(function(column) {
+            room[column.metadata.colName] = column.value
+          });
+        });
+        request.addParameter('roomId', TYPES.Int, req.query.roomId);
+        db.execSql(request);
+  })  
+});
+
 function followHandler(db ,data , cb) {
   if (data.source.type == 'agent') {
       var result = {}
@@ -2994,7 +3071,7 @@ function messageHandler(db ,data , cb) {
 function socialminerChat(room , data) {
     if (pjson.socialminer.enable) {
       var socialminerChat = findSocialminerChat(room.userId);
-      console.log("socialminerChats index ",room, socialminerChat)
+      //console.log("socialminerChats index ",room, socialminerChat)
       if (!socialminerChat) {
         room.author = room.displayName;
         room.title = data ? data.message.text:"";
@@ -3034,7 +3111,7 @@ function socialminerChat(room , data) {
       }
       if (data) {
           var messageType = data.message.type
-          console.log("data -->>>",data)
+          //console.log("data -->>>",data)
           if (messageType == 'sticker') {
           } else if (messageType == 'image') {
             socialminerChat.addMessage(WebHookBaseURL+"/"+data.message.filePath+data.message.fileName);

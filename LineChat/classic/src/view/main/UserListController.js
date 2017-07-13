@@ -56,7 +56,7 @@ Ext.define('LineChat.view.main.UserListController', {
                     layout : 'fit',
                     items : [{
                         xtype : 'fieldset',
-                        title : 'รายละเอียด',
+                        title : LineChat.app.isEn?'Detail':'รายละเอียด',
                         layoutx : {
                             type : 'hbox'
                         },
@@ -171,7 +171,7 @@ Ext.define('LineChat.view.main.UserListController', {
                                     if (!result.success) {
                                         Ext.Msg.alert('Error', result.msg);
                                     } else {
-                                        Ext.Msg.alert('Success', "บันทึกข้อมูลสำเร็จ ", function () {
+                                        Ext.Msg.alert('Success', LineChat.app.isEn?'Save success.':"บันทึกข้อมูลสำเร็จ ", function () {
                                             btn.up("window").close();
                                             Ext.getStore("User").load()
                                             Ext.getStore("ContactTree").load()
@@ -219,8 +219,8 @@ Ext.define('LineChat.view.main.UserListController', {
                     }],
                     store : store,
                     columns: [
-                        { text: 'รหัส',  dataIndex: 'person_code', width:120 },
-                        { text: 'ชื่อ', dataIndex: 'person_name', flex: 1 }
+                        { text: LineChat.app.isEn?'Code':'รหัส',  dataIndex: 'person_code', width:120 },
+                        { text: LineChat.app.isEn?'Name':'ชื่อ', dataIndex: 'person_name', flex: 1 }
                     ],
                     flex : 1,
                     scrollToBottom : false,

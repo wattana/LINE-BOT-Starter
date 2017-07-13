@@ -303,7 +303,7 @@ Ext.define('LineChat.view.main.Main', {
                 } ,{
                     xtype : 'button',
                     glyph: 'xf24d@FontAwesome',
-                    text : 'ออกใบงาน',
+                    text : LineChat.app.isEn?'Create Ticket':'ออกใบงาน',
                     disabled : true,
                     margin : '2 0 0 2',
                     reference : 'createRequestBtn',
@@ -312,13 +312,13 @@ Ext.define('LineChat.view.main.Main', {
                     xtype : 'button',
                     glyph: 'xf133@FontAwesome',
                     margin : '2 0 0 2',
-                    text : 'แสดงใบงาน',
+                    text : LineChat.app.isEn?'Ticket List':'แสดงใบงาน',
                     handler : 'onRequestListClick'
                 } ,{
                     xtype : 'button',
                     glyph: 'xf233@FontAwesome',
                     margin : '2 0 0 2',
-                    text : 'ดูข้อความทั้งหมด',
+                    text : LineChat.app.isEn?'All Message':'ดูข้อความทั้งหมด',
                     handler : 'onMoreMessageClick'
                 }, {
                     xtype: 'hiddenfield',
@@ -347,10 +347,18 @@ Ext.define('LineChat.view.main.Main', {
                     selectionchange :  function( sm , selected , eOpts ) {
                         var btn = me.down("button[reference=createRequestBtn]")
                         var selection = sm.getSelection()
-                        if (selected.length)
-                            btn.setText("ออกใบงาน ("+sm.getSelection().length+")")
-                        else
-                            btn.setText("ออกใบงาน")
+                        if (LineChat.app.isEn) {
+                            if (selected.length)
+                                btn.setText("Create Ticket ("+sm.getSelection().length+")")
+                            else
+                                btn.setText("Create Ticket")
+                        } else {
+                            if (selected.length)
+                                btn.setText("ออกใบงาน ("+sm.getSelection().length+")")
+                            else
+                                btn.setText("ออกใบงาน")
+                        }
+                        
                         btn.setDisabled(selection == 0) 
                     }
                 }
@@ -382,7 +390,7 @@ Ext.define('LineChat.view.main.Main', {
                     height : 230,
                     hidden: true,
                     items : [{
-                        title : 'ช่วยเหลือ',
+                        title : LineChat.app.isEn?'Help':'ช่วยเหลือ',
                         layout: 'fit',
                         items : [{
                             xtype: 'dataview',
@@ -548,7 +556,7 @@ Ext.define('LineChat.view.main.Main', {
                     },
                     {
                         xtype: 'button',
-                        text: 'ส่งข้อความ',
+                        text: LineChat.app.isEn?'Send Message':'ส่งข้อความ',
                         scale : 'medium',
                         action : 'sendMessage',
                         style: {
@@ -561,7 +569,7 @@ Ext.define('LineChat.view.main.Main', {
                     }, {
                         xtype: 'button',
                         scale : 'medium',
-                        text: 'ส่งข้อความ',
+                        text: LineChat.app.isEn?'Send Message':'ส่งข้อความ',
                         action : 'sendContactMessage',
                         style: {
                             marginLeft: '5px',
@@ -668,7 +676,7 @@ Ext.define('LineChat.view.main.Main', {
 
         var panel = 
         Ext.create('Ext.panel.Panel', {
-            title: 'ข้อความทั้งหมด',
+            title: LineChat.app.isEn?'All Message': 'ข้อความทั้งหมด',
             region : 'center',
             layout : {
                 type : 'vbox',

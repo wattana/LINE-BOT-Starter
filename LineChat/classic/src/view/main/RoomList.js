@@ -26,7 +26,8 @@ Ext.define('LineChat.view.main.RoomList', {
                 '</div>',
                 '<div class="chat-message" style="padding:3px;">',
                     '<div style="float:left;margin-right: 8px;color:gray">',
-                        '<img src="{pictureUrl}/small" title="{displayName}">',
+                        '<img src="{pictureUrl}/small" roomId="{id}" onerror="LineChat.app.onLoadPictureError()" title="{displayName}">',
+                        //'<img src="{[this.getPictureUrl(values)]}" onload="console.log(111)" title="{displayName}">',
                     '</div>',
                     '<span class="chat-by-name" style="margin-right: 2px">{[this.getDisplayName(values)]}</span>',
                     '<div class="chat-message">',
@@ -48,6 +49,7 @@ Ext.define('LineChat.view.main.RoomList', {
                 getDisplayName : function (message) {
                     return Ext.String.ellipsis(message.personName||message.displayName, 30)
                 },
+
                 statusColor: function (waitFlag, talkDatetime) {
                     if (waitFlag == '1') {
                         return 'gray'

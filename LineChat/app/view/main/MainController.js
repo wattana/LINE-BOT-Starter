@@ -98,7 +98,7 @@ Ext.define('LineChat.view.main.MainController', {
     talkingWith: function (view, record, item, index, e, options) {
         var me = this;
         if (e && e.getTarget('i.delete-btn')){
-            Ext.Msg.confirm('Confirm','ยืนยันทำรายการลบข้อมูล',function(btn){
+            Ext.Msg.confirm('Confirm',LineChat.app.isEn?'Confirm delete ?':'ยืนยันทำรายการลบข้อมูล',function(btn){
                 //console.log("confirm",btn)
                 if (btn == 'yes') {
                     me.socket.emit('disableRoom',
@@ -308,11 +308,12 @@ Ext.define('LineChat.view.main.MainController', {
 
     addMessage: function (chatMessage) {
         var me = this;
-        //console.log('addMessage',chatMessage)
+        console.log('addMessage',chatMessage)
         var chatRecord ;
         var roomInfo = this.getView().getReferences().roomInfoForm;
         var chatRoomGrid = this.getView().down('roomlist')
         var roomRecord = chatRoomGrid.getStore().findRecord("id", chatMessage.roomId)
+        //console.log("roomRc",roomRecord)
         if (roomRecord) {
             var grid = this.getView().down('messagechat')
             var updatetime = new Date(parseInt(chatMessage.timestamp));
@@ -607,7 +608,7 @@ Ext.define('LineChat.view.main.MainController', {
         if (form.isValid()) {
             var win=
             Ext.create('Ext.window.Window', {
-            title: 'สร้างใบงาน',
+            title: LineChat.app.isEn?'Create Ticket':'สร้างใบงาน',
             height: 500,
             width: 800,
             layout : {
@@ -617,7 +618,7 @@ Ext.define('LineChat.view.main.MainController', {
             },
             items: [{ 
                 xtype : 'fieldset',
-                title : 'อ้างถึงเลขที่ใบงาน',
+                title : LineChat.app.isEn?'Ticket Ref No': 'อ้างถึงเลขที่ใบงาน',
                 layout : {
                     type : 'hbox'
                 },
@@ -627,12 +628,12 @@ Ext.define('LineChat.view.main.MainController', {
                     name : 'requestNumber'
                 },{
                     xtype : 'button',
-                    text : 'เพิ่มประวัติใบงาน',
+                    text : LineChat.app.isEn?'Add Ticket History':'เพิ่มประวัติใบงาน',
                     formBind : true,
                     margin : '0 0 0 10',
                     handler : function (btn) {
                         if (!btn.up("window").down('textfield[name=requestNumber]').getValue()) {
-                             Ext.Msg.alert('Failed', "กรุณาระบุเลขใบงาน", function () {                                                    
+                             Ext.Msg.alert('Failed', LineChat.app.isEn?'Ticket no required.':"กรุณาระบุเลขใบงาน", function () {                                                    
                                 });
                             return;
                         }
@@ -655,7 +656,7 @@ Ext.define('LineChat.view.main.MainController', {
                                 if (!result.success) {
                                     Ext.Msg.alert('Error', result.msg);
                                 } else {
-                                    Ext.Msg.alert('Success', "บันทึกข้อมูลสำเร็จ เลขที่เอกสาร "+action.result.msg, function () {
+                                    Ext.Msg.alert('Success', LineChat.app.isEn?'Create Success Ticket No':"บันทึกข้อมูลสำเร็จ เลขที่เอกสาร "+action.result.msg, function () {
                                         //view.fireEvent("saved", form , action);
                                         grid.getSelectionModel().deselectAll();
                                         btn.up("window").close();
@@ -671,7 +672,7 @@ Ext.define('LineChat.view.main.MainController', {
                 },{
                     xtype : 'button',
                     margin : '0 0 0 10',
-                    text : 'สร้างใบงานใหม่',
+                    text : LineChat.app.isEn?'Create Ticket':'สร้างใบงานใหม่',
                     handler : function (btn) {
                         var grid = me.getView().down('messagechat')
                         var selected = grid.getSelection()
@@ -691,7 +692,7 @@ Ext.define('LineChat.view.main.MainController', {
                                 if (!result.success) {
                                     Ext.Msg.alert('Error', result.msg);
                                 } else {
-                                    Ext.Msg.alert('Success', "บันทึกข้อมูลสำเร็จ เลขที่เอกสาร "+action.result.msg, function () {
+                                    Ext.Msg.alert('Success', LineChat.app.isEn?'Create success Ticket no':"บันทึกข้อมูลสำเร็จ เลขที่เอกสาร "+action.result.msg, function () {
                                         //view.fireEvent("saved", form , action);
                                         grid.getSelectionModel().deselectAll();
                                         btn.up("window").close();
@@ -755,13 +756,13 @@ Ext.define('LineChat.view.main.MainController', {
                     }
                 },
                 columns: [
-                    { text: 'เลขที่ใบงาน',  dataIndex: 'request_number', width:120 },
-                    { text: 'วันที่ใบงาน', dataIndex: 'open_date' ,
+                    { text: LineChat.app.isEn?'Ticket No':'เลขที่ใบงาน',  dataIndex: 'request_number', width:120 },
+                    { text: LineChat.app.isEn?'Ticket Date':'วันที่ใบงาน', dataIndex: 'open_date' ,
                       width:150, 
                       xtype: 'datecolumn',
                       format:'d/m/Y H:i'
                     },
-                    { text: 'รายละเอียด', dataIndex: 'request_detail', flex: 1 }
+                    { text: LineChat.app.isEn?'Detail':'รายละเอียด', dataIndex: 'request_detail', flex: 1 }
                 ],
                 flex : 1,
                 scrollToBottom : false,
@@ -788,7 +789,7 @@ Ext.define('LineChat.view.main.MainController', {
         }).show();
             
         } else {
-            Ext.Msg.alert('Failed', "กรุณาป้อนข้อมูลให้ครบ", function () {                                                    
+            Ext.Msg.alert('Failed', LineChat.app.isEn?'Please fill form.': "กรุณาป้อนข้อมูลให้ครบ", function () {                                                    
                     });
         }
     },
@@ -818,7 +819,7 @@ Ext.define('LineChat.view.main.MainController', {
             tbarxx : [{
                 xtype : 'button',
                 glyph: 'xf24d@FontAwesome',
-                text : 'ออกใบงาน',
+                text : LineChat.app.isEn?'Create Ticket':'ออกใบงาน',
                 disabled : true,
                 margin : '2 0 0 2',
                 reference : 'createRequestBtn',
@@ -908,7 +909,7 @@ Ext.define('LineChat.view.main.MainController', {
 
         var win = 
         Ext.create('Ext.window.Window', {
-            title: 'รายการใบงาน',
+            title: LineChat.app.isEn?'Ticket List':'รายการใบงาน',
             layout : {
                 type : 'vbox',
                 align : 'stretch',
@@ -922,7 +923,7 @@ Ext.define('LineChat.view.main.MainController', {
             tbarxx : [{
                 xtype : 'button',
                 glyph: 'xf24d@FontAwesome',
-                text : 'ออกใบงาน',
+                text : LineChat.app.isEn?'Create Ticket':'ออกใบงาน',
                 disabled : true,
                 margin : '2 0 0 2',
                 reference : 'createRequestBtn',
@@ -962,13 +963,13 @@ Ext.define('LineChat.view.main.MainController', {
                     }
                 },
                 columns: [
-                    { text: 'เลขที่ใบงาน',  dataIndex: 'request_number', width:120 },
-                    { text: 'วันที่ใบงาน', dataIndex: 'open_date' ,
+                    { text: LineChat.app.isEn?'Ticket No':'เลขที่ใบงาน',  dataIndex: 'request_number', width:120 },
+                    { text: LineChat.app.isEn?'Ticket Date':'วันที่ใบงาน', dataIndex: 'open_date' ,
                       width:150, 
                       xtype: 'datecolumn',
                       format:'d/m/Y H:i'
                     },
-                    { text: 'รายละเอียด', dataIndex: 'request_detail', flex: 1 }
+                    { text: LineChat.app.isEn?'Detail':'รายละเอียด', dataIndex: 'request_detail', flex: 1 }
                 ],
                 flex : 1,
                 scrollToBottom : false,
@@ -1078,7 +1079,7 @@ Ext.define('LineChat.view.main.MainController', {
                     }
                 }],
                 buttons : [{
-                    text : 'ส่งข้อความ',
+                    text : LineChat.app.isEn?'Send Message':'ส่งข้อความ',
                     reference : 'select',
                     disabled : true,
                     handler : function (btn) {
@@ -1192,7 +1193,7 @@ Ext.define('LineChat.view.main.MainController', {
                     }
                 }],
                 buttons : [{
-                    text : 'เลือก',
+                    text : LineChat.app.isEn?'Select':'เลือก',
                     reference : 'select',
                     disabled : true,
                     handler : itemSelect
