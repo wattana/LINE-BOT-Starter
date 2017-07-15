@@ -656,7 +656,7 @@ Ext.define('LineChat.view.main.MainController', {
                                 if (!result.success) {
                                     Ext.Msg.alert('Error', result.msg);
                                 } else {
-                                    Ext.Msg.alert('Success', LineChat.app.isEn?'Create Success Ticket No':"บันทึกข้อมูลสำเร็จ เลขที่เอกสาร "+action.result.msg, function () {
+                                    Ext.Msg.alert('Success', (LineChat.app.isEn?'Create Success Ticket No':"บันทึกข้อมูลสำเร็จ เลขที่เอกสาร ")+action.result.msg, function () {
                                         //view.fireEvent("saved", form , action);
                                         grid.getSelectionModel().deselectAll();
                                         btn.up("window").close();
@@ -692,7 +692,7 @@ Ext.define('LineChat.view.main.MainController', {
                                 if (!result.success) {
                                     Ext.Msg.alert('Error', result.msg);
                                 } else {
-                                    Ext.Msg.alert('Success', LineChat.app.isEn?'Create success Ticket no':"บันทึกข้อมูลสำเร็จ เลขที่เอกสาร "+action.result.msg, function () {
+                                    Ext.Msg.alert('Success', (LineChat.app.isEn?'Create success Ticket no':"บันทึกข้อมูลสำเร็จ เลขที่เอกสาร ")+action.result.msg, function () {
                                         //view.fireEvent("saved", form , action);
                                         grid.getSelectionModel().deselectAll();
                                         btn.up("window").close();
