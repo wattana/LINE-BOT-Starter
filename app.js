@@ -134,8 +134,8 @@ db.on('connect', function(err) {
                         "contact_id [uniqueidentifier] NULL, "+
                         "sourceType [nvarchar](20) NOT NULL DEFAULT (''),"+
                         "sourceUserId [nvarchar](40) NOT NULL DEFAULT (''), "+
-                        "messageId [nvarchar](50) NOT NULL DEFAULT (''), "+
-                        "messageType [nvarchar](20) NOT NULL DEFAULT (''), "+
+                        "messageId [nvarchar](50) NULL, "+
+                        "messageType [nvarchar](20) NULL, "+
                         "messageText [nvarchar](max) NULL, "+
                         "stickerId int, "+
                         "packageId int,"+
